@@ -7,6 +7,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.wadjet.core.designsystem.WadjetColors
 
@@ -21,6 +22,7 @@ fun WadjetTextField(
     trailingIcon: @Composable (() -> Unit)? = null,
     isError: Boolean = false,
     singleLine: Boolean = true,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
     OutlinedTextField(
         value = value,
@@ -32,6 +34,7 @@ fun WadjetTextField(
         trailingIcon = trailingIcon,
         isError = isError,
         singleLine = singleLine,
+        visualTransformation = visualTransformation,
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = WadjetColors.Gold,
             unfocusedBorderColor = WadjetColors.Border,

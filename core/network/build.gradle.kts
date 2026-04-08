@@ -26,15 +26,20 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:common"))
+
     // Retrofit
-    implementation(libs.retrofit)
+    api(libs.retrofit)
     implementation(libs.retrofit.kotlinx.serialization)
-    implementation(libs.okhttp)
+    api(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.okhttp.sse)
 
     // Serialization
-    implementation(libs.kotlinx.serialization.json)
+    api(libs.kotlinx.serialization.json)
+
+    // Security
+    implementation(libs.security.crypto)
 
     // Hilt
     implementation(libs.hilt.android)

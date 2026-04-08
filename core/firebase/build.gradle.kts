@@ -25,9 +25,11 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:common"))
+
     // Firebase
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.auth)
+    api(platform(libs.firebase.bom))
+    api(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.analytics)

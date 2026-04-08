@@ -49,6 +49,9 @@ espresso = "3.6.1"
 mockk = "1.13.13"
 turbine = "1.2.0"
 
+# Security
+securityCrypto = "1.1.0-alpha06"
+
 # Other
 timber = "5.0.1"
 splashscreen = "1.0.1"
@@ -116,6 +119,9 @@ googleid = { module = "com.google.android.libraries.identity.googleid:googleid",
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+
+# Security
+security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
 
 # DataStore
 datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }

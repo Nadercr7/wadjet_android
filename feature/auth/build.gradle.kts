@@ -38,6 +38,7 @@ dependencies {
     // Compose
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.material3)
+    implementation(libs.compose.material.icons)
 
     // Lifecycle
     implementation(libs.lifecycle.runtime)
@@ -51,6 +52,11 @@ dependencies {
 
     // Navigation
     implementation(libs.navigation.compose)
+
+    // Google Sign-In (Credential Manager)
+    implementation(libs.credentials)
+    implementation(libs.credentials.play)
+    implementation(libs.googleid)
 
     // Testing
     testImplementation(libs.junit)

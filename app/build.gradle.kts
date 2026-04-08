@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.services)
@@ -88,6 +89,7 @@ dependencies {
     // Compose
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.material3)
+    implementation(libs.compose.material.icons)
     implementation(libs.navigation.compose)
     implementation(libs.hilt.navigation.compose)
 
@@ -95,6 +97,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.core.splashscreen)
+    implementation(libs.kotlinx.serialization.json)
 
     // Testing
     testImplementation(libs.junit)
