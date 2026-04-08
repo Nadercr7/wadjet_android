@@ -43,6 +43,9 @@ dependencies {
     // Lottie
     implementation(libs.lottie.compose)
 
+    // Coil (for KenBurnsImage)
+    api(libs.coil.compose)
+
     // Testing
     testImplementation(libs.junit)
 }
