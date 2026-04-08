@@ -323,7 +323,7 @@ In Firebase Console → your project:
 |---------|----------|-------|
 | **Authentication** | Build → Authentication → Sign-in method | Enable: Google, Email/Password |
 | **Cloud Firestore** | Build → Firestore Database | Create database → Start in **test mode** (we'll deploy rules later) |
-| **Storage** | Build → Storage | Get started → default rules |
+| ~~**Storage**~~ | ~~Build → Storage~~ | ❌ Requires Blaze plan (not free) — skipped. Profile images use Google avatar URL instead |
 | **Analytics** | Already enabled from project creation | — |
 | **Crashlytics** | Release & Monitor → Crashlytics | Will activate on first app run |
 | **Cloud Messaging** | Engage → Messaging | Enabled by default |

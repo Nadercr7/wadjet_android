@@ -138,7 +138,7 @@ room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-auth = { module = "com.google.firebase:firebase-auth-ktx" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore-ktx" }
-firebase-storage = { module = "com.google.firebase:firebase-storage-ktx" }
+# firebase-storage removed — requires Blaze plan (not free on Spark)
 firebase-messaging = { module = "com.google.firebase:firebase-messaging-ktx" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics-ktx" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ktx" }
