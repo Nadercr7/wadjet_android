@@ -28,3 +28,8 @@ signing.properties
 # OS files
 Thumbs.db
 Desktop.ini
+
+# Kotlin/JVM build artifacts
+.kotlin/
+hs_err_*.log
+replay_pid*.log
