@@ -309,8 +309,11 @@ class WadjetApplication : Application()
    
    # Copy the SHA-1 line and paste in Firebase Console
    ```
+   
+   **Already retrieved**: `8A:2D:0F:56:90:75:38:23:9D:88:C4:90:25:7C:58:72:6F:B0:46:67`
+
 5. Click **Register app**
-6. Download `google-services.json` → place in `app/` directory
+6. ~~Download `google-services.json` → place in `app/` directory~~ ✅ Already done
 7. Click **Next** through the remaining steps
 
 ### 9c. Enable Firebase Services
