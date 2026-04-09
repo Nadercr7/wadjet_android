@@ -1,16 +1,14 @@
 package com.wadjet.feature.explore.screen
 
-import android.Manifest
-import android.content.pm.PackageManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.Preview
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
+// CAMERA_DISABLED: CameraX imports commented out for image-upload-only mode
+// import android.Manifest
+// import android.content.pm.PackageManager
+// import androidx.camera.core.CameraSelector
+// import androidx.camera.core.ImageCapture
+// import androidx.camera.core.ImageCaptureException
+// import androidx.camera.core.Preview
+// import androidx.camera.lifecycle.ProcessCameraProvider
+// import androidx.camera.view.PreviewView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -31,10 +29,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -44,77 +40,46 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import coil3.compose.AsyncImage
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.core.designsystem.component.ImageUploadZone
 import com.wadjet.core.domain.model.IdentifyMatch
 import com.wadjet.feature.explore.IdentifyUiState
-import java.io.File
-import java.util.concurrent.Executors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IdentifyScreen(
     state: IdentifyUiState,
-    onImageCaptured: (File) -> Unit,
+    onImageCaptured: (java.io.File) -> Unit,
     onImageSelected: (android.net.Uri) -> Unit,
     onMatchTap: (String) -> Unit,
     onRetry: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
-    var hasCameraPermission by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
-                PackageManager.PERMISSION_GRANTED,
-        )
-    }
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission(),
-    ) { granted -> hasCameraPermission = granted }
-
-    val photoPicker = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia(),
-    ) { uri -> uri?.let { onImageSelected(it) } }
-
-    LaunchedEffect(Unit) {
-        if (!hasCameraPermission) {
-            permissionLauncher.launch(Manifest.permission.CAMERA)
-        }
-    }
-
     Box(modifier = modifier.fillMaxSize().background(WadjetColors.Night)) {
-        // Camera or results
-        if (state.cameraActive && hasCameraPermission) {
-            IdentifyCameraPreview(onImageCaptured = onImageCaptured)
-        } else if (!hasCameraPermission && state.cameraActive) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Camera Permission Required", color = WadjetColors.Gold, style = MaterialTheme.typography.headlineSmall)
-                    Spacer(Modifier.height(12.dp))
-                    com.wadjet.core.designsystem.component.WadjetButton(
-                        text = "Grant Permission",
-                        onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
-                    )
-                }
+        // Main content: Image upload zone centered
+        if (state.result == null && !state.isLoading) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 72.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                ImageUploadZone(
+                    onImageSelected = onImageSelected,
+                    title = "Upload a photo of an Egyptian landmark",
+                    subtitle = "Supports JPG, PNG up to 10MB",
+                    analyzeButtonText = "Identify Landmark",
+                    isAnalyzing = state.isLoading,
+                    onAnalyze = null, // Analysis starts on image selection via onImageSelected
+                )
             }
         }
 
@@ -124,13 +89,6 @@ fun IdentifyScreen(
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = WadjetColors.Gold)
-                }
-            },
-            actions = {
-                IconButton(onClick = {
-                    photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                }) {
-                    Icon(Icons.Default.PhotoLibrary, "Gallery", tint = WadjetColors.Gold)
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
@@ -173,31 +131,7 @@ fun IdentifyScreen(
             )
         }
 
-        // Capture FAB
-        if (state.cameraActive && hasCameraPermission && !state.isLoading) {
-            FloatingActionButton(
-                onClick = { /* Capture handled by preview tap */ },
-                containerColor = WadjetColors.Gold,
-                contentColor = WadjetColors.Night,
-                shape = CircleShape,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 48.dp)
-                    .size(72.dp),
-            ) {
-                Surface(
-                    shape = CircleShape,
-                    color = WadjetColors.Night,
-                    modifier = Modifier.size(60.dp),
-                ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = WadjetColors.Gold,
-                        modifier = Modifier.padding(4.dp),
-                    ) {}
-                }
-            }
-        }
+        // CAMERA_DISABLED: Capture FAB removed — image upload replaces camera capture
 
         // Error
         state.error?.let { error ->
@@ -220,8 +154,10 @@ fun IdentifyScreen(
     }
 }
 
+// CAMERA_DISABLED: IdentifyCameraPreview — kept for future restoration
+/*
 @Composable
-private fun IdentifyCameraPreview(onImageCaptured: (File) -> Unit) {
+private fun IdentifyCameraPreview(onImageCaptured: (java.io.File) -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val executor = remember { Executors.newSingleThreadExecutor() }
@@ -251,7 +187,7 @@ private fun IdentifyCameraPreview(onImageCaptured: (File) -> Unit) {
             }, ContextCompat.getMainExecutor(ctx))
 
             previewView.setOnClickListener {
-                val file = File(ctx.cacheDir, "identify_${System.currentTimeMillis()}.jpg")
+                val file = java.io.File(ctx.cacheDir, "identify_${System.currentTimeMillis()}.jpg")
                 val outputOptions = ImageCapture.OutputFileOptions.Builder(file).build()
                 imageCapture.takePicture(
                     outputOptions,
@@ -271,6 +207,7 @@ private fun IdentifyCameraPreview(onImageCaptured: (File) -> Unit) {
         modifier = Modifier.fillMaxSize(),
     )
 }
+*/
 
 @Composable
 private fun IdentifyResults(

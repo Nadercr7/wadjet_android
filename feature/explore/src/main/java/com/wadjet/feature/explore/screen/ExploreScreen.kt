@@ -24,7 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -113,7 +113,7 @@ fun ExploreScreen(
             },
             actions = {
                 IconButton(onClick = onIdentify) {
-                    Icon(Icons.Default.CameraAlt, "Identify Landmark", tint = WadjetColors.Gold)
+                    Icon(Icons.Default.FileUpload, "Identify from photo", tint = WadjetColors.Gold)
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = WadjetColors.Night),

@@ -40,6 +40,9 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)
 
+    // Activity Compose (for ImageUploadZone PickVisualMedia)
+    implementation(libs.androidx.activity.compose)
+
     // Lottie
     implementation(libs.lottie.compose)
 
