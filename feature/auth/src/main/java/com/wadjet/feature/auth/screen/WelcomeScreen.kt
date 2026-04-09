@@ -1,6 +1,7 @@
 package com.wadjet.feature.auth.screen
 
 import android.app.Activity
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -23,6 +24,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
@@ -37,6 +39,7 @@ import com.wadjet.core.designsystem.HieroglyphStyle
 import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.designsystem.component.WadjetCard
 import com.wadjet.core.designsystem.component.WadjetGhostButton
+import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.feature.auth.AuthEvent
 import com.wadjet.feature.auth.AuthSheet
 import com.wadjet.feature.auth.AuthViewModel
@@ -80,10 +83,10 @@ fun WelcomeScreen(
 
         // Logo & tagline
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "𓂀",
-                style = HieroglyphStyle.copy(fontSize = MaterialTheme.typography.displayLarge.fontSize),
-                color = WadjetColors.Gold,
+            Image(
+                painter = painterResource(DesignR.drawable.logo_wadjet),
+                contentDescription = "Wadjet logo",
+                modifier = Modifier.size(120.dp),
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
