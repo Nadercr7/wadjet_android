@@ -3,6 +3,7 @@ name: Android CI
 on:
   push:
     branches: [main, develop]
+    tags: ['v*']
   pull_request:
     branches: [main]
 
@@ -59,8 +60,10 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: startsWith(github.ref, 'refs/tags/v')
     timeout-minutes: 30
+    permissions:
+      contents: write
 
     steps:
     - uses: actions/checkout@v4
@@ -86,17 +89,23 @@ jobs:
     - name: Decode Keystore
       run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > wadjet-release.jks
 
-    - name: Build Release Bundle
+    - name: Build Release APK
       env:
         KEYSTORE_PATH: wadjet-release.jks
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-      run: ./gradlew bundleRelease --console=plain
+      run: ./gradlew assembleRelease --console=plain
 
-    - name: Upload AAB
-      uses: actions/upload-artifact@v4
+    - name: Rename APK with version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/}
+        mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/wadjet-${VERSION}.apk
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
       with:
-        name: release-aab
-        path: app/build/outputs/bundle/release/app-release.aab
-        retention-days: 30
+        files: app/build/outputs/apk/release/wadjet-*.apk
+        generate_release_notes: true
+        draft: false
+        prerelease: ${{ contains(github.ref, 'beta') || contains(github.ref, 'rc') }}

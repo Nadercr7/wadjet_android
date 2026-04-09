@@ -15,18 +15,18 @@
 | P3 | Dictionary | ✅ DONE | `940fd4f` | Browse, learn, write, Room FTS, sign detail |
 | P4 | Scanner | ✅ DONE | `b83e9f9` | CameraX, scan pipeline, results, history |
 | P5 | Landmarks | ✅ DONE | `59f2052` | Explore, detail, identify, favorites, cache |
-| P6 | Chat | 🔲 TODO | — | Streaming SSE, TTS, STT, markdown |
-| P7 | Stories | 🔲 TODO | — | List, reader, interactions, images, narration |
-| P8 | Dashboard & Settings | 🔲 TODO | — | Stats, history, favorites, profile, prefs |
-| P9 | Offline & Polish | 🔲 TODO | — | Room caching, offline mode, animations, RTL |
-| P10 | Testing & Release | 🔲 TODO | — | Tests, ProGuard, Play Store prep |
+| P6 | Chat | ✅ DONE | `e2e609d` | SSE streaming, TTS, STT, markdown, context |
+| P7 | Stories | ✅ DONE | `a8400b3` | List, reader, 4 interaction types, TTS narration |
+| P8 | Dashboard & Settings | ✅ DONE | `3a48cc3` | Stats, history, favorites, profile, TTS config |
+| P9 | Offline & Polish | ✅ DONE | `c68b841` | Room caching, offline mode, animations, a11y |
+| P10 | Testing & Release | ✅ DONE | `1991e5b` | 28 unit + 17 integration tests, CI/CD, FCM, signing |
 
 ### Quality Commits (Cross-Cutting)
 | Commit | Description |
 |--------|-------------|
 | `1d07e8b` | NiA patterns: asResult(), stability config, conditional logging, buildConfig |
 | `8c96f23` | Fix: Welcome screen feature cards clipping |
-| *(pending)* | suspendRunCatching, ProGuard rules, DispatchersModule |
+| `e2e609d` | suspendRunCatching, ProGuard rules, DispatchersModule |
 
 ---
 
