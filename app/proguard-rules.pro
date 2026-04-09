@@ -5,17 +5,44 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# ── Kotlin Serialization ─────────────────────────────────────────────
+-keepattributes *Annotation*, InnerClasses
+-dontnote kotlinx.serialization.AnnotationsKt
+-keepclassmembers class kotlinx.serialization.json.** { *** Companion; }
+-keep,includedescriptorclasses class com.wadjet.**$$serializer { *; }
+-keepclassmembers class com.wadjet.** {
+    *** Companion;
+}
+-keepclasseswithmembers class com.wadjet.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# ── Retrofit ─────────────────────────────────────────────────────────
+-keepattributes Signature, Exceptions
+-keepclassmembers,allowshrinking,allowobfuscation interface * {
+    @retrofit2.http.* <methods>;
+}
+-dontwarn javax.annotation.**
+-dontwarn kotlin.Unit
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
+# ── OkHttp / Okio ───────────────────────────────────────────────────
+-dontwarn okhttp3.internal.platform.**
+-dontwarn org.conscrypt.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.openjsse.**
+-dontwarn okio.**
+
+# ── Firebase Crashlytics ─────────────────────────────────────────────
+-keepattributes SourceFile,LineNumberTable
+-keep public class * extends java.lang.Exception
+-keep class com.google.firebase.crashlytics.** { *; }
+
+# ── Room ─────────────────────────────────────────────────────────────
+-keep class * extends androidx.room.RoomDatabase
+-keep @androidx.room.Entity class *
+-dontwarn androidx.room.paging.**
+
+# ── ONNX Runtime ─────────────────────────────────────────────────────
+-keep class ai.onnxruntime.** { *; }
+-dontwarn ai.onnxruntime.**
 #-renamesourcefileattribute SourceFile

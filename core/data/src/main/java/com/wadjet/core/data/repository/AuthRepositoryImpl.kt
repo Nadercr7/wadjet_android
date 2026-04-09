@@ -1,5 +1,6 @@
 package com.wadjet.core.data.repository
 
+import com.wadjet.core.common.suspendRunCatching
 import com.wadjet.core.domain.model.User
 import com.wadjet.core.domain.repository.AuthRepository
 import com.wadjet.core.firebase.FirebaseAuthManager
@@ -39,7 +40,7 @@ class AuthRepositoryImpl @Inject constructor(
     override val isLoggedIn: Boolean
         get() = firebaseAuth.currentUser != null && tokenManager.isLoggedIn
 
-    override suspend fun signInWithGoogle(idToken: String): Result<User> = runCatching {
+    override suspend fun signInWithGoogle(idToken: String): Result<User> = suspendRunCatching {
         // 1. Firebase sign-in
         val firebaseUser = firebaseAuth.signInWithGoogle(idToken)
 
@@ -56,7 +57,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun signInWithEmail(email: String, password: String): Result<User> = runCatching {
+    override suspend fun signInWithEmail(email: String, password: String): Result<User> = suspendRunCatching {
         // 1. Firebase sign-in
         val firebaseUser = firebaseAuth.signInWithEmail(email, password)
 
@@ -76,7 +77,7 @@ class AuthRepositoryImpl @Inject constructor(
         email: String,
         password: String,
         displayName: String?,
-    ): Result<User> = runCatching {
+    ): Result<User> = suspendRunCatching {
         // 1. Firebase account creation
         val firebaseUser = firebaseAuth.createAccount(email, password)
 
@@ -94,7 +95,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun forgotPassword(email: String): Result<Unit> = runCatching {
+    override suspend fun forgotPassword(email: String): Result<Unit> = suspendRunCatching {
         firebaseAuth.sendPasswordReset(email)
         // Also notify backend (best-effort)
         try {

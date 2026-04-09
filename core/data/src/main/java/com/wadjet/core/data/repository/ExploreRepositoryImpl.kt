@@ -1,5 +1,6 @@
 package com.wadjet.core.data.repository
 
+import com.wadjet.core.common.suspendRunCatching
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.wadjet.core.database.dao.LandmarkDao
@@ -46,7 +47,7 @@ class ExploreRepositoryImpl @Inject constructor(
         search: String?,
         page: Int,
         perPage: Int,
-    ): Result<LandmarkPage> = runCatching {
+    ): Result<LandmarkPage> = suspendRunCatching {
         val response = landmarkApi.getLandmarks(
             category = category,
             city = city,
@@ -72,7 +73,7 @@ class ExploreRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getLandmarkDetail(slug: String): Result<LandmarkDetail> = runCatching {
+    override suspend fun getLandmarkDetail(slug: String): Result<LandmarkDetail> = suspendRunCatching {
         val response = landmarkApi.getLandmarkDetail(slug)
         if (response.isSuccessful) {
             val dto = response.body()!!
@@ -92,7 +93,7 @@ class ExploreRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun identifyLandmark(imageFile: File): Result<IdentifyResult> = runCatching {
+    override suspend fun identifyLandmark(imageFile: File): Result<IdentifyResult> = suspendRunCatching {
         val filePart = MultipartBody.Part.createFormData(
             "file",
             imageFile.name,
@@ -132,7 +133,7 @@ class ExploreRepositoryImpl @Inject constructor(
         name: String,
         thumbnail: String?,
         isFavorite: Boolean,
-    ): Result<Unit> = runCatching {
+    ): Result<Unit> = suspendRunCatching {
         val uid = firebaseAuth.currentUser?.uid
             ?: throw IllegalStateException("Not signed in")
         val favRef = firestore.collection("users").document(uid)

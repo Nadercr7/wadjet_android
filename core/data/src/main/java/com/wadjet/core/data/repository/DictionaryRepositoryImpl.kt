@@ -1,5 +1,6 @@
 package com.wadjet.core.data.repository
 
+import com.wadjet.core.common.suspendRunCatching
 import com.wadjet.core.database.dao.SignDao
 import com.wadjet.core.database.entity.SignEntity
 import com.wadjet.core.domain.model.Category
@@ -36,7 +37,7 @@ class DictionaryRepositoryImpl @Inject constructor(
         search: String?,
         page: Int,
         perPage: Int,
-    ): Result<SignPage> = runCatching {
+    ): Result<SignPage> = suspendRunCatching {
         val response = dictionaryApi.getSigns(
             category = category,
             search = search,
@@ -55,7 +56,7 @@ class DictionaryRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getSign(code: String): Result<Sign> = runCatching {
+    override suspend fun getSign(code: String): Result<Sign> = suspendRunCatching {
         val response = dictionaryApi.getSign(code)
         if (response.isSuccessful) {
             val dto = response.body()!!
@@ -68,7 +69,7 @@ class DictionaryRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getCategories(): Result<List<Category>> = runCatching {
+    override suspend fun getCategories(): Result<List<Category>> = suspendRunCatching {
         val response = dictionaryApi.getCategories()
         if (response.isSuccessful) {
             response.body()!!.categories.map { Category(code = it.code, name = it.name, count = it.count) }
@@ -77,7 +78,7 @@ class DictionaryRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getLesson(level: Int): Result<Lesson> = runCatching {
+    override suspend fun getLesson(level: Int): Result<Lesson> = suspendRunCatching {
         val response = dictionaryApi.getLesson(level)
         if (response.isSuccessful) {
             val body = response.body()!!
@@ -101,7 +102,7 @@ class DictionaryRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun write(text: String, mode: String): Result<WriteResult> = runCatching {
+    override suspend fun write(text: String, mode: String): Result<WriteResult> = suspendRunCatching {
         val response = writeApi.write(WriteRequest(text = text, mode = mode))
         if (response.isSuccessful) {
             val body = response.body()!!
@@ -124,7 +125,7 @@ class DictionaryRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getPalette(): Result<List<PaletteSign>> = runCatching {
+    override suspend fun getPalette(): Result<List<PaletteSign>> = suspendRunCatching {
         val response = writeApi.getPalette()
         if (response.isSuccessful) {
             response.body()!!.signs.map {
@@ -135,7 +136,7 @@ class DictionaryRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun speakPhonetic(text: String): Result<ByteArray> = runCatching {
+    override suspend fun speakPhonetic(text: String): Result<ByteArray> = suspendRunCatching {
         val response = audioApi.speak(SpeakRequest(text = text, lang = "en", context = "pronunciation"))
         if (response.isSuccessful) {
             response.body()?.bytes() ?: throw ApiException("Empty audio response")

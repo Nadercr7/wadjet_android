@@ -1,5 +1,6 @@
 package com.wadjet.core.data.repository
 
+import com.wadjet.core.common.suspendRunCatching
 import com.wadjet.core.database.dao.ScanResultDao
 import com.wadjet.core.database.entity.ScanResultEntity
 import com.wadjet.core.domain.model.DetectedGlyph
@@ -27,7 +28,7 @@ class ScanRepositoryImpl @Inject constructor(
     private val json: Json,
 ) : ScanRepository {
 
-    override suspend fun scanImage(imageFile: File, mode: String): Result<ScanResult> = runCatching {
+    override suspend fun scanImage(imageFile: File, mode: String): Result<ScanResult> = suspendRunCatching {
         val filePart = MultipartBody.Part.createFormData(
             "file",
             imageFile.name,
@@ -43,7 +44,7 @@ class ScanRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun saveScanResult(result: ScanResult, thumbnailPath: String): Result<Int> = runCatching {
+    override suspend fun saveScanResult(result: ScanResult, thumbnailPath: String): Result<Int> = suspendRunCatching {
         val confidenceAvg = if (result.glyphs.isNotEmpty()) {
             result.glyphs.map { it.classConfidence }.average().toFloat()
         } else 0f
@@ -68,12 +69,12 @@ class ScanRepositoryImpl @Inject constructor(
     override fun getScanHistory(): Flow<List<ScanHistorySummary>> =
         scanResultDao.getAll().map { entities -> entities.map { it.toSummary() } }
 
-    override suspend fun getScanResultJson(scanId: Int): Result<String> = runCatching {
+    override suspend fun getScanResultJson(scanId: Int): Result<String> = suspendRunCatching {
         scanResultDao.getById(scanId)?.resultsJson
             ?: throw ApiException("Scan result not found: $scanId")
     }
 
-    override suspend fun deleteScan(scanId: Int): Result<Unit> = runCatching {
+    override suspend fun deleteScan(scanId: Int): Result<Unit> = suspendRunCatching {
         val entity = scanResultDao.getById(scanId)
         if (entity != null) {
             // Delete thumbnail file

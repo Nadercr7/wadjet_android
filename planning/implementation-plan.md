@@ -7,19 +7,26 @@
 
 ## Phase Overview
 
-| Phase | Name | Description | Estimated Effort |
-|-------|------|-------------|-----------------|
-| P0 | Project Setup | Android Studio project, Gradle, Hilt, Firebase | Foundation |
-| P1 | Design System | Theme, components, fonts, icons | Foundation |
-| P2 | Auth & Navigation | Firebase Auth, navigation graph, bottom nav | Core |
-| P3 | Dictionary | Browse + Search + Sign Detail + Lessons | Feature |
-| P4 | Scanner | Camera, gallery, API scan, results display | Feature |
-| P5 | Landmarks | Browse, detail, identify, map integration | Feature |
-| P6 | Chat | Streaming SSE, TTS, STT, markdown rendering | Feature |
-| P7 | Stories | List, reader, interactions, images, narration | Feature |
-| P8 | Dashboard & Settings | Stats, history, favorites, profile, prefs | Feature |
-| P9 | Offline & Polish | Room caching, offline mode, animations, RTL | Polish |
-| P10 | Testing & Release | Tests, ProGuard, Play Store prep | Release |
+| Phase | Name | Status | Commit | Notes |
+|-------|------|--------|--------|-------|
+| P0 | Project Setup | ✅ DONE | `eb98c3c` | 20 modules, Gradle, Firebase |
+| P1 | Design System | ✅ DONE | `a7ba308` | Theme, colors, typography, 10+ components |
+| P2 | Auth & Navigation | ✅ DONE | `be9e852` + `c08c878` | Firebase Auth, Google Sign-In, NavGraph |
+| P3 | Dictionary | ✅ DONE | `940fd4f` | Browse, learn, write, Room FTS, sign detail |
+| P4 | Scanner | ✅ DONE | `b83e9f9` | CameraX, scan pipeline, results, history |
+| P5 | Landmarks | ✅ DONE | `59f2052` | Explore, detail, identify, favorites, cache |
+| P6 | Chat | 🔲 TODO | — | Streaming SSE, TTS, STT, markdown |
+| P7 | Stories | 🔲 TODO | — | List, reader, interactions, images, narration |
+| P8 | Dashboard & Settings | 🔲 TODO | — | Stats, history, favorites, profile, prefs |
+| P9 | Offline & Polish | 🔲 TODO | — | Room caching, offline mode, animations, RTL |
+| P10 | Testing & Release | 🔲 TODO | — | Tests, ProGuard, Play Store prep |
+
+### Quality Commits (Cross-Cutting)
+| Commit | Description |
+|--------|-------------|
+| `1d07e8b` | NiA patterns: asResult(), stability config, conditional logging, buildConfig |
+| `8c96f23` | Fix: Welcome screen feature cards clipping |
+| *(pending)* | suspendRunCatching, ProGuard rules, DispatchersModule |
 
 ---
 
@@ -596,3 +603,73 @@ P0 (Setup)
 ```
 
 Phases P3–P7 are **independently buildable** and can be done in any order. P4 (Scanner) is recommended first as it's the core feature.
+
+---
+
+## Reference Repos Audit (Completed Post-P5)
+
+> Audited 4 repos from `D:\Personal attachements\Repos\23-Android-Kotlin\`:
+> nowinandroid, awesome-android-ui, Jetpack-Compose-Tutorials, architecture-samples
+
+### Already Applied (16 patterns)
+
+| Pattern | Source | Applied In |
+|---------|--------|-----------|
+| `asResult()` Flow extension | NiA | core:common (P1d07e8b) |
+| Conditional logging (Timber debug-only) | NiA | app module |
+| Compose stability config | NiA | compose_compiler_config.conf |
+| Multi-preview annotations | NiA | core:designsystem |
+| Type-safe navigation (Kotlinx Serialization) | NiA | All feature modules |
+| Multi-module architecture | NiA | 20 modules |
+| Version catalog (libs.versions.toml) | NiA | Root project |
+| Repository pattern | NiA + arch-samples | core:data |
+| Hilt DI | NiA + arch-samples | All modules |
+| Timber logging | NiA | app module |
+| BuildConfig fields (BASE_URL) | NiA | app/build.gradle.kts |
+| Edge-to-edge display | NiA | MainActivity |
+| Room caching | NiA | core:database |
+| Gradle config cache | NiA | gradle.properties |
+| Non-transitive R classes | NiA | gradle.properties |
+| Consistent SDK versions | NiA | All modules |
+
+### Applied This Session (4 patterns)
+
+| Pattern | Source | File |
+|---------|--------|------|
+| `suspendRunCatching` (CancellationException safety) | NiA | core:common + 4 repo impls |
+| Comprehensive ProGuard rules | NiA | app/proguard-rules.pro |
+| Dispatcher injection (`@IoDispatcher`, `@DefaultDispatcher`) | NiA + arch-samples | core:common/di/DispatchersModule.kt |
+| `@ApplicationScope` coroutine scope | NiA | core:common/di/DispatchersModule.kt |
+
+### Deferred — High Priority (Target: P9-P10)
+
+| Pattern | Source | Why Deferred | Target |
+|---------|--------|-------------|--------|
+| Convention plugins (build-logic/) | NiA | High effort, current setup works | P10 or post-release |
+| Network connectivity monitor | NiA | Needs P9 offline work | P9 |
+| Hardcoded strings → strings.xml (~40 strings) | NiA | Tedious, no functional impact yet | P9 (i18n pass) |
+| `@Preview` on all screen composables | NiA | 0 of 10 screens have previews | Gradual per-phase |
+| Testing infrastructure (ViewModels, repos) | NiA + arch-samples | Zero tests currently | P10 |
+| Analytics abstraction layer | NiA | Firebase direct calls work | P10 |
+
+### Deferred — Nice-to-Have (Post-Release)
+
+| Pattern | Source | Notes |
+|---------|--------|-------|
+| Use case classes (domain layer) | arch-samples | Current ViewModel→Repo works fine |
+| Separate `:core:model` module | NiA | Models in :core:domain suffice |
+| Proto DataStore (typed prefs) | NiA | SharedPreferences fine for now |
+| WorkManager sync | NiA | No background sync needed yet |
+| `WadjetIcons` object (centralized icons) | NiA | Direct Lucide usage works |
+| Compose animations (AnimatedVisibility etc.) | Compose-Tutorials | Add per-screen as polish |
+| Custom chat bubble layouts | Compose-Tutorials | P6 Chat phase |
+| TopLevelDestination string resources | NiA | Currently hardcoded, minor |
+| Accessibility contentDescription audit | NiA | P9 accessibility pass |
+| `suspendRunCatching` for non-repo suspend calls | NiA | Apply as patterns expand |
+
+### Not Applicable (12 items)
+
+Product flavors, change-list sync, offline-first Synchronizer, topic following,
+Jacoco coverage, Spotless formatting, Kotlinx Datetime, DeepLinks, awesome-android-ui
+View-based libraries, architecture-samples CRUD patterns, Gradle Managed Devices,
+BackdropScaffold.
