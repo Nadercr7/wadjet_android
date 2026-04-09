@@ -6,6 +6,7 @@ import com.wadjet.core.network.TokenManager
 import com.wadjet.core.network.api.AuthApiService
 import com.wadjet.core.network.api.AudioApiService
 import com.wadjet.core.network.api.DictionaryApiService
+import com.wadjet.core.network.api.ScanApiService
 import com.wadjet.core.network.api.WriteApiService
 import dagger.Module
 import dagger.Provides
@@ -85,4 +86,9 @@ object NetworkModule {
     @Singleton
     fun provideAudioApiService(retrofit: Retrofit): AudioApiService =
         retrofit.create(AudioApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideScanApiService(retrofit: Retrofit): ScanApiService =
+        retrofit.create(ScanApiService::class.java)
 }

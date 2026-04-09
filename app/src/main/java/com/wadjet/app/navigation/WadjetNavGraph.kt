@@ -17,6 +17,11 @@ import com.wadjet.feature.dictionary.screen.DictionaryScreen
 import com.wadjet.feature.dictionary.screen.LessonScreen
 import com.wadjet.feature.dictionary.LessonViewModel
 import com.wadjet.feature.landing.screen.LandingScreen
+import com.wadjet.feature.scan.HistoryViewModel
+import com.wadjet.feature.scan.ScanViewModel
+import com.wadjet.feature.scan.screen.ScanHistoryScreen
+import com.wadjet.feature.scan.screen.ScanResultScreen
+import com.wadjet.feature.scan.screen.ScanScreen
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,9 +62,38 @@ fun WadjetNavGraph(
             )
         }
 
-        // Placeholder destinations — implemented in later phases
-        composable<Route.Scan> { PlaceholderScreen("Scan") }
-        composable<Route.ScanHistory> { PlaceholderScreen("Scan History") }
+        // Scan
+        composable<Route.Scan> {
+            val viewModel: ScanViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+
+            if (state.result != null) {
+                ScanResultScreen(
+                    result = state.result!!,
+                    onScanAgain = { viewModel.resetScan() },
+                    onBack = { navController.popBackStack() },
+                )
+            } else {
+                ScanScreen(
+                    state = state,
+                    onImageCaptured = { viewModel.onImageCaptured(it) },
+                    onImageSelected = { viewModel.onImageSelected(it) },
+                    onNavigateToHistory = { navController.navigate(Route.ScanHistory) },
+                    onBack = { navController.popBackStack() },
+                )
+            }
+        }
+
+        composable<Route.ScanHistory> {
+            val viewModel: HistoryViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            ScanHistoryScreen(
+                state = state,
+                onScanTap = { /* TODO: load cached result */ },
+                onDelete = { viewModel.deleteScan(it) },
+                onBack = { navController.popBackStack() },
+            )
+        }
         composable<Route.Dictionary> {
             DictionaryScreen(
                 onNavigateToLesson = { level -> navController.navigate(Route.Lesson(level)) },

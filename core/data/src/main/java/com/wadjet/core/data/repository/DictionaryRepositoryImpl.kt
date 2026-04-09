@@ -155,7 +155,7 @@ class DictionaryRepositoryImpl @Inject constructor(
     }
 }
 
-class ApiException(message: String) : Exception(message)
+internal class ApiException(message: String) : Exception(message)
 
 private fun SignDetailDto.toDomain() = Sign(
     code = code,

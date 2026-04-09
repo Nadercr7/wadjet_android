@@ -3,6 +3,7 @@ package com.wadjet.core.database.di
 import android.content.Context
 import androidx.room.Room
 import com.wadjet.core.database.WadjetDatabase
+import com.wadjet.core.database.dao.ScanResultDao
 import com.wadjet.core.database.dao.SignDao
 import dagger.Module
 import dagger.Provides
@@ -24,4 +25,7 @@ object DatabaseModule {
 
     @Provides
     fun provideSignDao(db: WadjetDatabase): SignDao = db.signDao()
+
+    @Provides
+    fun provideScanResultDao(db: WadjetDatabase): ScanResultDao = db.scanResultDao()
 }
