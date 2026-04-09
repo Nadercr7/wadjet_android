@@ -28,6 +28,7 @@ import com.wadjet.feature.explore.screen.IdentifyScreen
 import com.wadjet.feature.explore.screen.LandmarkDetailScreen
 import com.wadjet.feature.feedback.FeedbackViewModel
 import com.wadjet.feature.feedback.screen.FeedbackScreen
+import com.wadjet.feature.landing.LandingViewModel
 import com.wadjet.feature.landing.screen.LandingScreen
 import com.wadjet.feature.scan.HistoryViewModel
 import com.wadjet.feature.scan.ScanViewModel
@@ -88,11 +89,16 @@ fun WadjetNavGraph(
         }
 
         composable<Route.Landing> {
+            val viewModel: LandingViewModel = hiltViewModel()
+            val landingState by viewModel.state.collectAsStateWithLifecycle()
             LandingScreen(
+                state = landingState,
                 onNavigateToScan = { navController.navigate(Route.Scan) },
                 onNavigateToExplore = { navController.navigate(Route.Explore) },
                 onNavigateToDictionary = { navController.navigate(Route.Dictionary) },
                 onNavigateToStories = { navController.navigate(Route.Stories) },
+                onNavigateToChat = { navController.navigate(Route.Chat) },
+                onNavigateToStoryReader = { storyId -> navController.navigate(Route.StoryReader(storyId)) },
             )
         }
 
