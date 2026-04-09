@@ -1,20 +1,15 @@
 package com.wadjet.app.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.toRoute
-import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.feature.auth.screen.WelcomeScreen
 import com.wadjet.feature.chat.ChatViewModel
 import com.wadjet.feature.chat.screen.ChatScreen
+import com.wadjet.feature.dashboard.DashboardViewModel
+import com.wadjet.feature.dashboard.screen.DashboardScreen
 import com.wadjet.feature.dictionary.screen.DictionaryScreen
 import com.wadjet.feature.dictionary.screen.LessonScreen
 import com.wadjet.feature.dictionary.LessonViewModel
@@ -24,12 +19,16 @@ import com.wadjet.feature.explore.IdentifyViewModel
 import com.wadjet.feature.explore.screen.ExploreScreen
 import com.wadjet.feature.explore.screen.IdentifyScreen
 import com.wadjet.feature.explore.screen.LandmarkDetailScreen
+import com.wadjet.feature.feedback.FeedbackViewModel
+import com.wadjet.feature.feedback.screen.FeedbackScreen
 import com.wadjet.feature.landing.screen.LandingScreen
 import com.wadjet.feature.scan.HistoryViewModel
 import com.wadjet.feature.scan.ScanViewModel
 import com.wadjet.feature.scan.screen.ScanHistoryScreen
 import com.wadjet.feature.scan.screen.ScanResultScreen
 import com.wadjet.feature.scan.screen.ScanScreen
+import com.wadjet.feature.settings.SettingsViewModel
+import com.wadjet.feature.settings.screen.SettingsScreen
 import com.wadjet.feature.stories.StoriesViewModel
 import com.wadjet.feature.stories.StoryReaderViewModel
 import com.wadjet.feature.stories.screen.StoriesScreen
@@ -224,22 +223,63 @@ fun WadjetNavGraph(
             )
         }
 
-        composable<Route.Dashboard> { PlaceholderScreen("Dashboard") }
-        composable<Route.Settings> { PlaceholderScreen("Settings") }
-        composable<Route.Feedback> { PlaceholderScreen("Feedback") }
-    }
-}
+        composable<Route.Dashboard> {
+            val viewModel: DashboardViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            DashboardScreen(
+                state = state,
+                onFavTabSelected = viewModel::selectFavTab,
+                onRemoveFavorite = viewModel::removeFavorite,
+                onRefresh = viewModel::refresh,
+                onSettings = { navController.navigate(Route.Settings) },
+                onBack = { navController.popBackStack() },
+            )
+        }
 
-@Composable
-private fun PlaceholderScreen(name: String) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = name,
-            color = WadjetColors.Gold,
-            style = MaterialTheme.typography.headlineMedium,
-        )
+        composable<Route.Settings> {
+            val viewModel: SettingsViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+
+            if (state.signedOut) {
+                androidx.compose.runtime.LaunchedEffect(Unit) {
+                    navController.navigate(Route.Welcome) {
+                        popUpTo(navController.graph.id) { inclusive = true }
+                    }
+                }
+            }
+
+            SettingsScreen(
+                state = state,
+                onStartEditName = viewModel::startEditName,
+                onUpdateEditName = viewModel::updateEditName,
+                onSaveName = viewModel::saveName,
+                onCancelEditName = viewModel::cancelEditName,
+                onUpdateCurrentPassword = viewModel::updateCurrentPassword,
+                onUpdateNewPassword = viewModel::updateNewPassword,
+                onChangePassword = viewModel::changePassword,
+                onTtsEnabledChanged = viewModel::setTtsEnabled,
+                onTtsSpeedChanged = viewModel::setTtsSpeed,
+                onClearCache = { /* TODO: clear Coil + app cache */ },
+                onSignOut = viewModel::signOut,
+                onFeedback = { navController.navigate(Route.Feedback) },
+                onDismissMessage = viewModel::dismissMessage,
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable<Route.Feedback> {
+            val viewModel: FeedbackViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            FeedbackScreen(
+                state = state,
+                onCategorySelected = viewModel::selectCategory,
+                onMessageChanged = viewModel::updateMessage,
+                onNameChanged = viewModel::updateName,
+                onEmailChanged = viewModel::updateEmail,
+                onSubmit = viewModel::submit,
+                onDismissError = viewModel::dismissError,
+                onBack = { navController.popBackStack() },
+            )
+        }
     }
 }
