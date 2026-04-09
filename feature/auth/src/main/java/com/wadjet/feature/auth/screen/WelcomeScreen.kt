@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -105,13 +105,13 @@ fun WelcomeScreen(
         }
 
         // Feature preview cards
-        LazyRow(
+        Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth(),
         ) {
-            item { FeatureCard("𓂀", "Scan", "Decode hieroglyphs") }
-            item { FeatureCard("𓊹", "Dictionary", "1,000+ signs") }
-            item { FeatureCard("🏛", "Explore", "260+ landmarks") }
+            FeatureCard("𓂀", "Scan", "Decode hieroglyphs", Modifier.weight(1f))
+            FeatureCard("𓊹", "Dictionary", "1,000+ signs", Modifier.weight(1f))
+            FeatureCard("🏛", "Explore", "260+ landmarks", Modifier.weight(1f))
         }
 
         // Auth buttons
@@ -258,9 +258,9 @@ fun WelcomeScreen(
 }
 
 @Composable
-private fun FeatureCard(glyph: String, title: String, subtitle: String) {
+private fun FeatureCard(glyph: String, title: String, subtitle: String, modifier: Modifier = Modifier) {
     WadjetCard(
-        modifier = Modifier.size(width = 140.dp, height = 120.dp),
+        modifier = modifier.height(120.dp),
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
