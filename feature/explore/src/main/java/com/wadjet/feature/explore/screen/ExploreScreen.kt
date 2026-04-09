@@ -64,6 +64,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.core.designsystem.component.ShimmerCardList
 import com.wadjet.core.domain.model.Landmark
 import com.wadjet.feature.explore.CATEGORIES
 import com.wadjet.feature.explore.ExploreUiState
@@ -147,9 +148,10 @@ fun ExploreScreen(
             modifier = Modifier.fillMaxSize(),
         ) {
             if (state.isLoading && state.landmarks.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = WadjetColors.Gold)
-                }
+                ShimmerCardList(
+                    itemCount = 5,
+                    modifier = Modifier.padding(16.dp),
+                )
             } else if (state.landmarks.isEmpty() && !state.isLoading) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(

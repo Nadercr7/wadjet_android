@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -22,14 +23,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.wadjet.app.navigation.Route
 import com.wadjet.app.navigation.TopLevelDestination
 import com.wadjet.app.navigation.WadjetNavGraph
+import com.wadjet.core.common.network.NetworkMonitor
 import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.WadjetTheme
+import com.wadjet.core.designsystem.component.OfflineIndicator
 import com.wadjet.core.domain.repository.AuthRepository
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -40,6 +44,7 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var authRepository: AuthRepository
     @Inject @Named("webClientId") lateinit var webClientId: String
+    @Inject lateinit var networkMonitor: NetworkMonitor
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +54,7 @@ class MainActivity : ComponentActivity() {
                 WadjetApp(
                     isLoggedIn = authRepository.isLoggedIn,
                     webClientId = webClientId,
+                    networkMonitor = networkMonitor,
                 )
             }
         }
@@ -59,10 +65,12 @@ class MainActivity : ComponentActivity() {
 private fun WadjetApp(
     isLoggedIn: Boolean,
     webClientId: String,
+    networkMonitor: NetworkMonitor,
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+    val isOffline by networkMonitor.isOnline.collectAsStateWithLifecycle(initialValue = true)
 
     // Determine start destination based on auth state
     val startDestination: Route = if (isLoggedIn) Route.Landing else Route.Welcome
@@ -96,12 +104,16 @@ private fun WadjetApp(
             }
         },
     ) { innerPadding ->
-        WadjetNavGraph(
-            navController = navController,
-            startDestination = startDestination,
-            webClientId = webClientId,
-            modifier = Modifier.padding(innerPadding),
-        )
+        Column(modifier = Modifier.padding(innerPadding)) {
+            OfflineIndicator(isOffline = !isOffline)
+
+            WadjetNavGraph(
+                navController = navController,
+                startDestination = startDestination,
+                webClientId = webClientId,
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 }
 

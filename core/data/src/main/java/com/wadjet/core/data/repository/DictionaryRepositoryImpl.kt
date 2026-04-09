@@ -38,21 +38,39 @@ class DictionaryRepositoryImpl @Inject constructor(
         page: Int,
         perPage: Int,
     ): Result<SignPage> = suspendRunCatching {
-        val response = dictionaryApi.getSigns(
-            category = category,
-            search = search,
-            type = type,
-            page = page,
-            perPage = perPage,
-        )
-        if (response.isSuccessful) {
-            val body = response.body()!!
-            val signs = body.signs.map { it.toDomain() }
-            // Cache signs for offline search
-            signDao.insertAll(body.signs.map { it.toEntity() })
-            SignPage(signs = signs, total = body.total, page = body.page, totalPages = body.totalPages)
-        } else {
-            throw ApiException("Failed to load signs: ${response.code()}")
+        try {
+            val response = dictionaryApi.getSigns(
+                category = category,
+                search = search,
+                type = type,
+                page = page,
+                perPage = perPage,
+            )
+            if (response.isSuccessful) {
+                val body = response.body()!!
+                val signs = body.signs.map { it.toDomain() }
+                // Cache signs for offline search
+                signDao.insertAll(body.signs.map { it.toEntity() })
+                SignPage(signs = signs, total = body.total, page = body.page, totalPages = body.totalPages)
+            } else {
+                throw ApiException("Failed to load signs: ${response.code()}")
+            }
+        } catch (e: java.io.IOException) {
+            // Offline fallback — serve from Room cache
+            Timber.w(e, "Network unavailable, falling back to cached signs")
+            val limit = perPage
+            val offset = (page - 1) * perPage
+            val cached = when {
+                category != null && type != null -> signDao.getByFilter(category, type, limit, offset)
+                category != null -> signDao.getByCategory(category, limit, offset)
+                type != null -> signDao.getByType(type, limit, offset)
+                else -> signDao.getAll(limit, offset)
+            }
+            if (cached.isNotEmpty()) {
+                SignPage(signs = cached.map { it.toDomain() }, total = cached.size, page = page, totalPages = 1)
+            } else {
+                throw e
+            }
         }
     }
 

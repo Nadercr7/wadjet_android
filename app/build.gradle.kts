@@ -96,12 +96,19 @@ dependencies {
     implementation(libs.compose.material.icons)
     implementation(libs.navigation.compose)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.lifecycle.runtime.compose)
 
     // AndroidX
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.core.splashscreen)
     implementation(libs.kotlinx.serialization.json)
+
+    // Coil (for SingletonImageLoader.Factory in Application)
+    implementation(libs.coil.compose)
+
+    // Timber
+    implementation(libs.timber)
 
     // Testing
     testImplementation(libs.junit)

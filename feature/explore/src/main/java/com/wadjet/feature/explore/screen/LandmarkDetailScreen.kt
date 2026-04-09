@@ -59,6 +59,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.core.designsystem.component.ShimmerDetail
 import com.wadjet.core.domain.model.LandmarkDetail
 import com.wadjet.core.domain.model.LandmarkImage
 import com.wadjet.core.domain.model.Recommendation
@@ -115,9 +116,7 @@ fun LandmarkDetailScreen(
 
         when {
             state.isLoading -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = WadjetColors.Gold)
-                }
+                ShimmerDetail(modifier = Modifier.padding(16.dp))
             }
             state.error != null -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

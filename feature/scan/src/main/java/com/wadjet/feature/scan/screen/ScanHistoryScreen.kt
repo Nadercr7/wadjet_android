@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.core.designsystem.component.ShimmerCardList
 import com.wadjet.core.domain.model.ScanHistorySummary
 import com.wadjet.feature.scan.HistoryUiState
 import java.io.File
@@ -78,12 +79,10 @@ fun ScanHistoryScreen(
 
         when {
             state.isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator(color = WadjetColors.Gold)
-                }
+                ShimmerCardList(
+                    itemCount = 5,
+                    modifier = Modifier.padding(16.dp),
+                )
             }
 
             state.items.isEmpty() -> {

@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import com.wadjet.core.designsystem.GardinerCodeStyle
 import com.wadjet.core.designsystem.HieroglyphStyle
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.core.designsystem.component.ShimmerGrid
 import com.wadjet.core.designsystem.component.WadjetTextField
 import com.wadjet.core.domain.model.Sign
 import com.wadjet.feature.dictionary.BrowseUiState
@@ -127,12 +128,10 @@ fun BrowseTab(
 
         // Sign grid
         if (state.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator(color = WadjetColors.Gold)
-            }
+            ShimmerGrid(
+                itemCount = 6,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
         } else if (state.signs.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),

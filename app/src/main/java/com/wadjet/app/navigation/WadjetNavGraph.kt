@@ -1,5 +1,12 @@
 package com.wadjet.app.navigation
 
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -48,6 +55,22 @@ fun WadjetNavGraph(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier,
+        enterTransition = {
+            slideInHorizontally(tween(300, easing = EaseOut)) { it / 4 } +
+                fadeIn(tween(300))
+        },
+        exitTransition = {
+            slideOutHorizontally(tween(300, easing = EaseIn)) { -it / 4 } +
+                fadeOut(tween(150))
+        },
+        popEnterTransition = {
+            slideInHorizontally(tween(300, easing = EaseOut)) { -it / 4 } +
+                fadeIn(tween(300))
+        },
+        popExitTransition = {
+            slideOutHorizontally(tween(300, easing = EaseIn)) { it / 4 } +
+                fadeOut(tween(150))
+        },
     ) {
         composable<Route.Splash> {
             // Splash handled by SplashViewModel in MainActivity — this is a fallback

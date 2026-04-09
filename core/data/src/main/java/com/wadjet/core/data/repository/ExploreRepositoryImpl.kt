@@ -48,28 +48,49 @@ class ExploreRepositoryImpl @Inject constructor(
         page: Int,
         perPage: Int,
     ): Result<LandmarkPage> = suspendRunCatching {
-        val response = landmarkApi.getLandmarks(
-            category = category,
-            city = city,
-            search = search,
-            page = page,
-            perPage = perPage,
-        )
-        if (response.isSuccessful) {
-            val body = response.body()!!
-            // Cache first page to Room
-            if (page == 1 && search == null) {
-                val entities = body.landmarks.map { it.toEntity() }
-                landmarkDao.insertAll(entities)
-            }
-            LandmarkPage(
-                landmarks = body.landmarks.map { it.toDomain() },
-                total = body.total,
-                page = body.page,
-                totalPages = body.totalPages,
+        try {
+            val response = landmarkApi.getLandmarks(
+                category = category,
+                city = city,
+                search = search,
+                page = page,
+                perPage = perPage,
             )
-        } else {
-            throw ApiException("Failed to load landmarks: ${response.code()}")
+            if (response.isSuccessful) {
+                val body = response.body()!!
+                // Cache first page to Room
+                if (page == 1 && search == null) {
+                    val entities = body.landmarks.map { it.toEntity() }
+                    landmarkDao.insertAll(entities)
+                }
+                LandmarkPage(
+                    landmarks = body.landmarks.map { it.toDomain() },
+                    total = body.total,
+                    page = body.page,
+                    totalPages = body.totalPages,
+                )
+            } else {
+                throw ApiException("Failed to load landmarks: ${response.code()}")
+            }
+        } catch (e: java.io.IOException) {
+            // Offline fallback — serve from Room cache
+            Timber.w(e, "Network unavailable, falling back to cached landmarks")
+            val cached = landmarkDao.getFiltered(
+                category = category,
+                city = city,
+                limit = perPage,
+                offset = (page - 1) * perPage,
+            )
+            if (cached.isNotEmpty()) {
+                LandmarkPage(
+                    landmarks = cached.map { it.toDomain() },
+                    total = cached.size,
+                    page = page,
+                    totalPages = 1,
+                )
+            } else {
+                throw e
+            }
         }
     }
 

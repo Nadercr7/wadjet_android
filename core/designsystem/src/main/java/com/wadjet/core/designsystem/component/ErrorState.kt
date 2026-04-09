@@ -33,7 +33,7 @@ fun ErrorState(
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = null,
+            contentDescription = "Error",
             modifier = Modifier.size(64.dp),
             tint = WadjetColors.TextMuted,
         )
