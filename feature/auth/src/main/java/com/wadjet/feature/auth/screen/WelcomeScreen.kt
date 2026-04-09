@@ -33,6 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs
 import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.WadjetTypography
 import com.wadjet.core.designsystem.HieroglyphStyle
@@ -113,7 +114,7 @@ fun WelcomeScreen(
         ) {
             FeatureCard("𓂀", "Scan", "Decode hieroglyphs", Modifier.weight(1f))
             FeatureCard("𓊹", "Dictionary", "1,000+ signs", Modifier.weight(1f))
-            FeatureCard("🏛", "Explore", "260+ landmarks", Modifier.weight(1f))
+            FeatureCard("𓉐", "Explore", "260+ landmarks", Modifier.weight(1f))
         }
 
         // Auth buttons
@@ -283,7 +284,12 @@ private fun FeatureCard(glyph: String, title: String, subtitle: String, modifier
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.Center,
         ) {
-            Text(text = glyph, style = MaterialTheme.typography.headlineMedium)
+            Text(
+                text = glyph,
+                style = MaterialTheme.typography.headlineMedium,
+                fontFamily = NotoSansEgyptianHieroglyphs,
+                color = WadjetColors.Gold,
+            )
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = title, style = MaterialTheme.typography.titleSmall, color = WadjetColors.Gold)
             Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = WadjetColors.TextMuted)

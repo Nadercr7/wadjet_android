@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs
 import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.designsystem.component.WadjetCard
@@ -53,7 +54,7 @@ fun LandingScreen(
         // Landmarks path card
         item {
             PathCard(
-                glyph = "🏛",
+                glyph = "𓉐",
                 title = "Landmarks",
                 subtitle = "Explore Sites & Monuments",
                 buttonText = "Start Exploring",
@@ -77,25 +78,25 @@ fun LandingScreen(
             ) {
                 QuickAction(
                     modifier = Modifier.weight(1f),
-                    icon = "📷",
+                    icon = "𓂀",
                     label = "Scan",
                     onClick = onNavigateToScan,
                 )
                 QuickAction(
                     modifier = Modifier.weight(1f),
-                    icon = "📖",
+                    icon = "𓊹",
                     label = "Dictionary",
                     onClick = onNavigateToDictionary,
                 )
                 QuickAction(
                     modifier = Modifier.weight(1f),
-                    icon = "🧭",
+                    icon = "𓇯",
                     label = "Explore",
                     onClick = onNavigateToExplore,
                 )
                 QuickAction(
                     modifier = Modifier.weight(1f),
-                    icon = "📜",
+                    icon = "𓁟",
                     label = "Stories",
                     onClick = onNavigateToStories,
                 )
@@ -117,6 +118,8 @@ private fun PathCard(
             Text(
                 text = glyph,
                 style = MaterialTheme.typography.displayMedium,
+                fontFamily = NotoSansEgyptianHieroglyphs,
+                color = WadjetColors.Gold,
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
@@ -150,7 +153,12 @@ private fun QuickAction(
             modifier = Modifier.padding(12.dp),
             horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
         ) {
-            Text(text = icon, style = MaterialTheme.typography.titleLarge)
+            Text(
+                text = icon,
+                style = MaterialTheme.typography.titleLarge,
+                fontFamily = NotoSansEgyptianHieroglyphs,
+                color = WadjetColors.Gold,
+            )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = label,

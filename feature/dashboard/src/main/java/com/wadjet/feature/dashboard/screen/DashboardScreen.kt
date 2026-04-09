@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs
 import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.domain.model.DashboardStoryProgress
 import com.wadjet.core.domain.model.FavoriteItem
@@ -286,7 +287,12 @@ private fun ScanCard(
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("𓀀", fontSize = 28.sp)
+        Text(
+            text = "𓀀",
+            fontSize = 28.sp,
+            fontFamily = NotoSansEgyptianHieroglyphs,
+            color = WadjetColors.Gold,
+        )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "${scan.glyphCount} glyphs",

@@ -32,7 +32,7 @@ fun ShimmerEffect(modifier: Modifier = Modifier) {
             brush = Brush.linearGradient(
                 colors = listOf(
                     WadjetColors.Surface,
-                    WadjetColors.SurfaceAlt,
+                    WadjetColors.GoldMuted.copy(alpha = 0.15f),
                     WadjetColors.Surface,
                 ),
                 start = Offset(translateAnim, 0f),

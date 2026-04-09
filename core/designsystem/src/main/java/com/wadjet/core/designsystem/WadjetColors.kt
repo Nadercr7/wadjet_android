@@ -26,7 +26,7 @@ object WadjetColors {
     val TextDim = Color(0xFF7E7E7E)
     val Ivory = Color(0xFFF5F0E8)
     val Sand = Color(0xFFC4A265)
-    val Dust = Color(0xFFA89070)
+    val Dust = Color(0xFF8B7355)
 
     // Semantic
     val Success = Color(0xFF4CAF50)

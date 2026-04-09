@@ -53,17 +53,28 @@ fun WadjetGhostButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    isLoading: Boolean = false,
 ) {
     OutlinedButton(
         onClick = onClick,
         modifier = modifier.height(48.dp),
+        enabled = enabled && !isLoading,
         colors = ButtonDefaults.outlinedButtonColors(
             contentColor = WadjetColors.Gold,
         ),
         border = BorderStroke(1.dp, WadjetColors.Gold),
         shape = RoundedCornerShape(12.dp),
     ) {
-        Text(text, style = MaterialTheme.typography.labelLarge)
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                color = WadjetColors.Gold,
+                strokeWidth = 2.dp,
+            )
+        } else {
+            Text(text, style = MaterialTheme.typography.labelLarge)
+        }
     }
 }
 

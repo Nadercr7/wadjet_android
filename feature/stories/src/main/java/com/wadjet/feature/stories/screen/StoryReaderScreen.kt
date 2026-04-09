@@ -320,7 +320,12 @@ private fun SceneImage(
         } else if (isLoading) {
             Text("Generating scene...", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
         } else {
-            Text("📜", fontSize = 48.sp)
+            Text(
+                text = "𓁟",
+                fontSize = 48.sp,
+                fontFamily = com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs,
+                color = WadjetColors.Gold,
+            )
         }
     }
 }
