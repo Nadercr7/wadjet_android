@@ -44,7 +44,7 @@ class AuthInterceptor @Inject constructor(
         // If 401, try to refresh
         if (response.code == 401 && token != null) {
             response.close()
-            return handleTokenRefresh(chain, original)
+            return handleTokenRefresh(chain, original, token)
         }
 
         return response
@@ -73,12 +73,12 @@ class AuthInterceptor @Inject constructor(
         return response
     }
 
-    private fun handleTokenRefresh(chain: Interceptor.Chain, original: Request): Response {
+    private fun handleTokenRefresh(chain: Interceptor.Chain, original: Request, failedToken: String): Response {
         val newToken = runBlocking {
             mutex.withLock {
                 // Check if another thread already refreshed
                 val currentToken = tokenManager.accessToken
-                if (currentToken != null && currentToken != original.header("Authorization")?.removePrefix("Bearer ")) {
+                if (currentToken != null && currentToken != failedToken) {
                     return@withLock currentToken
                 }
 

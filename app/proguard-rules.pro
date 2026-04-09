@@ -45,4 +45,26 @@
 # ── ONNX Runtime ─────────────────────────────────────────────────────
 -keep class ai.onnxruntime.** { *; }
 -dontwarn ai.onnxruntime.**
+
+# ── Coil ─────────────────────────────────────────────────────────────
+-dontwarn coil3.**
+
+# ── Hilt / Dagger ────────────────────────────────────────────────────
+-dontwarn dagger.hilt.internal.**
+-keep class dagger.hilt.** { *; }
+-keep class * extends dagger.hilt.android.internal.managers.ViewComponentManager$FragmentContextWrapper { *; }
+
+# ── Google Sign-In / Credential Manager ──────────────────────────────
+-keep class com.google.android.libraries.identity.googleid.** { *; }
+-keep class androidx.credentials.** { *; }
+-dontwarn com.google.android.libraries.identity.googleid.**
+-dontwarn androidx.credentials.**
+
+# ── Enum serialization ───────────────────────────────────────────────
+-keepclassmembers class * extends java.lang.Enum {
+    <fields>;
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
 #-renamesourcefileattribute SourceFile
