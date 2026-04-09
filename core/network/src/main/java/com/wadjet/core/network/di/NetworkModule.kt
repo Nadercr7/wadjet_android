@@ -5,6 +5,7 @@ import com.wadjet.core.network.AuthInterceptor
 import com.wadjet.core.network.TokenManager
 import com.wadjet.core.network.api.AuthApiService
 import com.wadjet.core.network.api.AudioApiService
+import com.wadjet.core.network.api.ChatApiService
 import com.wadjet.core.network.api.DictionaryApiService
 import com.wadjet.core.network.api.LandmarkApiService
 import com.wadjet.core.network.api.ScanApiService
@@ -101,4 +102,9 @@ object NetworkModule {
     @Singleton
     fun provideLandmarkApiService(retrofit: Retrofit): LandmarkApiService =
         retrofit.create(LandmarkApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideChatApiService(retrofit: Retrofit): ChatApiService =
+        retrofit.create(ChatApiService::class.java)
 }

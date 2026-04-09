@@ -31,6 +31,9 @@ dependencies {
     implementation(project(":core:firebase"))
     implementation(project(":core:common"))
 
+    // OkHttp SSE (for chat streaming)
+    implementation(libs.okhttp.sse)
+
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

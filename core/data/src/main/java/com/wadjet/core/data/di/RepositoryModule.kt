@@ -1,10 +1,12 @@
 package com.wadjet.core.data.di
 
 import com.wadjet.core.data.repository.AuthRepositoryImpl
+import com.wadjet.core.data.repository.ChatRepositoryImpl
 import com.wadjet.core.data.repository.DictionaryRepositoryImpl
 import com.wadjet.core.data.repository.ExploreRepositoryImpl
 import com.wadjet.core.data.repository.ScanRepositoryImpl
 import com.wadjet.core.domain.repository.AuthRepository
+import com.wadjet.core.domain.repository.ChatRepository
 import com.wadjet.core.domain.repository.DictionaryRepository
 import com.wadjet.core.domain.repository.ExploreRepository
 import com.wadjet.core.domain.repository.ScanRepository
@@ -33,4 +35,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindExploreRepository(impl: ExploreRepositoryImpl): ExploreRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindChatRepository(impl: ChatRepositoryImpl): ChatRepository
 }

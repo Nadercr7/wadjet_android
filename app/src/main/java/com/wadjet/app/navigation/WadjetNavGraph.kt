@@ -13,6 +13,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.feature.auth.screen.WelcomeScreen
+import com.wadjet.feature.chat.ChatViewModel
+import com.wadjet.feature.chat.screen.ChatScreen
 import com.wadjet.feature.dictionary.screen.DictionaryScreen
 import com.wadjet.feature.dictionary.screen.LessonScreen
 import com.wadjet.feature.dictionary.LessonViewModel
@@ -161,7 +163,36 @@ fun WadjetNavGraph(
                 onBack = { navController.popBackStack() },
             )
         }
-        composable<Route.Chat> { PlaceholderScreen("Thoth Chat") }
+        composable<Route.Chat> {
+            val viewModel: ChatViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            ChatScreen(
+                state = state,
+                onInputChanged = viewModel::updateInput,
+                onSend = { viewModel.sendMessage() },
+                onSpeak = viewModel::speakMessage,
+                onSttResult = viewModel::onSttResult,
+                onSetRecording = viewModel::setRecording,
+                onClearChat = viewModel::clearChat,
+                onDismissError = viewModel::dismissError,
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable<Route.ChatLandmark> {
+            val viewModel: ChatViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            ChatScreen(
+                state = state,
+                onInputChanged = viewModel::updateInput,
+                onSend = { viewModel.sendMessage() },
+                onSpeak = viewModel::speakMessage,
+                onSttResult = viewModel::onSttResult,
+                onSetRecording = viewModel::setRecording,
+                onClearChat = viewModel::clearChat,
+                onDismissError = viewModel::dismissError,
+                onBack = { navController.popBackStack() },
+            )
+        }
         composable<Route.Stories> { PlaceholderScreen("Stories") }
         composable<Route.Dashboard> { PlaceholderScreen("Dashboard") }
         composable<Route.Settings> { PlaceholderScreen("Settings") }
