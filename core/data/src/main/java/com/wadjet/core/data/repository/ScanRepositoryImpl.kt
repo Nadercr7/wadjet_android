@@ -7,7 +7,9 @@ import com.wadjet.core.domain.model.DetectedGlyph
 import com.wadjet.core.domain.model.ScanHistorySummary
 import com.wadjet.core.domain.model.ScanResult
 import com.wadjet.core.domain.repository.ScanRepository
+import com.wadjet.core.network.api.AudioApiService
 import com.wadjet.core.network.api.ScanApiService
+import com.wadjet.core.network.model.SpeakRequest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
@@ -24,6 +26,7 @@ import javax.inject.Singleton
 @Singleton
 class ScanRepositoryImpl @Inject constructor(
     private val scanApi: ScanApiService,
+    private val audioApi: AudioApiService,
     private val scanResultDao: ScanResultDao,
     private val json: Json,
 ) : ScanRepository {
@@ -87,6 +90,15 @@ class ScanRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun speak(text: String, lang: String, context: String): Result<ByteArray?> = suspendRunCatching {
+        val response = audioApi.speak(SpeakRequest(text = text, lang = lang, context = context))
+        when (response.code()) {
+            200 -> response.body()?.bytes()
+            204 -> null
+            else -> throw Exception("TTS failed: ${response.code()}")
+        }
+    }
+
     private fun com.wadjet.core.network.model.ScanResponse.toDomain() = ScanResult(
         numDetections = numDetections,
         glyphs = glyphs.map {
@@ -100,6 +112,7 @@ class ScanRepositoryImpl @Inject constructor(
         transliteration = transliteration,
         gardinerSequence = gardinerSequence,
         readingDirection = readingDirection,
+        layoutMode = layoutMode,
         translationEn = translationEn,
         translationAr = translationAr,
         annotatedImageBase64 = annotatedImage,
@@ -110,6 +123,14 @@ class ScanRepositoryImpl @Inject constructor(
         totalMs = totalMs,
         mode = mode,
         pipeline = pipeline,
+        aiNotes = aiReading?.notes,
+        aiUnverified = aiUnverified == true,
+        qualityHints = qualityHints,
+        confidenceSummary = confidenceSummary?.let {
+            com.wadjet.core.domain.model.ConfidenceSummary(
+                avg = it.avg, min = it.min, max = it.max, lowCount = it.lowCount,
+            )
+        },
     )
 
     private fun ScanResultEntity.toSummary() = ScanHistorySummary(
@@ -134,6 +155,7 @@ class ScanRepositoryImpl @Inject constructor(
         val transliteration: String?,
         val gardinerSequence: String?,
         val readingDirection: String?,
+        val layoutMode: String? = null,
         val translationEn: String?,
         val translationAr: String?,
         val annotatedImageBase64: String?,
@@ -144,6 +166,9 @@ class ScanRepositoryImpl @Inject constructor(
         val totalMs: Long,
         val mode: String,
         val pipeline: String?,
+        val aiNotes: String? = null,
+        val aiUnverified: Boolean = false,
+        val qualityHints: List<String> = emptyList(),
     )
 
     @kotlinx.serialization.Serializable
@@ -167,6 +192,7 @@ class ScanRepositoryImpl @Inject constructor(
         transliteration = transliteration,
         gardinerSequence = gardinerSequence,
         readingDirection = readingDirection,
+        layoutMode = layoutMode,
         translationEn = translationEn,
         translationAr = translationAr,
         annotatedImageBase64 = annotatedImageBase64,
@@ -177,6 +203,9 @@ class ScanRepositoryImpl @Inject constructor(
         totalMs = totalMs,
         mode = mode,
         pipeline = pipeline,
+        aiNotes = aiNotes,
+        aiUnverified = aiUnverified,
+        qualityHints = qualityHints,
     )
 }
 

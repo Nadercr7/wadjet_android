@@ -23,4 +23,9 @@ interface ChatRepository {
      * Speak text via server TTS. Returns WAV bytes, or null for 204 (use local TTS).
      */
     suspend fun speak(text: String, lang: String = "en"): Result<ByteArray?>
+
+    /**
+     * Transcribe audio via server STT (Groq Whisper). Returns transcribed text.
+     */
+    suspend fun transcribe(audioFile: java.io.File, lang: String = "en"): Result<String>
 }

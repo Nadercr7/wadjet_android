@@ -3,9 +3,11 @@ package com.wadjet.feature.scan
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.MediaPlayer
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wadjet.core.designsystem.component.TtsState
 import com.wadjet.core.domain.model.ScanResult
 import com.wadjet.core.domain.repository.ScanRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,6 +34,7 @@ data class ScanUiState(
     val savedScanId: Int? = null,
     val error: String? = null,
     val isLoading: Boolean = false,
+    val ttsStates: Map<String, TtsState> = emptyMap(),
 )
 
 sealed class ScanEvent {
@@ -50,6 +53,66 @@ class ScanViewModel @Inject constructor(
 
     private val _events = MutableSharedFlow<ScanEvent>()
     val events: SharedFlow<ScanEvent> = _events.asSharedFlow()
+
+    private var mediaPlayer: MediaPlayer? = null
+
+    fun speak(key: String, text: String, lang: String = "en") {
+        val current = _state.value.ttsStates[key]
+        if (current == TtsState.PLAYING || current == TtsState.LOADING) {
+            stopTts(key)
+            return
+        }
+        _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.LOADING)) }
+        viewModelScope.launch {
+            scanRepository.speak(text, lang, "scan_pronunciation").onSuccess { bytes ->
+                if (bytes != null) {
+                    playWavBytes(key, bytes)
+                } else {
+                    // 204 — signal local TTS fallback
+                    _state.update {
+                        it.copy(
+                            ttsStates = it.ttsStates + (key to TtsState.IDLE),
+                            error = "LOCAL_TTS:$lang:$text",
+                        )
+                    }
+                }
+            }.onFailure {
+                Timber.e(it, "Scan TTS failed for key=$key")
+                _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) }
+            }
+        }
+    }
+
+    private fun playWavBytes(key: String, bytes: ByteArray) {
+        stopMediaPlayer()
+        try {
+            val tmp = File.createTempFile("tts_", ".wav", context.cacheDir)
+            tmp.writeBytes(bytes)
+            mediaPlayer = MediaPlayer().apply {
+                setDataSource(tmp.absolutePath)
+                prepare()
+                setOnCompletionListener {
+                    _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) }
+                    stopMediaPlayer()
+                }
+                start()
+            }
+            _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.PLAYING)) }
+        } catch (e: Exception) {
+            Timber.e(e, "MediaPlayer failed")
+            _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.IDLE)) }
+        }
+    }
+
+    private fun stopTts(key: String) {
+        stopMediaPlayer()
+        _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.IDLE)) }
+    }
+
+    private fun stopMediaPlayer() {
+        mediaPlayer?.apply { if (isPlaying) stop(); release() }
+        mediaPlayer = null
+    }
 
     fun onImageCaptured(file: File) {
         viewModelScope.launch {

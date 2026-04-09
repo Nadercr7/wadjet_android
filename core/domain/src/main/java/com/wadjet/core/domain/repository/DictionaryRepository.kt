@@ -15,13 +15,14 @@ interface DictionaryRepository {
         search: String? = null,
         page: Int = 1,
         perPage: Int = 30,
+        lang: String = "en",
     ): Result<SignPage>
 
-    suspend fun getSign(code: String): Result<Sign>
+    suspend fun getSign(code: String, lang: String = "en"): Result<Sign>
 
-    suspend fun getCategories(): Result<List<Category>>
+    suspend fun getCategories(lang: String = "en"): Result<List<Category>>
 
-    suspend fun getLesson(level: Int): Result<Lesson>
+    suspend fun getLesson(level: Int, lang: String = "en"): Result<Lesson>
 
     suspend fun write(text: String, mode: String): Result<WriteResult>
 

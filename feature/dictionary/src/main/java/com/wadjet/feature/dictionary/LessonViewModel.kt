@@ -43,9 +43,10 @@ class LessonViewModel @Inject constructor(
     }
 
     private fun loadLesson() {
+        val lang = if (java.util.Locale.getDefault().language == "ar") "ar" else "en"
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
-            repository.getLesson(level)
+            repository.getLesson(level, lang = lang)
                 .onSuccess { lesson ->
                     _state.update { it.copy(lesson = lesson, isLoading = false) }
                 }

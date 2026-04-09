@@ -108,7 +108,7 @@ fun DictionaryScreen(
         ) {
             SignDetailSheet(
                 sign = browseState.selectedSign!!,
-                onSpeak = { /* TTS wired in later phase */ },
+                onSpeak = { text -> dictionaryViewModel.speakSign(text) },
             )
         }
     }

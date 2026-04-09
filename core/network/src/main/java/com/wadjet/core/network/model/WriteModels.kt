@@ -44,4 +44,12 @@ data class SpeakRequest(
     val text: String,
     val lang: String = "en",
     val context: String = "dictionary",
+    val voice: String? = null,
+    val style: String? = null,
+)
+
+@Serializable
+data class SttResponse(
+    val text: String,
+    val language: String = "en",
 )

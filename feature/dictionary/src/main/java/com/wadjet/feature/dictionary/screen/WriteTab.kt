@@ -45,12 +45,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wadjet.core.designsystem.GardinerCodeStyle
 import com.wadjet.core.designsystem.HieroglyphStyle
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.core.designsystem.component.StreamingDots
 import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.designsystem.component.WadjetTextField
 import com.wadjet.core.domain.model.PaletteSign
@@ -133,6 +135,35 @@ fun WriteTab(
             )
         }
 
+        // Realtime preview
+        if (state.result == null && state.inputText.isNotBlank()) {
+            Spacer(Modifier.height(12.dp))
+            if (state.isPreviewLoading) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    StreamingDots()
+                }
+            } else if (state.preview != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(WadjetColors.Surface.copy(alpha = 0.5f))
+                        .padding(12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = state.preview.hieroglyphs,
+                        style = HieroglyphStyle.copy(fontSize = 36.sp),
+                        textAlign = TextAlign.Center,
+                        color = WadjetColors.Gold.copy(alpha = 0.6f),
+                    )
+                }
+            }
+        }
+
         // Result
         val result = state.result
         if (result != null) {
@@ -155,6 +186,23 @@ fun WriteTab(
                 )
             }
 
+            // MdC output
+            val mdc = result.mdc
+            if (!mdc.isNullOrBlank()) {
+                Spacer(Modifier.height(8.dp))
+                Text("MdC:", style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
+                Text(
+                    text = mdc,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+                    color = WadjetColors.Sand,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(WadjetColors.Surface)
+                        .padding(8.dp),
+                )
+            }
+
             // Glyph breakdown
             if (result.glyphs.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
@@ -168,7 +216,17 @@ fun WriteTab(
                         Spacer(Modifier.width(8.dp))
                         Text(g.gardinerCode, style = GardinerCodeStyle)
                         Spacer(Modifier.width(8.dp))
-                        Text(g.meaning.orEmpty(), style = MaterialTheme.typography.bodySmall, color = WadjetColors.TextMuted)
+                        Column {
+                            g.transliteration?.let { t ->
+                                Text(t, style = MaterialTheme.typography.bodySmall, color = WadjetColors.Sand)
+                            }
+                            g.phoneticValue?.let { p ->
+                                Text("/$p/", style = MaterialTheme.typography.bodySmall, color = WadjetColors.TextMuted)
+                            }
+                            g.meaning?.let { m ->
+                                Text(m, style = MaterialTheme.typography.bodySmall, color = WadjetColors.TextMuted)
+                            }
+                        }
                     }
                 }
             }

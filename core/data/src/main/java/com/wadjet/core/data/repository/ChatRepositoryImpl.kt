@@ -11,8 +11,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okhttp3.sse.EventSource
@@ -112,6 +115,21 @@ class ChatRepositoryImpl @Inject constructor(
             200 -> response.body()?.bytes()
             204 -> null // Use local TTS fallback
             else -> throw Exception("TTS failed: ${response.code()}")
+        }
+    }
+
+    override suspend fun transcribe(audioFile: java.io.File, lang: String): Result<String> = suspendRunCatching {
+        val filePart = MultipartBody.Part.createFormData(
+            "file",
+            audioFile.name,
+            audioFile.asRequestBody("audio/wav".toMediaType()),
+        )
+        val langPart = lang.toRequestBody("text/plain".toMediaType())
+        val response = audioApi.stt(filePart, langPart)
+        if (response.isSuccessful) {
+            response.body()?.text ?: ""
+        } else {
+            throw Exception("STT failed: ${response.code()}")
         }
     }
 }

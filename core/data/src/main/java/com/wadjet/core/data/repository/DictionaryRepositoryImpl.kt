@@ -37,6 +37,7 @@ class DictionaryRepositoryImpl @Inject constructor(
         search: String?,
         page: Int,
         perPage: Int,
+        lang: String,
     ): Result<SignPage> = suspendRunCatching {
         try {
             val response = dictionaryApi.getSigns(
@@ -45,6 +46,7 @@ class DictionaryRepositoryImpl @Inject constructor(
                 type = type,
                 page = page,
                 perPage = perPage,
+                lang = lang,
             )
             if (response.isSuccessful) {
                 val body = response.body()!!
@@ -74,8 +76,8 @@ class DictionaryRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getSign(code: String): Result<Sign> = suspendRunCatching {
-        val response = dictionaryApi.getSign(code)
+    override suspend fun getSign(code: String, lang: String): Result<Sign> = suspendRunCatching {
+        val response = dictionaryApi.getSign(code, lang = lang)
         if (response.isSuccessful) {
             val dto = response.body()!!
             signDao.insertAll(listOf(dto.toEntity()))
@@ -87,8 +89,8 @@ class DictionaryRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getCategories(): Result<List<Category>> = suspendRunCatching {
-        val response = dictionaryApi.getCategories()
+    override suspend fun getCategories(lang: String): Result<List<Category>> = suspendRunCatching {
+        val response = dictionaryApi.getCategories(lang = lang)
         if (response.isSuccessful) {
             response.body()!!.categories.map { Category(code = it.code, name = it.name, count = it.count) }
         } else {
@@ -96,8 +98,8 @@ class DictionaryRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getLesson(level: Int): Result<Lesson> = suspendRunCatching {
-        val response = dictionaryApi.getLesson(level)
+    override suspend fun getLesson(level: Int, lang: String): Result<Lesson> = suspendRunCatching {
+        val response = dictionaryApi.getLesson(level, lang = lang)
         if (response.isSuccessful) {
             val body = response.body()!!
             Lesson(

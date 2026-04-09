@@ -21,6 +21,24 @@ data class ScanResponse(
     @SerialName("annotated_image") val annotatedImage: String? = null,
     val mode: String = "auto",
     val pipeline: String? = null,
+    @SerialName("ai_reading") val aiReading: AiReadingDto? = null,
+    @SerialName("ai_unverified") val aiUnverified: Boolean? = null,
+    @SerialName("quality_hints") val qualityHints: List<String> = emptyList(),
+    @SerialName("confidence_summary") val confidenceSummary: ConfidenceSummaryDto? = null,
+)
+
+@Serializable
+data class AiReadingDto(
+    val notes: String? = null,
+    val provider: String? = null,
+)
+
+@Serializable
+data class ConfidenceSummaryDto(
+    val avg: Float = 0f,
+    val min: Float = 0f,
+    val max: Float = 0f,
+    @SerialName("low_count") val lowCount: Int = 0,
 )
 
 @Serializable

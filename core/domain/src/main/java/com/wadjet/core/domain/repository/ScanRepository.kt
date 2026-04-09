@@ -11,4 +11,5 @@ interface ScanRepository {
     fun getScanHistory(): Flow<List<ScanHistorySummary>>
     suspend fun getScanResultJson(scanId: Int): Result<String>
     suspend fun deleteScan(scanId: Int): Result<Unit>
+    suspend fun speak(text: String, lang: String = "en", context: String = "scan"): Result<ByteArray?>
 }

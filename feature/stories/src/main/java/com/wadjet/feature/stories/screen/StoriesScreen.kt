@@ -223,6 +223,17 @@ private fun StoryCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     DifficultyBadge(story.difficulty)
+                    if (story.glyphsTaught.isNotEmpty()) {
+                        Text(
+                            text = "${story.glyphsTaught.size} glyphs",
+                            color = WadjetColors.Gold,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(WadjetColors.Gold.copy(alpha = 0.15f))
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                        )
+                    }
                     Text(
                         text = "${story.estimatedMinutes}min",
                         color = WadjetColors.TextMuted,

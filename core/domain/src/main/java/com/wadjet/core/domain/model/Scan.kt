@@ -6,6 +6,7 @@ data class ScanResult(
     val transliteration: String?,
     val gardinerSequence: String?,
     val readingDirection: String?,
+    val layoutMode: String?,
     val translationEn: String?,
     val translationAr: String?,
     val annotatedImageBase64: String?,
@@ -16,6 +17,17 @@ data class ScanResult(
     val totalMs: Long,
     val mode: String,
     val pipeline: String?,
+    val aiNotes: String?,
+    val aiUnverified: Boolean,
+    val qualityHints: List<String>,
+    val confidenceSummary: ConfidenceSummary?,
+)
+
+data class ConfidenceSummary(
+    val avg: Float,
+    val min: Float,
+    val max: Float,
+    val lowCount: Int,
 )
 
 data class DetectedGlyph(

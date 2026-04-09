@@ -60,6 +60,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -255,6 +256,59 @@ fun StoryReaderScreen(
                             text = "Next →",
                             onClick = onNextChapter,
                         )
+                    }
+                }
+            }
+
+            // Completion screen (last chapter)
+            if (!state.canGoNext && state.totalChapters > 0) {
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    FadeUp(visible = true) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(
+                                            WadjetColors.Gold.copy(alpha = 0.15f),
+                                            WadjetColors.Surface,
+                                        ),
+                                    ),
+                                )
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Text(
+                                text = story.coverGlyph,
+                                fontSize = 64.sp,
+                                fontFamily = com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs,
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Story Complete",
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = WadjetColors.Gold,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceEvenly,
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text("${state.score}", color = WadjetColors.Gold, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                                    Text("Score", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                                }
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text("${state.glyphsLearned.size}", color = WadjetColors.Gold, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                                    Text("Glyphs", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(20.dp))
+                            ChapterNavButton(text = "Back to Stories", onClick = onBack)
+                        }
                     }
                 }
             }

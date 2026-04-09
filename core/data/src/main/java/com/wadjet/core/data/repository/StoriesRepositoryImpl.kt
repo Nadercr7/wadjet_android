@@ -76,6 +76,8 @@ class StoriesRepositoryImpl @Inject constructor(
                         index = ch.index,
                         titleEn = ch.title.en,
                         titleAr = ch.title.ar,
+                        ttsVoice = ch.ttsVoice,
+                        ttsStyle = ch.ttsStyle,
                         paragraphs = ch.paragraphs.map { p ->
                             Paragraph(
                                 textEn = p.text.en,
@@ -142,8 +144,8 @@ class StoriesRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun speakChapter(text: String): Result<ByteArray?> = suspendRunCatching {
-        val response = audioApi.speak(SpeakRequest(text = text, lang = "en", context = "story_narration"))
+    override suspend fun speakChapter(text: String, voice: String?, style: String?): Result<ByteArray?> = suspendRunCatching {
+        val response = audioApi.speak(SpeakRequest(text = text, lang = "en", context = "story_narration", voice = voice, style = style))
         when (response.code()) {
             200 -> response.body()?.bytes()
             204 -> null

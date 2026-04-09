@@ -135,7 +135,7 @@ class StoryReaderViewModel @Inject constructor(
         _state.update { it.copy(isSpeaking = true) }
 
         viewModelScope.launch {
-            storiesRepository.speakChapter(text).onSuccess { bytes ->
+            storiesRepository.speakChapter(text, voice = chapter.ttsVoice, style = chapter.ttsStyle).onSuccess { bytes ->
                 if (bytes != null) {
                     playWavBytes(bytes)
                 } else {

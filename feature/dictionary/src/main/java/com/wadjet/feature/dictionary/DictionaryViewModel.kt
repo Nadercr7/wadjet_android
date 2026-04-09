@@ -1,5 +1,6 @@
 package com.wadjet.feature.dictionary
 
+import android.media.MediaPlayer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.domain.model.Category
@@ -14,6 +15,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
+import java.io.File
 import javax.inject.Inject
 
 data class BrowseUiState(
@@ -41,6 +44,7 @@ class DictionaryViewModel @Inject constructor(
     val state: StateFlow<BrowseUiState> = _state.asStateFlow()
 
     private var searchJob: Job? = null
+    private val lang: String get() = if (java.util.Locale.getDefault().language == "ar") "ar" else "en"
 
     init {
         loadCategories()
@@ -49,7 +53,7 @@ class DictionaryViewModel @Inject constructor(
 
     private fun loadCategories() {
         viewModelScope.launch {
-            repository.getCategories()
+            repository.getCategories(lang = lang)
                 .onSuccess { cats -> _state.update { it.copy(categories = cats) } }
         }
     }
@@ -67,6 +71,7 @@ class DictionaryViewModel @Inject constructor(
                 type = current.selectedType,
                 search = current.searchQuery.ifBlank { null },
                 page = page,
+                lang = lang,
             ).onSuccess { result ->
                 _state.update {
                     it.copy(
@@ -115,5 +120,33 @@ class DictionaryViewModel @Inject constructor(
 
     fun dismissError() {
         _state.update { it.copy(error = null) }
+    }
+
+    fun speakSign(text: String) {
+        viewModelScope.launch {
+            repository.speakPhonetic(text).onSuccess { bytes ->
+                try {
+                    val tmp = File.createTempFile("dict_tts_", ".wav")
+                    tmp.writeBytes(bytes)
+                    mediaPlayer?.apply { if (isPlaying) stop(); release() }
+                    mediaPlayer = MediaPlayer().apply {
+                        setDataSource(tmp.absolutePath)
+                        prepare()
+                        setOnCompletionListener { release(); mediaPlayer = null }
+                        start()
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "Dictionary TTS playback failed")
+                }
+            }.onFailure { Timber.e(it, "Dictionary TTS failed") }
+        }
+    }
+
+    private var mediaPlayer: MediaPlayer? = null
+
+    override fun onCleared() {
+        super.onCleared()
+        mediaPlayer?.apply { if (isPlaying) stop(); release() }
+        mediaPlayer = null
     }
 }

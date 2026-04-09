@@ -111,6 +111,8 @@ fun WadjetNavGraph(
             if (result != null) {
                 ScanResultScreen(
                     result = result,
+                    ttsStates = state.ttsStates,
+                    onSpeak = { key, text, lang -> viewModel.speak(key, text, lang) },
                     onScanAgain = { viewModel.resetScan() },
                     onBack = { navController.popBackStack() },
                 )
@@ -205,6 +207,7 @@ fun WadjetNavGraph(
                 onSpeak = viewModel::speakMessage,
                 onSttResult = viewModel::onSttResult,
                 onSetRecording = viewModel::setRecording,
+                onStopStreaming = viewModel::stopStreaming,
                 onClearChat = viewModel::clearChat,
                 onDismissError = viewModel::dismissError,
                 onBack = { navController.popBackStack() },
@@ -220,6 +223,7 @@ fun WadjetNavGraph(
                 onSpeak = viewModel::speakMessage,
                 onSttResult = viewModel::onSttResult,
                 onSetRecording = viewModel::setRecording,
+                onStopStreaming = viewModel::stopStreaming,
                 onClearChat = viewModel::clearChat,
                 onDismissError = viewModel::dismissError,
                 onBack = { navController.popBackStack() },

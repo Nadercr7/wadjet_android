@@ -242,8 +242,32 @@ class ChatViewModel @Inject constructor(
         _state.update { it.copy(inputText = text, isRecording = false) }
     }
 
+    fun transcribeAudio(audioFile: File) {
+        viewModelScope.launch {
+            chatRepository.transcribe(audioFile).onSuccess { text ->
+                if (text.isNotBlank()) {
+                    _state.update { it.copy(inputText = text, isRecording = false) }
+                }
+            }.onFailure {
+                Timber.e(it, "Server STT failed, use local fallback")
+                _state.update { s -> s.copy(error = "STT_FALLBACK", isRecording = false) }
+            }
+        }
+    }
+
     fun setRecording(recording: Boolean) {
         _state.update { it.copy(isRecording = recording) }
+    }
+
+    fun stopStreaming() {
+        streamJob?.cancel()
+        streamJob = null
+        _state.update { s ->
+            val msgs = s.messages.map { m ->
+                if (m.isStreaming) m.copy(isStreaming = false) else m
+            }
+            s.copy(messages = msgs, isStreaming = false)
+        }
     }
 
     fun clearChat() {

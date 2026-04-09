@@ -52,6 +52,7 @@ import com.wadjet.core.designsystem.component.BadgeVariant
 import com.wadjet.core.designsystem.component.ImageUploadZone
 import com.wadjet.core.designsystem.component.WadjetBadge
 import com.wadjet.core.domain.model.IdentifyMatch
+import com.wadjet.core.domain.model.LandmarkDetail
 import com.wadjet.feature.explore.IdentifyUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -130,6 +131,7 @@ fun IdentifyScreen(
         if (state.result != null && !state.isLoading) {
             IdentifyResults(
                 matches = state.result.matches,
+                topDetail = if ((state.result.topMatch?.confidence ?: 0f) >= 0.80f) state.result.detail else null,
                 onMatchTap = onMatchTap,
                 onRetry = onRetry,
                 modifier = Modifier.align(Alignment.BottomCenter),
@@ -217,6 +219,7 @@ private fun IdentifyCameraPreview(onImageCaptured: (java.io.File) -> Unit) {
 @Composable
 private fun IdentifyResults(
     matches: List<IdentifyMatch>,
+    topDetail: LandmarkDetail?,
     onMatchTap: (String) -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
@@ -234,6 +237,47 @@ private fun IdentifyResults(
                 fontWeight = FontWeight.SemiBold,
             )
             Spacer(Modifier.height(12.dp))
+
+            // Inline preview for high-confidence top match
+            if (topDetail != null) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = WadjetColors.Night,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onMatchTap(topDetail.slug) },
+                ) {
+                    Column {
+                        topDetail.thumbnail?.let { url ->
+                            coil3.compose.AsyncImage(
+                                model = url,
+                                contentDescription = topDetail.name,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(140.dp)
+                                    .background(WadjetColors.Surface),
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            )
+                        }
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = topDetail.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = WadjetColors.Gold,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            topDetail.type?.let { type ->
+                                Text(
+                                    text = type,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = WadjetColors.Sand,
+                                )
+                            }
+                        }
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+            }
 
             if (matches.isEmpty()) {
                 Text(

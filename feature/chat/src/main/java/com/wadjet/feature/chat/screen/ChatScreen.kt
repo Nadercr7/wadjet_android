@@ -43,6 +43,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Stop
@@ -90,6 +91,7 @@ fun ChatScreen(
     onSpeak: (ChatMessage) -> Unit,
     onSttResult: (String) -> Unit,
     onSetRecording: (Boolean) -> Unit,
+    onStopStreaming: () -> Unit,
     onClearChat: () -> Unit,
     onDismissError: () -> Unit,
     onBack: () -> Unit,
@@ -164,8 +166,10 @@ fun ChatScreen(
                             style = MaterialTheme.typography.titleLarge,
                         )
                         if (state.landmarkSlug != null) {
+                            val displayName = state.landmarkSlug.replace("-", " ")
+                                .split(" ").joinToString(" ") { it.replaceFirstChar(Char::uppercase) }
                             Text(
-                                text = "Discussing: ${state.landmarkSlug.replace("-", " ")}",
+                                text = "Discussing: $displayName",
                                 color = WadjetColors.Sand,
                                 style = MaterialTheme.typography.bodySmall,
                                 maxLines = 1,
@@ -233,7 +237,12 @@ fun ChatScreen(
             // Quick suggestion chips (first message only — greeting + no user messages yet)
             val hasOnlyGreeting = state.messages.size <= 1 && !state.isStreaming
             if (hasOnlyGreeting) {
-                val suggestions = listOf(
+                val isArabic = Locale.getDefault().language == "ar"
+                val suggestions = if (isArabic) listOf(
+                    "أخبرني عن الأهرامات",
+                    "ما هي الهيروغليفية؟",
+                    "فراعنة مشهورين",
+                ) else listOf(
                     "Tell me about the pyramids",
                     "What are hieroglyphs?",
                     "Famous pharaohs",
@@ -271,6 +280,7 @@ fun ChatScreen(
                                 micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                             }
                         },
+                        onStopStreaming = onStopStreaming,
                         isStreaming = state.isStreaming,
                         isRecording = state.isRecording,
                     )
@@ -288,6 +298,7 @@ fun ChatScreen(
                             micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                         }
                     },
+                    onStopStreaming = onStopStreaming,
                     isStreaming = state.isStreaming,
                     isRecording = state.isRecording,
                 )
@@ -393,12 +404,25 @@ private fun ChatInputBar(
     onTextChanged: (String) -> Unit,
     onSend: () -> Unit,
     onMicTap: () -> Unit,
+    onStopStreaming: () -> Unit,
     isStreaming: Boolean,
     isRecording: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        // Character counter
+        if (text.isNotEmpty()) {
+            Text(
+                text = "${text.length}/2000",
+                color = if (text.length > 1800) WadjetColors.Error else WadjetColors.TextMuted,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(end = 16.dp, bottom = 2.dp),
+            )
+        }
     Row(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .background(WadjetColors.Surface)
             .padding(horizontal = 12.dp, vertical = 8.dp),
@@ -446,17 +470,28 @@ private fun ChatInputBar(
             )
         }
 
-        // Send button
-        IconButton(
-            onClick = onSend,
-            enabled = text.isNotBlank() && !isStreaming,
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Send,
-                contentDescription = "Send",
-                tint = if (text.isNotBlank() && !isStreaming) WadjetColors.Gold else WadjetColors.TextMuted,
-            )
+        // Send or Stop button
+        if (isStreaming) {
+            IconButton(onClick = onStopStreaming) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Stop generating",
+                    tint = WadjetColors.Error,
+                )
+            }
+        } else {
+            IconButton(
+                onClick = onSend,
+                enabled = text.isNotBlank(),
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    contentDescription = "Send",
+                    tint = if (text.isNotBlank()) WadjetColors.Gold else WadjetColors.TextMuted,
+                )
+            }
         }
+    }
     }
 }
 

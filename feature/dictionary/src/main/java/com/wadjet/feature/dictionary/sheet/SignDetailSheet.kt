@@ -176,9 +176,10 @@ fun SignDetailSheet(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
-            // TTS
-            if (!phonetic.isNullOrBlank()) {
-                IconButton(onClick = { onSpeak(phonetic) }) {
+            // TTS — prefer speech field (richer pronunciation), fall back to phonetic
+            val ttsText = sign.speech?.takeIf { it.isNotBlank() } ?: phonetic
+            if (!ttsText.isNullOrBlank()) {
+                IconButton(onClick = { onSpeak(ttsText) }) {
                     Icon(
                         Icons.Default.VolumeUp,
                         contentDescription = "Pronounce",

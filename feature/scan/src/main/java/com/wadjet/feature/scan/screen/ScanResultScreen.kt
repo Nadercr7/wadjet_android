@@ -62,6 +62,8 @@ import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.animation.FadeUp
 import com.wadjet.core.designsystem.animation.shineSweep
 import com.wadjet.core.designsystem.component.BadgeVariant
+import com.wadjet.core.designsystem.component.TtsButton
+import com.wadjet.core.designsystem.component.TtsState
 import com.wadjet.core.designsystem.component.WadjetBadge
 import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.domain.model.DetectedGlyph
@@ -74,6 +76,8 @@ import kotlinx.coroutines.delay
 @Composable
 fun ScanResultScreen(
     result: ScanResult,
+    ttsStates: Map<String, TtsState>,
+    onSpeak: (key: String, text: String, lang: String) -> Unit,
     onScanAgain: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -83,7 +87,7 @@ fun ScanResultScreen(
 
     // Stagger animation
     var visibleSections by remember { mutableStateOf(0) }
-    LaunchedEffect(Unit) { repeat(6) { delay(120); visibleSections++ } }
+    LaunchedEffect(Unit) { repeat(10) { delay(120); visibleSections++ } }
 
     Column(
         modifier = modifier
@@ -111,6 +115,51 @@ fun ScanResultScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
         ) {
+            // AI Unverified warning
+            if (result.aiUnverified) {
+                FadeUp(visible = visibleSections >= 1) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = WadjetColors.Warning.copy(alpha = 0.12f),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("⚠", fontSize = 18.sp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "AI verification unavailable — results may be less accurate",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = WadjetColors.Warning,
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
+
+            // Quality hints (shown when 0 detections)
+            if (result.qualityHints.isNotEmpty()) {
+                FadeUp(visible = visibleSections >= 1) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = WadjetColors.Surface,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text("Tips", style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            result.qualityHints.forEach { hint ->
+                                Text("• $hint", style = MaterialTheme.typography.bodySmall, color = WadjetColors.Text)
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
+
             // Annotated image with ShineSweep
             FadeUp(visible = visibleSections >= 1) {
                 Box(modifier = Modifier.shineSweep()) {
@@ -118,9 +167,9 @@ fun ScanResultScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Confidence badge
+            // Confidence badge + reading direction/layout badges
             FadeUp(visible = visibleSections >= 1) {
                 val avgConf = if (result.glyphs.isNotEmpty()) {
                     (result.glyphs.sumOf { (it.classConfidence * 100).toInt() } / result.glyphs.size)
@@ -130,14 +179,57 @@ fun ScanResultScreen(
                     avgConf >= 60 -> BadgeVariant.Gold
                     else -> BadgeVariant.Error
                 }
-                WadjetBadge(text = "Confidence: $avgConf%", variant = variant)
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    WadjetBadge(text = "Confidence: $avgConf%", variant = variant)
+                    result.readingDirection?.let { dir ->
+                        WadjetBadge(text = dir.replaceFirstChar { it.uppercase() }, variant = BadgeVariant.Muted)
+                    }
+                    result.layoutMode?.let { mode ->
+                        WadjetBadge(text = mode.replaceFirstChar { it.uppercase() }, variant = BadgeVariant.Muted)
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Confidence summary card
+            result.confidenceSummary?.let { cs ->
+                FadeUp(visible = visibleSections >= 2) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = WadjetColors.Surface,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                        ) {
+                            StatItem("Avg", "${(cs.avg * 100).toInt()}%")
+                            StatItem("Min", "${(cs.min * 100).toInt()}%")
+                            StatItem("Max", "${(cs.max * 100).toInt()}%")
+                            if (cs.lowCount > 0) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "${cs.lowCount}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = WadjetColors.Error,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                    Text("Low", style = MaterialTheme.typography.labelSmall, color = WadjetColors.TextMuted)
+                                }
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
             // Detected glyphs — FlowRow grid
             if (result.glyphs.isNotEmpty()) {
-                FadeUp(visible = visibleSections >= 2) {
+                FadeUp(visible = visibleSections >= 3) {
                     Column {
                         GoldDivider()
                         Spacer(modifier = Modifier.height(12.dp))
@@ -162,14 +254,20 @@ fun ScanResultScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Transliteration
+            // Transliteration + Gardiner sequence
             val translit = result.transliteration
             if (!translit.isNullOrBlank()) {
-                FadeUp(visible = visibleSections >= 3) {
+                FadeUp(visible = visibleSections >= 4) {
                     Column {
                         GoldDivider()
                         Spacer(modifier = Modifier.height(12.dp))
-                        SectionLabel("Transliteration")
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            SectionLabel("Transliteration")
+                            TtsButton(
+                                state = ttsStates["translit"] ?: TtsState.IDLE,
+                                onClick = { onSpeak("translit", translit, "en") },
+                            )
+                        }
                         Text(
                             text = translit,
                             style = MaterialTheme.typography.titleLarge.copy(
@@ -179,6 +277,13 @@ fun ScanResultScreen(
                             color = WadjetColors.Gold,
                             modifier = Modifier.padding(vertical = 4.dp),
                         )
+                        result.gardinerSequence?.let { seq ->
+                            Text(
+                                text = "Gardiner: $seq",
+                                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                                color = WadjetColors.Sand,
+                            )
+                        }
                     }
                 }
             }
@@ -188,7 +293,7 @@ fun ScanResultScreen(
             val translationAr = result.translationAr
             if (!translationEn.isNullOrBlank() || !translationAr.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))
-                FadeUp(visible = visibleSections >= 4) {
+                FadeUp(visible = visibleSections >= 5) {
                     Column {
                         GoldDivider()
                         Spacer(modifier = Modifier.height(12.dp))
@@ -197,6 +302,13 @@ fun ScanResultScreen(
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             SectionLabel(if (showArabic) "AR" else "EN")
+                            TtsButton(
+                                state = ttsStates[if (showArabic) "ar" else "en"] ?: TtsState.IDLE,
+                                onClick = {
+                                    if (showArabic) onSpeak("ar", translationAr.orEmpty(), "ar")
+                                    else onSpeak("en", translationEn.orEmpty(), "en")
+                                },
+                            )
                             Spacer(modifier = Modifier.weight(1f))
                             if (!translationAr.isNullOrBlank() && !translationEn.isNullOrBlank()) {
                                 Surface(
@@ -227,9 +339,32 @@ fun ScanResultScreen(
                 }
             }
 
+            // AI Notes card
+            val aiNotes = result.aiNotes
+            if (!aiNotes.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                FadeUp(visible = visibleSections >= 6) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = WadjetColors.Gold.copy(alpha = 0.08f),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            SectionLabel("AI Notes")
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = aiNotes,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = WadjetColors.Text,
+                            )
+                        }
+                    }
+                }
+            }
+
             // Timing stats
             Spacer(modifier = Modifier.height(16.dp))
-            FadeUp(visible = visibleSections >= 5) {
+            FadeUp(visible = visibleSections >= 7) {
                 Column {
                     GoldDivider()
                     Spacer(modifier = Modifier.height(12.dp))
@@ -239,7 +374,7 @@ fun ScanResultScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            FadeUp(visible = visibleSections >= 6) {
+            FadeUp(visible = visibleSections >= 8) {
                 WadjetButton(
                     text = "Scan Again",
                     onClick = onScanAgain,
@@ -331,9 +466,9 @@ private fun GlyphChip(glyph: DetectedGlyph) {
             LinearProgressIndicator(
                 progress = { glyph.classConfidence },
                 color = when {
-                    confidence >= 90 -> WadjetColors.Gold
-                    confidence >= 70 -> WadjetColors.GoldLight
-                    else -> WadjetColors.Sand
+                    confidence > 70 -> WadjetColors.Success
+                    confidence >= 40 -> WadjetColors.Gold
+                    else -> WadjetColors.Error
                 },
                 trackColor = WadjetColors.Night,
                 modifier = Modifier

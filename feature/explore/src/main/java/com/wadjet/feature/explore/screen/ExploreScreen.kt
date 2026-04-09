@@ -377,14 +377,33 @@ private fun LandmarkCard(
 
             // Text content
             Column(modifier = Modifier.padding(12.dp)) {
-                Text(
-                    text = landmark.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = WadjetColors.Text,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = landmark.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = WadjetColors.Text,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (landmark.featured) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Badge(text = "★ Featured", color = WadjetColors.Gold)
+                    }
+                }
+                landmark.nameAr?.let { ar ->
+                    Text(
+                        text = ar,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = WadjetColors.Sand,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
