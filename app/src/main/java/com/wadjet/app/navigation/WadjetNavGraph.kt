@@ -16,6 +16,12 @@ import com.wadjet.feature.auth.screen.WelcomeScreen
 import com.wadjet.feature.dictionary.screen.DictionaryScreen
 import com.wadjet.feature.dictionary.screen.LessonScreen
 import com.wadjet.feature.dictionary.LessonViewModel
+import com.wadjet.feature.explore.DetailViewModel
+import com.wadjet.feature.explore.ExploreViewModel
+import com.wadjet.feature.explore.IdentifyViewModel
+import com.wadjet.feature.explore.screen.ExploreScreen
+import com.wadjet.feature.explore.screen.IdentifyScreen
+import com.wadjet.feature.explore.screen.LandmarkDetailScreen
 import com.wadjet.feature.landing.screen.LandingScreen
 import com.wadjet.feature.scan.HistoryViewModel
 import com.wadjet.feature.scan.ScanViewModel
@@ -113,7 +119,48 @@ fun WadjetNavGraph(
                 onBack = { navController.popBackStack() },
             )
         }
-        composable<Route.Explore> { PlaceholderScreen("Explore") }
+        composable<Route.Explore> {
+            val viewModel: ExploreViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            ExploreScreen(
+                state = state,
+                onCategorySelected = viewModel::selectCategory,
+                onCitySelected = viewModel::selectCity,
+                onSearchChanged = viewModel::updateSearch,
+                onLandmarkTap = { slug -> navController.navigate(Route.LandmarkDetail(slug)) },
+                onToggleFavorite = viewModel::toggleFavorite,
+                onLoadMore = viewModel::loadMore,
+                onRefresh = viewModel::refresh,
+                onIdentify = { navController.navigate(Route.Identify) },
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable<Route.LandmarkDetail> {
+            val viewModel: DetailViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            LandmarkDetailScreen(
+                state = state,
+                onTabSelected = viewModel::selectTab,
+                onToggleFavorite = viewModel::toggleFavorite,
+                onRecommendationTap = { slug -> navController.navigate(Route.LandmarkDetail(slug)) },
+                onChatAbout = { slug -> navController.navigate(Route.ChatLandmark(slug)) },
+                onBack = { navController.popBackStack() },
+            )
+        }
+        composable<Route.Identify> {
+            val viewModel: IdentifyViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            IdentifyScreen(
+                state = state,
+                onImageCaptured = viewModel::onImageCaptured,
+                onImageSelected = viewModel::onImageSelected,
+                onMatchTap = { slug ->
+                    navController.navigate(Route.LandmarkDetail(slug))
+                },
+                onRetry = viewModel::reset,
+                onBack = { navController.popBackStack() },
+            )
+        }
         composable<Route.Chat> { PlaceholderScreen("Thoth Chat") }
         composable<Route.Stories> { PlaceholderScreen("Stories") }
         composable<Route.Dashboard> { PlaceholderScreen("Dashboard") }

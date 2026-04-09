@@ -2,9 +2,11 @@ package com.wadjet.core.data.di
 
 import com.wadjet.core.data.repository.AuthRepositoryImpl
 import com.wadjet.core.data.repository.DictionaryRepositoryImpl
+import com.wadjet.core.data.repository.ExploreRepositoryImpl
 import com.wadjet.core.data.repository.ScanRepositoryImpl
 import com.wadjet.core.domain.repository.AuthRepository
 import com.wadjet.core.domain.repository.DictionaryRepository
+import com.wadjet.core.domain.repository.ExploreRepository
 import com.wadjet.core.domain.repository.ScanRepository
 import dagger.Binds
 import dagger.Module
@@ -27,4 +29,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindScanRepository(impl: ScanRepositoryImpl): ScanRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindExploreRepository(impl: ExploreRepositoryImpl): ExploreRepository
 }
