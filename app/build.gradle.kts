@@ -34,7 +34,11 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8000\"")
+            // Use local.properties "debug.base.url" for emulator/local dev,
+            // otherwise fall back to production backend
+            val localBaseUrl = project.findProperty("debug.base.url") as? String
+            val debugUrl = localBaseUrl ?: "https://nadercr7-wadjet-v2.hf.space"
+            buildConfigField("String", "BASE_URL", "\"$debugUrl\"")
         }
         release {
             buildConfigField("String", "BASE_URL", "\"https://nadercr7-wadjet-v2.hf.space\"")
