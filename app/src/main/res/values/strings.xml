@@ -1,5 +1,3 @@
 <resources>
     <string name="app_name">Wadjet</string>
-    <!-- TODO: Enable Google Sign-In in Firebase Console, download updated google-services.json, then remove this placeholder -->
-    <string name="default_web_client_id" translatable="false">PLACEHOLDER</string>
 </resources>
