@@ -10,9 +10,16 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.feature.auth.screen.WelcomeScreen
+import com.wadjet.feature.dictionary.screen.DictionaryScreen
+import com.wadjet.feature.dictionary.screen.LessonScreen
+import com.wadjet.feature.dictionary.LessonViewModel
 import com.wadjet.feature.landing.screen.LandingScreen
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun WadjetNavGraph(
@@ -53,7 +60,24 @@ fun WadjetNavGraph(
         // Placeholder destinations — implemented in later phases
         composable<Route.Scan> { PlaceholderScreen("Scan") }
         composable<Route.ScanHistory> { PlaceholderScreen("Scan History") }
-        composable<Route.Dictionary> { PlaceholderScreen("Dictionary") }
+        composable<Route.Dictionary> {
+            DictionaryScreen(
+                onNavigateToLesson = { level -> navController.navigate(Route.Lesson(level)) },
+            )
+        }
+
+        composable<Route.Lesson> {
+            val viewModel: LessonViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            LessonScreen(
+                state = state,
+                onSelectAnswer = viewModel::selectAnswer,
+                onRevealAnswer = viewModel::revealAnswer,
+                onNextExercise = viewModel::nextExercise,
+                onRetry = viewModel::retry,
+                onBack = { navController.popBackStack() },
+            )
+        }
         composable<Route.Explore> { PlaceholderScreen("Explore") }
         composable<Route.Chat> { PlaceholderScreen("Thoth Chat") }
         composable<Route.Stories> { PlaceholderScreen("Stories") }

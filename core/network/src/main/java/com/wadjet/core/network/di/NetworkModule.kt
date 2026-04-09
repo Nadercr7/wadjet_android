@@ -4,6 +4,9 @@ import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFact
 import com.wadjet.core.network.AuthInterceptor
 import com.wadjet.core.network.TokenManager
 import com.wadjet.core.network.api.AuthApiService
+import com.wadjet.core.network.api.AudioApiService
+import com.wadjet.core.network.api.DictionaryApiService
+import com.wadjet.core.network.api.WriteApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -67,4 +70,19 @@ object NetworkModule {
     @Singleton
     fun provideAuthApiService(retrofit: Retrofit): AuthApiService =
         retrofit.create(AuthApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideDictionaryApiService(retrofit: Retrofit): DictionaryApiService =
+        retrofit.create(DictionaryApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideWriteApiService(retrofit: Retrofit): WriteApiService =
+        retrofit.create(WriteApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideAudioApiService(retrofit: Retrofit): AudioApiService =
+        retrofit.create(AudioApiService::class.java)
 }
