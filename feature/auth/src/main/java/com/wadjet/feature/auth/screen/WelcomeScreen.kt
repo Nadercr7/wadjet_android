@@ -40,6 +40,8 @@ import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.designsystem.component.WadjetCard
 import com.wadjet.core.designsystem.component.WadjetGhostButton
 import com.wadjet.core.designsystem.R as DesignR
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.NoCredentialException
 import com.wadjet.feature.auth.AuthEvent
 import com.wadjet.feature.auth.AuthSheet
 import com.wadjet.feature.auth.AuthViewModel
@@ -140,8 +142,13 @@ fun WelcomeScreen(
                                 .createFrom(result.credential.data)
                                 .idToken
                             viewModel.signInWithGoogle(googleIdToken)
+                        } catch (e: GetCredentialCancellationException) {
+                            Timber.d("Google sign-in cancelled by user")
+                        } catch (e: NoCredentialException) {
+                            viewModel.onGoogleSignInError("No Google accounts found on this device")
                         } catch (e: Exception) {
                             Timber.e(e, "Google sign-in failed")
+                            viewModel.onGoogleSignInError(e.message ?: "Google sign-in failed")
                         }
                     }
                 },
@@ -208,8 +215,13 @@ fun WelcomeScreen(
                                     .createFrom(result.credential.data)
                                     .idToken
                                 viewModel.signInWithGoogle(idToken)
+                            } catch (e: GetCredentialCancellationException) {
+                                Timber.d("Google sign-in cancelled by user")
+                            } catch (e: NoCredentialException) {
+                                viewModel.onGoogleSignInError("No Google accounts found on this device")
                             } catch (e: Exception) {
                                 Timber.e(e, "Google sign-in failed")
+                                viewModel.onGoogleSignInError(e.message ?: "Google sign-in failed")
                             }
                         }
                     },
@@ -239,8 +251,13 @@ fun WelcomeScreen(
                                     .createFrom(result.credential.data)
                                     .idToken
                                 viewModel.signInWithGoogle(idToken)
+                            } catch (e: GetCredentialCancellationException) {
+                                Timber.d("Google sign-in cancelled by user")
+                            } catch (e: NoCredentialException) {
+                                viewModel.onGoogleSignInError("No Google accounts found on this device")
                             } catch (e: Exception) {
                                 Timber.e(e, "Google sign-in failed")
+                                viewModel.onGoogleSignInError(e.message ?: "Google sign-in failed")
                             }
                         }
                     },

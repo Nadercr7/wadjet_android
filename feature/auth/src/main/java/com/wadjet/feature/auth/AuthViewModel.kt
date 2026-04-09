@@ -54,6 +54,10 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun onGoogleSignInError(message: String) {
+        _state.update { it.copy(error = message) }
+    }
+
     fun signInWithEmail(email: String, password: String) {
         if (!validateEmail(email) || password.isBlank()) {
             _state.update { it.copy(error = "Please enter a valid email and password") }
