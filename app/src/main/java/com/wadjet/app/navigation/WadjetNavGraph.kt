@@ -30,6 +30,10 @@ import com.wadjet.feature.scan.ScanViewModel
 import com.wadjet.feature.scan.screen.ScanHistoryScreen
 import com.wadjet.feature.scan.screen.ScanResultScreen
 import com.wadjet.feature.scan.screen.ScanScreen
+import com.wadjet.feature.stories.StoriesViewModel
+import com.wadjet.feature.stories.StoryReaderViewModel
+import com.wadjet.feature.stories.screen.StoriesScreen
+import com.wadjet.feature.stories.screen.StoryReaderScreen
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -193,7 +197,33 @@ fun WadjetNavGraph(
                 onBack = { navController.popBackStack() },
             )
         }
-        composable<Route.Stories> { PlaceholderScreen("Stories") }
+        composable<Route.Stories> {
+            val viewModel: StoriesViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            StoriesScreen(
+                state = state,
+                onDifficultySelected = viewModel::selectDifficulty,
+                onStoryTap = { storyId -> navController.navigate(Route.StoryReader(storyId)) },
+                onRefresh = viewModel::refresh,
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable<Route.StoryReader> {
+            val viewModel: StoryReaderViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            StoryReaderScreen(
+                state = state,
+                onPrevChapter = viewModel::prevChapter,
+                onNextChapter = viewModel::nextChapter,
+                onSubmitAnswer = viewModel::submitAnswer,
+                onUpdateWriteInput = viewModel::updateWriteInput,
+                onSpeak = viewModel::speakChapter,
+                onDismissError = viewModel::dismissError,
+                onBack = { navController.popBackStack() },
+            )
+        }
+
         composable<Route.Dashboard> { PlaceholderScreen("Dashboard") }
         composable<Route.Settings> { PlaceholderScreen("Settings") }
         composable<Route.Feedback> { PlaceholderScreen("Feedback") }

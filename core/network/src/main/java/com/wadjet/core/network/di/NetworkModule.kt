@@ -9,6 +9,7 @@ import com.wadjet.core.network.api.ChatApiService
 import com.wadjet.core.network.api.DictionaryApiService
 import com.wadjet.core.network.api.LandmarkApiService
 import com.wadjet.core.network.api.ScanApiService
+import com.wadjet.core.network.api.StoriesApiService
 import com.wadjet.core.network.api.WriteApiService
 import dagger.Module
 import dagger.Provides
@@ -107,4 +108,9 @@ object NetworkModule {
     @Singleton
     fun provideChatApiService(retrofit: Retrofit): ChatApiService =
         retrofit.create(ChatApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideStoriesApiService(retrofit: Retrofit): StoriesApiService =
+        retrofit.create(StoriesApiService::class.java)
 }
