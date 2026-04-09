@@ -41,7 +41,11 @@ object NetworkModule {
         .addInterceptor(authInterceptor)
         .addInterceptor(
             HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
+                level = if (com.wadjet.core.network.BuildConfig.DEBUG) {
+                    HttpLoggingInterceptor.Level.BODY
+                } else {
+                    HttpLoggingInterceptor.Level.NONE
+                }
             },
         )
         .addInterceptor { chain ->

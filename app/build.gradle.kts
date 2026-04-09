@@ -43,6 +43,10 @@ android {
         buildConfig = true
     }
 
+    composeCompiler {
+        stabilityConfigurationFile = rootProject.layout.projectDirectory.file("compose_compiler_config.conf")
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

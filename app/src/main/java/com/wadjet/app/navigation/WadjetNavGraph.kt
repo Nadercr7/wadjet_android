@@ -67,9 +67,10 @@ fun WadjetNavGraph(
             val viewModel: ScanViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
 
-            if (state.result != null) {
+            val result = state.result
+            if (result != null) {
                 ScanResultScreen(
-                    result = state.result!!,
+                    result = result,
                     onScanAgain = { viewModel.resetScan() },
                     onBack = { navController.popBackStack() },
                 )
