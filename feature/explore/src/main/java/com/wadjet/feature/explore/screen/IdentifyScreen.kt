@@ -47,7 +47,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.core.designsystem.animation.FadeUp
+import com.wadjet.core.designsystem.component.BadgeVariant
 import com.wadjet.core.designsystem.component.ImageUploadZone
+import com.wadjet.core.designsystem.component.WadjetBadge
 import com.wadjet.core.domain.model.IdentifyMatch
 import com.wadjet.feature.explore.IdentifyUiState
 
@@ -72,14 +75,16 @@ fun IdentifyScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                ImageUploadZone(
-                    onImageSelected = onImageSelected,
-                    title = "Upload a photo of an Egyptian landmark",
-                    subtitle = "Supports JPG, PNG up to 10MB",
-                    analyzeButtonText = "Identify Landmark",
-                    isAnalyzing = state.isLoading,
-                    onAnalyze = null, // Analysis starts on image selection via onImageSelected
-                )
+                FadeUp(visible = true) {
+                    ImageUploadZone(
+                        onImageSelected = onImageSelected,
+                        title = "Upload a photo of an Egyptian landmark",
+                        subtitle = "Supports JPG, PNG up to 10MB",
+                        analyzeButtonText = "Identify Landmark",
+                        isAnalyzing = state.isLoading,
+                        onAnalyze = null,
+                    )
+                }
             }
         }
 
@@ -243,11 +248,13 @@ private fun IdentifyResults(
                 )
             } else {
                 matches.forEachIndexed { index, match ->
-                    MatchCard(
-                        match = match,
-                        rank = index + 1,
-                        onClick = { onMatchTap(match.slug) },
-                    )
+                    FadeUp(visible = true) {
+                        MatchCard(
+                            match = match,
+                            rank = index + 1,
+                            onClick = { onMatchTap(match.slug) },
+                        )
+                    }
                     if (index < matches.lastIndex) Spacer(Modifier.height(8.dp))
                 }
                 Spacer(Modifier.height(12.dp))
@@ -303,13 +310,14 @@ private fun MatchCard(
                 )
             }
             Spacer(Modifier.width(8.dp))
-            // Confidence
-            Text(
-                text = "${(match.confidence * 100).toInt()}%",
-                style = MaterialTheme.typography.titleMedium,
-                color = if (match.confidence > 0.7f) WadjetColors.Gold else WadjetColors.Sand,
-                fontWeight = FontWeight.Bold,
-            )
+            // Confidence badge
+            val confPct = (match.confidence * 100).toInt()
+            val variant = when {
+                confPct >= 80 -> BadgeVariant.Success
+                confPct >= 50 -> BadgeVariant.Gold
+                else -> BadgeVariant.Error
+            }
+            WadjetBadge(text = "$confPct%", variant = variant)
         }
     }
 }

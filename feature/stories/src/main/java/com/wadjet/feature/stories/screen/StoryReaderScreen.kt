@@ -76,6 +76,7 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.core.designsystem.animation.FadeUp
 import com.wadjet.core.domain.model.GlyphAnnotation
 import com.wadjet.core.domain.model.Interaction
 import com.wadjet.core.domain.model.InteractionResult
@@ -197,12 +198,14 @@ fun StoryReaderScreen(
 
             // Chapter title
             item {
-                Text(
-                    text = chapter.titleEn,
-                    color = WadjetColors.Gold,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                )
+                FadeUp(visible = true) {
+                    Text(
+                        text = chapter.titleEn,
+                        color = WadjetColors.Gold,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
             }
 
             // Paragraphs + interactions interleaved
@@ -258,21 +261,23 @@ fun StoryReaderScreen(
 
             // Score + glyphs
             item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(WadjetColors.Surface)
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Score", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
-                        Text("${state.score}", color = WadjetColors.Gold, style = MaterialTheme.typography.titleMedium)
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Glyphs", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
-                        Text("${state.glyphsLearned.size}", color = WadjetColors.Gold, style = MaterialTheme.typography.titleMedium)
+                FadeUp(visible = true) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(WadjetColors.Surface)
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Score", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                            Text("${state.score}", color = WadjetColors.Gold, style = MaterialTheme.typography.titleMedium)
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Glyphs", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                            Text("${state.glyphsLearned.size}", color = WadjetColors.Gold, style = MaterialTheme.typography.titleMedium)
+                        }
                     }
                 }
             }

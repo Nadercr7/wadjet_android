@@ -59,6 +59,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.core.designsystem.animation.FadeUp
+import com.wadjet.core.designsystem.animation.KenBurnsImage
 import com.wadjet.core.designsystem.component.ShimmerDetail
 import com.wadjet.core.domain.model.LandmarkDetail
 import com.wadjet.core.domain.model.LandmarkImage
@@ -178,10 +180,9 @@ private fun DetailContent(
         if (detail.images.isNotEmpty()) {
             ImageCarousel(images = detail.images)
         } else if (detail.thumbnail != null) {
-            AsyncImage(
-                model = detail.thumbnail,
+            KenBurnsImage(
+                url = detail.thumbnail!!,
                 contentDescription = detail.name,
-                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(240.dp),
@@ -207,10 +208,12 @@ private fun DetailContent(
             Spacer(Modifier.height(8.dp))
 
             // Badges
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                detail.type?.let { DetailBadge(text = it, color = WadjetColors.Gold) }
-                detail.city?.let { DetailBadge(text = it, color = WadjetColors.Sand) }
-                detail.era?.let { DetailBadge(text = it, color = WadjetColors.Dust) }
+            FadeUp(visible = true) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    detail.type?.let { DetailBadge(text = it, color = WadjetColors.Gold) }
+                    detail.city?.let { DetailBadge(text = it, color = WadjetColors.Sand) }
+                    detail.era?.let { DetailBadge(text = it, color = WadjetColors.Dust) }
+                }
             }
 
             Spacer(Modifier.height(16.dp))

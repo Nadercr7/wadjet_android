@@ -12,6 +12,8 @@ import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,17 +22,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -40,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -55,18 +55,22 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wadjet.core.designsystem.HieroglyphStyle
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.core.designsystem.animation.FadeUp
+import com.wadjet.core.designsystem.animation.shineSweep
+import com.wadjet.core.designsystem.component.BadgeVariant
+import com.wadjet.core.designsystem.component.WadjetBadge
 import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.domain.model.DetectedGlyph
 import com.wadjet.core.domain.model.ScanResult
 import com.wadjet.feature.scan.rememberBase64Bitmap
 import com.wadjet.feature.scan.util.gardinerToUnicode
+import kotlinx.coroutines.delay
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ScanResultScreen(
     result: ScanResult,
@@ -76,6 +80,10 @@ fun ScanResultScreen(
 ) {
     val context = LocalContext.current
     var showArabic by remember { mutableStateOf(false) }
+
+    // Stagger animation
+    var visibleSections by remember { mutableStateOf(0) }
+    LaunchedEffect(Unit) { repeat(6) { delay(120); visibleSections++ } }
 
     Column(
         modifier = modifier
@@ -103,25 +111,51 @@ fun ScanResultScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
         ) {
-            // Annotated image (zoomable)
-            AnnotatedImageView(base64 = result.annotatedImageBase64)
+            // Annotated image with ShineSweep
+            FadeUp(visible = visibleSections >= 1) {
+                Box(modifier = Modifier.shineSweep()) {
+                    AnnotatedImageView(base64 = result.annotatedImageBase64)
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Detected glyphs
+            // Confidence badge
+            FadeUp(visible = visibleSections >= 1) {
+                val avgConf = if (result.glyphs.isNotEmpty()) {
+                    (result.glyphs.sumOf { (it.classConfidence * 100).toInt() } / result.glyphs.size)
+                } else 0
+                val variant = when {
+                    avgConf >= 85 -> BadgeVariant.Success
+                    avgConf >= 60 -> BadgeVariant.Gold
+                    else -> BadgeVariant.Error
+                }
+                WadjetBadge(text = "Confidence: $avgConf%", variant = variant)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Detected glyphs — FlowRow grid
             if (result.glyphs.isNotEmpty()) {
-                Text(
-                    text = "Detected (${result.numDetections})",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = WadjetColors.Gold,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    items(result.glyphs) { glyph ->
-                        GlyphChip(glyph)
+                FadeUp(visible = visibleSections >= 2) {
+                    Column {
+                        GoldDivider()
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Detected (${result.numDetections})",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = WadjetColors.Gold,
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            result.glyphs.forEach { glyph ->
+                                GlyphChip(glyph)
+                            }
+                        }
                     }
                 }
             }
@@ -131,69 +165,87 @@ fun ScanResultScreen(
             // Transliteration
             val translit = result.transliteration
             if (!translit.isNullOrBlank()) {
-                SectionLabel("Transliteration")
-                Text(
-                    text = translit,
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontFamily = FontFamily.Monospace,
-                        letterSpacing = 2.sp,
-                    ),
-                    color = WadjetColors.Gold,
-                    modifier = Modifier.padding(vertical = 4.dp),
-                )
+                FadeUp(visible = visibleSections >= 3) {
+                    Column {
+                        GoldDivider()
+                        Spacer(modifier = Modifier.height(12.dp))
+                        SectionLabel("Transliteration")
+                        Text(
+                            text = translit,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontFamily = FontFamily.Monospace,
+                                letterSpacing = 2.sp,
+                            ),
+                            color = WadjetColors.Gold,
+                            modifier = Modifier.padding(vertical = 4.dp),
+                        )
+                    }
+                }
             }
 
-            // Translation toggle
+            // Translation
             val translationEn = result.translationEn
             val translationAr = result.translationAr
             if (!translationEn.isNullOrBlank() || !translationAr.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    SectionLabel(if (showArabic) "AR" else "EN")
-                    Spacer(modifier = Modifier.weight(1f))
-                    if (!translationAr.isNullOrBlank() && !translationEn.isNullOrBlank()) {
-                        Surface(
-                            onClick = { showArabic = !showArabic },
-                            shape = RoundedCornerShape(8.dp),
-                            color = WadjetColors.Gold.copy(alpha = 0.15f),
+                FadeUp(visible = visibleSections >= 4) {
+                    Column {
+                        GoldDivider()
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
-                            Text(
-                                text = if (showArabic) "EN ↔ AR" else "AR ↔ EN",
-                                color = WadjetColors.Gold,
-                                style = MaterialTheme.typography.labelMedium,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            )
+                            SectionLabel(if (showArabic) "AR" else "EN")
+                            Spacer(modifier = Modifier.weight(1f))
+                            if (!translationAr.isNullOrBlank() && !translationEn.isNullOrBlank()) {
+                                Surface(
+                                    onClick = { showArabic = !showArabic },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = WadjetColors.Gold.copy(alpha = 0.15f),
+                                ) {
+                                    Text(
+                                        text = if (showArabic) "EN ↔ AR" else "AR ↔ EN",
+                                        color = WadjetColors.Gold,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                    )
+                                }
+                            }
                         }
+
+                        Text(
+                            text = if (showArabic) translationAr.orEmpty() else translationEn.orEmpty(),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = WadjetColors.Text,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .animateContentSize(),
+                        )
                     }
                 }
-
-                Text(
-                    text = if (showArabic) translationAr.orEmpty() else translationEn.orEmpty(),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = WadjetColors.Text,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                        .animateContentSize(),
-                )
             }
 
             // Timing stats
             Spacer(modifier = Modifier.height(16.dp))
-            TimingStats(result)
+            FadeUp(visible = visibleSections >= 5) {
+                Column {
+                    GoldDivider()
+                    Spacer(modifier = Modifier.height(12.dp))
+                    TimingStats(result)
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Scan again
-            WadjetButton(
-                text = "Scan Again",
-                onClick = onScanAgain,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            FadeUp(visible = visibleSections >= 6) {
+                WadjetButton(
+                    text = "Scan Again",
+                    onClick = onScanAgain,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
         }
@@ -261,7 +313,7 @@ private fun GlyphChip(glyph: DetectedGlyph) {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(12.dp).width(72.dp),
+            modifier = Modifier.padding(12.dp).width(80.dp),
         ) {
             Text(
                 text = unicode,
@@ -272,7 +324,8 @@ private fun GlyphChip(glyph: DetectedGlyph) {
             Text(
                 text = glyph.gardinerCode,
                 style = MaterialTheme.typography.labelSmall,
-                color = WadjetColors.TextMuted,
+                color = WadjetColors.Sand,
+                fontWeight = FontWeight.Bold,
             )
             Spacer(modifier = Modifier.height(4.dp))
             LinearProgressIndicator(
@@ -294,6 +347,14 @@ private fun GlyphChip(glyph: DetectedGlyph) {
             )
         }
     }
+}
+
+@Composable
+private fun GoldDivider() {
+    HorizontalDivider(
+        thickness = 1.dp,
+        color = WadjetColors.Gold.copy(alpha = 0.2f),
+    )
 }
 
 @Composable

@@ -417,12 +417,28 @@ private fun TtsSection(
 
 @Composable
 private fun SectionHeader(text: String) {
-    Text(
-        text = text,
-        color = WadjetColors.Gold,
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.Bold,
-    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                WadjetColors.Gold.copy(alpha = 0.08f),
+                RoundedCornerShape(topEnd = 6.dp, bottomEnd = 6.dp),
+            )
+            .border(
+                width = 3.dp,
+                color = WadjetColors.Gold,
+                shape = RoundedCornerShape(topStart = 3.dp, bottomStart = 3.dp),
+            )
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = text,
+            color = WadjetColors.Gold,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+        )
+    }
 }
 
 @Composable

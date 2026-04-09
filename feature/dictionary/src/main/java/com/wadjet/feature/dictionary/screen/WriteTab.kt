@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -143,6 +144,7 @@ fun WriteTab(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
                     .background(WadjetColors.Surface)
+                    .animateContentSize()
                     .padding(20.dp),
                 contentAlignment = Alignment.Center,
             ) {

@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -46,6 +47,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -70,6 +73,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.core.designsystem.animation.borderBeam
+import com.wadjet.core.designsystem.component.StreamingDots
 import com.wadjet.core.domain.model.ChatMessage
 import com.wadjet.core.domain.model.ChatMessage.Role
 import com.wadjet.feature.chat.ChatUiState
@@ -225,22 +230,68 @@ fun ChatScreen(
                 }
             }
 
-            // Input bar
-            ChatInputBar(
-                text = state.inputText,
-                onTextChanged = onInputChanged,
-                onSend = onSend,
-                onMicTap = {
-                    if (state.isRecording) {
-                        speechRecognizer?.stopListening()
-                        onSetRecording(false)
-                    } else {
-                        micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            // Quick suggestion chips (first message only — greeting + no user messages yet)
+            val hasOnlyGreeting = state.messages.size <= 1 && !state.isStreaming
+            if (hasOnlyGreeting) {
+                val suggestions = listOf(
+                    "Tell me about the pyramids",
+                    "What are hieroglyphs?",
+                    "Famous pharaohs",
+                )
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(suggestions) { suggestion ->
+                        FilterChip(
+                            selected = false,
+                            onClick = { onInputChanged(suggestion); onSend() },
+                            label = { Text(suggestion, style = MaterialTheme.typography.bodySmall) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = WadjetColors.Surface,
+                                labelColor = WadjetColors.Gold,
+                            ),
+                        )
                     }
-                },
-                isStreaming = state.isStreaming,
-                isRecording = state.isRecording,
-            )
+                }
+            }
+
+            // Input bar with BorderBeam when streaming
+            if (state.isStreaming) {
+                com.wadjet.core.designsystem.animation.BorderBeam(durationMs = 2000) {
+                    ChatInputBar(
+                        text = state.inputText,
+                        onTextChanged = onInputChanged,
+                        onSend = onSend,
+                        onMicTap = {
+                            if (state.isRecording) {
+                                speechRecognizer?.stopListening()
+                                onSetRecording(false)
+                            } else {
+                                micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                            }
+                        },
+                        isStreaming = state.isStreaming,
+                        isRecording = state.isRecording,
+                    )
+                }
+            } else {
+                ChatInputBar(
+                    text = state.inputText,
+                    onTextChanged = onInputChanged,
+                    onSend = onSend,
+                    onMicTap = {
+                        if (state.isRecording) {
+                            speechRecognizer?.stopListening()
+                            onSetRecording(false)
+                        } else {
+                            micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                        }
+                    },
+                    isStreaming = state.isStreaming,
+                    isRecording = state.isRecording,
+                )
+            }
         }
     }
 }
@@ -308,7 +359,7 @@ private fun ChatBubble(
                             )
                         }
                         if (message.isStreaming) {
-                            BlinkingCursor()
+                            StreamingDots(modifier = Modifier.padding(top = 4.dp))
                         }
                     }
                 }
@@ -334,25 +385,6 @@ private fun ChatBubble(
             }
         }
     }
-}
-
-@Composable
-private fun BlinkingCursor() {
-    val infiniteTransition = rememberInfiniteTransition(label = "cursor")
-    val alpha = infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(500),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "cursorAlpha",
-    )
-    Text(
-        text = "▌",
-        color = WadjetColors.Gold.copy(alpha = alpha.value),
-        style = MaterialTheme.typography.bodyMedium,
-    )
 }
 
 @Composable

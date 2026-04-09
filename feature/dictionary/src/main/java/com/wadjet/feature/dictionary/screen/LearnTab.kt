@@ -13,10 +13,17 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.core.designsystem.animation.FadeUp
 import com.wadjet.core.designsystem.component.WadjetCard
+import kotlinx.coroutines.delay
 
 @Composable
 fun LearnTab(
@@ -31,13 +38,20 @@ fun LearnTab(
         LessonInfo(5, "Full Sentences", "Put it all together — read complete inscriptions."),
     )
 
+    var visibleCount by remember { mutableStateOf(0) }
+    LaunchedEffect(Unit) {
+        lessons.forEachIndexed { _, _ -> delay(120); visibleCount++ }
+    }
+
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        itemsIndexed(lessons) { _, lesson ->
-            LessonCard(lesson = lesson, onClick = { onLessonClick(lesson.level) })
+        itemsIndexed(lessons) { index, lesson ->
+            FadeUp(visible = index < visibleCount) {
+                LessonCard(lesson = lesson, onClick = { onLessonClick(lesson.level) })
+            }
         }
     }
 }

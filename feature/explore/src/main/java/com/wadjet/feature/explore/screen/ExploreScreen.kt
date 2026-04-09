@@ -64,6 +64,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.core.designsystem.animation.goldPulse
+import com.wadjet.core.designsystem.animation.shineSweep
 import com.wadjet.core.designsystem.component.ShimmerCardList
 import com.wadjet.core.domain.model.Landmark
 import com.wadjet.feature.explore.CATEGORIES
@@ -112,7 +114,10 @@ fun ExploreScreen(
                 }
             },
             actions = {
-                IconButton(onClick = onIdentify) {
+                IconButton(
+                    onClick = onIdentify,
+                    modifier = Modifier.goldPulse(),
+                ) {
                     Icon(Icons.Default.FileUpload, "Identify from photo", tint = WadjetColors.Gold)
                 }
             },
@@ -154,12 +159,16 @@ fun ExploreScreen(
                 )
             } else if (state.landmarks.isEmpty() && !state.isLoading) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = if (state.searchQuery.isNotBlank()) "No results for \"${state.searchQuery}\""
-                        else "No landmarks found",
-                        color = WadjetColors.TextMuted,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("𓉐", style = MaterialTheme.typography.displayLarge, color = WadjetColors.Gold.copy(alpha = 0.5f))
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = if (state.searchQuery.isNotBlank()) "No results for \"${state.searchQuery}\""
+                            else "No landmarks found",
+                            color = WadjetColors.TextMuted,
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
                 }
             } else {
                 LazyColumn(
@@ -326,6 +335,7 @@ private fun LandmarkCard(
         color = WadjetColors.Surface,
         modifier = Modifier
             .fillMaxWidth()
+            .shineSweep()
             .clickable(onClick = onClick),
     ) {
         Column {

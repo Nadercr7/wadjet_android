@@ -35,6 +35,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,10 +48,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.core.designsystem.animation.FadeUp
+import com.wadjet.core.designsystem.animation.shineSweep
 import com.wadjet.core.domain.model.StoryProgress
 import com.wadjet.core.domain.model.StorySummary
 import com.wadjet.feature.stories.DIFFICULTY_FILTERS
 import com.wadjet.feature.stories.StoriesUiState
+import kotlinx.coroutines.delay
 
 private const val FREE_STORY_LIMIT = 3
 
@@ -122,25 +130,36 @@ fun StoriesScreen(
                 }
 
                 // Story list
+                val filtered = state.filteredStories
+                var visibleCount by remember { mutableIntStateOf(0) }
+                LaunchedEffect(filtered.size) {
+                    visibleCount = 0
+                    for (i in filtered.indices) {
+                        delay(120)
+                        visibleCount = i + 1
+                    }
+                }
                 LazyColumn(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    val filtered = state.filteredStories
                     items(
                         items = filtered,
                         key = { it.id },
                     ) { story ->
                         val index = state.stories.indexOf(story)
+                        val itemIndex = filtered.indexOf(story)
                         val isLocked = index >= FREE_STORY_LIMIT
                         val progress = state.progress[story.id]
-                        StoryCard(
-                            story = story,
-                            progress = progress,
-                            isLocked = isLocked,
-                            onClick = { if (!isLocked) onStoryTap(story.id) },
-                        )
+                        FadeUp(visible = itemIndex < visibleCount) {
+                            StoryCard(
+                                story = story,
+                                progress = progress,
+                                isLocked = isLocked,
+                                onClick = { if (!isLocked) onStoryTap(story.id) },
+                            )
+                        }
                     }
                 }
             }
@@ -176,7 +195,8 @@ private fun StoryCard(
                 modifier = Modifier
                     .size(64.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(WadjetColors.SurfaceAlt),
+                    .background(WadjetColors.SurfaceAlt)
+                    .shineSweep(),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(

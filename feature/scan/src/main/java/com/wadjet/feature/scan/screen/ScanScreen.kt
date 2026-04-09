@@ -1,15 +1,11 @@
 package com.wadjet.feature.scan.screen
 
 // CAMERA_DISABLED: CameraX imports commented out for image-upload-only mode
-// import android.Manifest
-// import android.content.pm.PackageManager
-// import androidx.camera.core.CameraSelector
-// import androidx.camera.core.ImageCapture
-// import androidx.camera.core.ImageCaptureException
-// import androidx.camera.core.Preview
-// import androidx.camera.lifecycle.ProcessCameraProvider
-// import androidx.camera.view.PreviewView
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -33,7 +29,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,16 +39,27 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.core.designsystem.animation.FadeUp
+import com.wadjet.core.designsystem.animation.shineSweep
 import com.wadjet.core.designsystem.component.ImageUploadZone
 import com.wadjet.feature.scan.ScanStep
 import com.wadjet.feature.scan.ScanUiState
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +72,9 @@ fun ScanScreen(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize().background(WadjetColors.Night)) {
-        // Main content: Image upload zone centered
+        val (visible, _) = remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) { delay(100) }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -74,14 +82,16 @@ fun ScanScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            ImageUploadZone(
-                onImageSelected = onImageSelected,
-                title = "Tap to select a hieroglyph image",
-                subtitle = "Supports JPG, PNG up to 10MB",
-                analyzeButtonText = "Scan Hieroglyphs",
-                isAnalyzing = state.isLoading,
-                onAnalyze = null, // Analysis starts on image selection via onImageSelected
-            )
+            FadeUp(visible = true) {
+                ImageUploadZone(
+                    onImageSelected = onImageSelected,
+                    title = "Tap to select a hieroglyph image",
+                    subtitle = "Supports JPG, PNG up to 10MB",
+                    analyzeButtonText = "Scan Hieroglyphs",
+                    isAnalyzing = state.isLoading,
+                    onAnalyze = null,
+                )
+            }
         }
 
         // Top bar
@@ -252,82 +262,154 @@ private fun PermissionDeniedContent(onRequestPermission: () -> Unit) {
 @Composable
 private fun ScanProgressOverlay(step: ScanStep) {
     val steps = listOf(
-        ScanStep.DETECTING to "Detecting glyphs",
-        ScanStep.CLASSIFYING to "Classifying signs",
-        ScanStep.TRANSLITERATING to "Transliterating",
-        ScanStep.TRANSLATING to "Translating",
+        ScanStep.DETECTING to ("Detecting glyphs" to "Locating hieroglyphs in image"),
+        ScanStep.CLASSIFYING to ("Classifying signs" to "Matching to Gardiner catalogue"),
+        ScanStep.TRANSLITERATING to ("Transliterating" to "Converting to phonetic script"),
+        ScanStep.TRANSLATING to ("Translating" to "Producing English & Arabic"),
     )
 
     val currentIndex = steps.indexOfFirst { it.first == step }
-    val progress = if (currentIndex >= 0) (currentIndex + 1f) / steps.size else 0f
 
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.6f,
-        targetValue = 1.0f,
-        animationSpec = infiniteRepeatable(tween(800), RepeatMode.Reverse),
-        label = "pulseAlpha",
+    // Animated gold shimmer bar
+    val shimmerProgress = remember { Animatable(0f) }
+    LaunchedEffect(currentIndex) {
+        val target = if (currentIndex >= 0) (currentIndex + 1f) / steps.size else 0f
+        shimmerProgress.animateTo(target, animationSpec = tween(600, easing = EaseInOut))
+    }
+
+    // Gold shimmer on the progress bar
+    val infiniteTransition = rememberInfiniteTransition(label = "shimmerBar")
+    val shimmerOffset by infiniteTransition.animateFloat(
+        initialValue = -0.3f,
+        targetValue = 1.3f,
+        animationSpec = infiniteRepeatable(tween(1500, easing = LinearEasing), RepeatMode.Restart),
+        label = "shimmerBarOffset",
     )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(WadjetColors.Night.copy(alpha = 0.85f)),
+            .background(WadjetColors.Night.copy(alpha = 0.92f)),
         contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(32.dp),
+            modifier = Modifier.padding(32.dp).fillMaxWidth(),
         ) {
-            CircularProgressIndicator(
+            // Hieroglyph branding icon
+            Text("𓂀", fontSize = 48.sp, color = WadjetColors.Gold)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                "Analyzing Inscription",
+                style = MaterialTheme.typography.titleMedium,
                 color = WadjetColors.Gold,
-                modifier = Modifier.size(48.dp),
+                fontWeight = FontWeight.Bold,
             )
-
             Spacer(modifier = Modifier.height(24.dp))
 
-            steps.forEachIndexed { index, (stepEnum, label) ->
+            // Pipeline steps
+            steps.forEachIndexed { index, (_, labelPair) ->
+                val (label, subtitle) = labelPair
                 val isActive = index == currentIndex
                 val isDone = index < currentIndex
-                val alpha = when {
-                    isActive -> pulseAlpha
-                    isDone -> 1f
-                    else -> 0.4f
-                }
-                val color = when {
-                    isDone -> WadjetColors.Gold
-                    isActive -> WadjetColors.Gold.copy(alpha = alpha)
-                    else -> WadjetColors.TextMuted
-                }
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(vertical = 6.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
                 ) {
+                    // Step indicator
+                    val indicatorColor = when {
+                        isDone -> WadjetColors.Gold
+                        isActive -> WadjetColors.Gold
+                        else -> WadjetColors.TextMuted.copy(alpha = 0.4f)
+                    }
                     Text(
-                        text = if (isDone) "●" else if (isActive) "●" else "○",
-                        color = color,
-                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+                        text = when {
+                            isDone -> "✓"
+                            isActive -> "◉"
+                            else -> "○"
+                        },
+                        color = indicatorColor,
+                        fontSize = if (isActive) 20.sp else 16.sp,
+                        fontWeight = if (isActive || isDone) FontWeight.Bold else FontWeight.Normal,
                     )
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = label,
-                        color = color,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = label,
+                            color = when {
+                                isDone -> WadjetColors.Gold
+                                isActive -> WadjetColors.Text
+                                else -> WadjetColors.TextMuted.copy(alpha = 0.5f)
+                            },
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+                        )
+                        if (isActive) {
+                            Text(
+                                text = subtitle,
+                                color = WadjetColors.Sand,
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+                }
+                // Connector line between steps
+                if (index < steps.lastIndex) {
+                    Box(
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .width(2.dp)
+                            .height(12.dp)
+                            .background(
+                                if (isDone) WadjetColors.Gold.copy(alpha = 0.5f)
+                                else WadjetColors.Border,
+                            ),
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            LinearProgressIndicator(
-                progress = { progress },
-                color = WadjetColors.Gold,
-                trackColor = WadjetColors.Surface,
+            // Gold shimmer progress bar
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .height(6.dp),
+                    .fillMaxWidth(0.8f)
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(WadjetColors.Surface),
+            ) {
+                // Filled portion
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(shimmerProgress.value)
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                        .drawBehind {
+                            val w = size.width
+                            val highlightCenter = shimmerOffset * w
+                            drawRect(
+                                brush = Brush.horizontalGradient(
+                                    colors = listOf(
+                                        WadjetColors.Gold,
+                                        WadjetColors.GoldLight,
+                                        WadjetColors.Gold,
+                                    ),
+                                    startX = highlightCenter - w * 0.3f,
+                                    endX = highlightCenter + w * 0.3f,
+                                ),
+                            )
+                        },
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = "${((shimmerProgress.value) * 100).toInt()}%",
+                style = MaterialTheme.typography.labelSmall,
+                color = WadjetColors.Sand,
             )
         }
     }

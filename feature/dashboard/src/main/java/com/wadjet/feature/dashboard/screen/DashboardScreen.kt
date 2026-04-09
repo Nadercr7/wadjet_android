@@ -1,5 +1,7 @@
 package com.wadjet.feature.dashboard.screen
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -37,6 +39,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +50,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.core.designsystem.animation.FadeUp
+import com.wadjet.core.designsystem.animation.shineSweep
 import com.wadjet.core.domain.model.DashboardStoryProgress
 import com.wadjet.core.domain.model.FavoriteItem
 import com.wadjet.core.domain.model.ScanHistoryItem
@@ -100,15 +106,21 @@ fun DashboardScreen(
             ) {
                 // User header
                 item {
-                    UserHeader(
-                        name = state.user?.displayName ?: "Explorer",
-                        email = state.user?.email ?: "",
-                        avatarUrl = state.user?.avatarUrl,
-                    )
+                    FadeUp(visible = true) {
+                        UserHeader(
+                            name = state.user?.displayName ?: "Explorer",
+                            email = state.user?.email ?: "",
+                            avatarUrl = state.user?.avatarUrl,
+                        )
+                    }
                 }
 
                 // Stat cards 2×2
-                item { StatsGrid(stats = state.stats) }
+                item {
+                    FadeUp(visible = true) {
+                        StatsGrid(stats = state.stats)
+                    }
+                }
 
                 // Recent Scans
                 if (state.recentScans.isNotEmpty()) {
@@ -216,7 +228,7 @@ private fun UserHeader(
         Column {
             Text(
                 text = name,
-                color = WadjetColors.Text,
+                color = WadjetColors.Gold,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
             )
@@ -252,6 +264,15 @@ private fun StatCard(
     value: String,
     modifier: Modifier = Modifier,
 ) {
+    val targetValue = value.toIntOrNull() ?: 0
+    val animatable = remember { Animatable(0f) }
+    LaunchedEffect(targetValue) {
+        animatable.animateTo(
+            targetValue.toFloat(),
+            animationSpec = tween(durationMillis = 800),
+        )
+    }
+
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
@@ -261,7 +282,7 @@ private fun StatCard(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = value,
+            text = "${animatable.value.toInt()}",
             color = WadjetColors.Gold,
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
@@ -284,6 +305,7 @@ private fun ScanCard(
             .width(100.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(WadjetColors.Surface)
+            .shineSweep()
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
