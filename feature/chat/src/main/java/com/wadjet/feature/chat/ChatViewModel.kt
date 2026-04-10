@@ -9,6 +9,7 @@ import androidx.navigation.toRoute
 import com.wadjet.core.domain.model.ChatMessage
 import com.wadjet.core.domain.model.ChatMessage.Role
 import com.wadjet.core.domain.repository.ChatRepository
+import com.wadjet.core.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import java.io.File
 import java.util.UUID
@@ -39,6 +41,7 @@ data class ChatUiState(
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
+    private val userRepository: UserRepository,
     private val chatHistoryStore: ChatHistoryStore,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -49,6 +52,11 @@ class ChatViewModel @Inject constructor(
     private val sessionId: String
     private var streamJob: Job? = null
     private var mediaPlayer: MediaPlayer? = null
+    private var lastSentMessage: String? = null
+
+    companion object {
+        private const val STREAM_TIMEOUT_MS = 60_000L
+    }
 
     init {
         // Resolve or create session
@@ -101,6 +109,24 @@ class ChatViewModel @Inject constructor(
         val trimmed = text.trim()
         if (trimmed.isEmpty() || _state.value.isStreaming) return
 
+        viewModelScope.launch {
+            // Check free-tier limits
+            userRepository.getLimits().onSuccess { limits ->
+                if (limits.chatMessagesToday >= limits.chatMessagesPerDay) {
+                    _state.update {
+                        it.copy(error = "Daily message limit reached (${limits.chatMessagesPerDay}). Try again tomorrow.")
+                    }
+                    return@launch
+                }
+            }
+
+            doSendMessage(trimmed)
+        }
+    }
+
+    private fun doSendMessage(trimmed: String) {
+        lastSentMessage = trimmed
+
         val userMessage = ChatMessage(
             id = UUID.randomUUID().toString(),
             role = Role.USER,
@@ -127,61 +153,101 @@ class ChatViewModel @Inject constructor(
         streamJob = viewModelScope.launch {
             val contentBuilder = StringBuilder()
 
-            chatRepository.streamChat(
-                message = trimmed,
-                sessionId = sessionId,
-                landmark = _state.value.landmarkSlug,
-            )
-                .catch { error ->
-                    Timber.e(error, "Chat stream error")
-                    _state.update { state ->
-                        state.copy(
-                            messages = state.messages.map { msg ->
-                                if (msg.id == botMessageId) {
-                                    msg.copy(
-                                        content = contentBuilder.toString().ifEmpty {
-                                            "Sorry, I encountered an error. Please try again."
-                                        },
-                                        isStreaming = false,
-                                    )
-                                } else {
-                                    msg
-                                }
-                            },
-                            isStreaming = false,
-                            error = error.message,
-                        )
+            val completed = withTimeoutOrNull(STREAM_TIMEOUT_MS) {
+                chatRepository.streamChat(
+                    message = trimmed,
+                    sessionId = sessionId,
+                    landmark = _state.value.landmarkSlug,
+                )
+                    .catch { error ->
+                        Timber.e(error, "Chat stream error")
+                        _state.update { state ->
+                            state.copy(
+                                messages = state.messages.map { msg ->
+                                    if (msg.id == botMessageId) {
+                                        msg.copy(
+                                            content = contentBuilder.toString().ifEmpty {
+                                                "Sorry, I encountered an error. Please try again."
+                                            },
+                                            isStreaming = false,
+                                        )
+                                    } else {
+                                        msg
+                                    }
+                                },
+                                isStreaming = false,
+                                error = error.message,
+                            )
+                        }
                     }
-                }
-                .onCompletion {
-                    _state.update { state ->
-                        state.copy(
-                            messages = state.messages.map { msg ->
-                                if (msg.id == botMessageId) {
-                                    msg.copy(isStreaming = false)
-                                } else {
-                                    msg
-                                }
-                            },
-                            isStreaming = false,
-                        )
+                    .onCompletion {
+                        _state.update { state ->
+                            state.copy(
+                                messages = state.messages.map { msg ->
+                                    if (msg.id == botMessageId) {
+                                        msg.copy(isStreaming = false)
+                                    } else {
+                                        msg
+                                    }
+                                },
+                                isStreaming = false,
+                            )
+                        }
                     }
-                }
-                .collect { chunk ->
-                    contentBuilder.append(chunk)
-                    _state.update { state ->
-                        state.copy(
-                            messages = state.messages.map { msg ->
-                                if (msg.id == botMessageId) {
-                                    msg.copy(content = contentBuilder.toString())
-                                } else {
-                                    msg
-                                }
-                            },
-                        )
+                    .collect { chunk ->
+                        contentBuilder.append(chunk)
+                        _state.update { state ->
+                            state.copy(
+                                messages = state.messages.map { msg ->
+                                    if (msg.id == botMessageId) {
+                                        msg.copy(content = contentBuilder.toString())
+                                    } else {
+                                        msg
+                                    }
+                                },
+                            )
+                        }
                     }
+            }
+
+            // Timeout triggered — cancel and show error
+            if (completed == null) {
+                _state.update { state ->
+                    state.copy(
+                        messages = state.messages.map { msg ->
+                            if (msg.id == botMessageId) {
+                                msg.copy(
+                                    content = contentBuilder.toString().ifEmpty {
+                                        "Connection timed out. Please try again."
+                                    },
+                                    isStreaming = false,
+                                )
+                            } else {
+                                msg
+                            }
+                        },
+                        isStreaming = false,
+                        error = "Connection timed out",
+                    )
                 }
+            }
         }
+    }
+
+    fun retryLastMessage() {
+        val last = lastSentMessage ?: return
+        // Remove the last failed bot message
+        _state.update { state ->
+            val messages = state.messages.toMutableList()
+            if (messages.isNotEmpty() && messages.last().role == Role.ASSISTANT) {
+                messages.removeAt(messages.lastIndex)
+            }
+            if (messages.isNotEmpty() && messages.last().role == Role.USER) {
+                messages.removeAt(messages.lastIndex)
+            }
+            state.copy(messages = messages, error = null)
+        }
+        doSendMessage(last)
     }
 
     fun speakMessage(message: ChatMessage) {

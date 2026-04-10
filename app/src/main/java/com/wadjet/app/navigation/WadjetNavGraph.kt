@@ -19,12 +19,15 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
+import com.wadjet.app.screen.HieroglyphsHubScreen
 import com.wadjet.feature.auth.screen.WelcomeScreen
 import com.wadjet.feature.chat.ChatViewModel
 import com.wadjet.feature.chat.screen.ChatScreen
 import com.wadjet.feature.dashboard.DashboardViewModel
 import com.wadjet.feature.dashboard.screen.DashboardScreen
 import com.wadjet.feature.dictionary.screen.DictionaryScreen
+import com.wadjet.feature.dictionary.screen.DictionarySignScreen
 import com.wadjet.feature.dictionary.screen.LessonScreen
 import com.wadjet.feature.dictionary.LessonViewModel
 import com.wadjet.feature.explore.DetailViewModel
@@ -111,12 +114,26 @@ fun WadjetNavGraph(
                 state = landingState,
                 onNavigateToScan = { navController.navigate(Route.Scan) },
                 onNavigateToExplore = { navController.navigate(Route.Explore) },
-                onNavigateToDictionary = { navController.navigate(Route.Dictionary) },
-                onNavigateToWrite = { navController.navigate(Route.Dictionary) },
+                onNavigateToDictionary = { navController.navigate(Route.Dictionary()) },
+                onNavigateToWrite = { navController.navigate(Route.Dictionary(initialTab = 2)) },
                 onNavigateToIdentify = { navController.navigate(Route.Identify) },
                 onNavigateToStories = { navController.navigate(Route.Stories) },
                 onNavigateToChat = { navController.navigate(Route.Chat) },
                 onNavigateToStoryReader = { storyId -> navController.navigate(Route.StoryReader(storyId)) },
+            )
+        }
+
+        // Hieroglyphs hub
+        composable<Route.Hieroglyphs>(
+            enterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
+            exitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
+            popEnterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
+            popExitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
+        ) {
+            HieroglyphsHubScreen(
+                onNavigateToScan = { navController.navigate(Route.Scan) },
+                onNavigateToDictionary = { navController.navigate(Route.Dictionary()) },
+                onNavigateToWrite = { navController.navigate(Route.Dictionary(initialTab = 2)) },
             )
         }
 
@@ -137,6 +154,7 @@ fun WadjetNavGraph(
                     ttsStates = state.ttsStates,
                     onSpeak = { key, text, lang -> viewModel.speak(key, text, lang) },
                     onScanAgain = { viewModel.resetScan() },
+                    onNavigateToDictionarySign = { code -> navController.navigate(Route.DictionarySign(code)) },
                     onBack = { navController.popBackStack() },
                 )
             } else {
@@ -157,6 +175,7 @@ fun WadjetNavGraph(
                 state = state,
                 onScanTap = { scanId -> navController.navigate(Route.ScanResult(scanId.toString())) },
                 onDelete = { viewModel.deleteScan(it) },
+                onRefresh = viewModel::refresh,
                 onBack = { navController.popBackStack() },
             )
         }
@@ -182,6 +201,7 @@ fun WadjetNavGraph(
                         ttsStates = state.ttsStates,
                         onSpeak = { key, text, lang -> viewModel.speak(key, text, lang) },
                         onScanAgain = { navController.popBackStack() },
+                        onNavigateToDictionarySign = { code -> navController.navigate(Route.DictionarySign(code)) },
                         onBack = { navController.popBackStack() },
                     )
                 }
@@ -201,9 +221,11 @@ fun WadjetNavGraph(
                 }
             }
         }
-        composable<Route.Dictionary> {
+        composable<Route.Dictionary> { backStackEntry ->
+            val route = backStackEntry.toRoute<Route.Dictionary>()
             DictionaryScreen(
                 onNavigateToLesson = { level -> navController.navigate(Route.Lesson(level)) },
+                initialTab = route.initialTab,
             )
         }
 
@@ -212,10 +234,13 @@ fun WadjetNavGraph(
             val state by viewModel.state.collectAsStateWithLifecycle()
             LessonScreen(
                 state = state,
-                onSelectAnswer = viewModel::selectAnswer,
-                onRevealAnswer = viewModel::revealAnswer,
-                onNextExercise = viewModel::nextExercise,
                 onRetry = viewModel::retry,
+                onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable<Route.DictionarySign> {
+            DictionarySignScreen(
                 onBack = { navController.popBackStack() },
             )
         }
@@ -248,6 +273,7 @@ fun WadjetNavGraph(
                 onTabSelected = viewModel::selectTab,
                 onToggleFavorite = viewModel::toggleFavorite,
                 onRecommendationTap = { slug -> navController.navigate(Route.LandmarkDetail(slug)) },
+                onChildTap = { slug -> navController.navigate(Route.LandmarkDetail(slug)) },
                 onChatAbout = { slug -> navController.navigate(Route.ChatLandmark(slug)) },
                 onBack = { navController.popBackStack() },
             )
@@ -262,11 +288,23 @@ fun WadjetNavGraph(
                 onMatchTap = { slug ->
                     navController.navigate(Route.LandmarkDetail(slug))
                 },
+                onViewDetails = { slug ->
+                    navController.navigate(Route.LandmarkDetail(slug))
+                },
+                onAskThoth = { slug ->
+                    navController.navigate(Route.ChatLandmark(slug))
+                },
+                onIdentifyAnother = viewModel::reset,
                 onRetry = viewModel::reset,
                 onBack = { navController.popBackStack() },
             )
         }
-        composable<Route.Chat> {
+        composable<Route.Chat>(
+            enterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
+            exitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
+            popEnterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
+            popExitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
+        ) {
             val viewModel: ChatViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
             ChatScreen(
@@ -318,6 +356,7 @@ fun WadjetNavGraph(
                 state = state,
                 onDifficultySelected = viewModel::selectDifficulty,
                 onStoryTap = { storyId -> navController.navigate(Route.StoryReader(storyId)) },
+                onToggleFavorite = viewModel::toggleStoryFavorite,
                 onRefresh = viewModel::refresh,
                 onBack = { navController.popBackStack() },
             )

@@ -34,8 +34,31 @@ data class LandmarkDetail(
     val highlights: String?,
     val visitingTips: String?,
     val historicalSignificance: String?,
+    val dynasty: String?,
+    val notablePharaohs: List<String>,
+    val notableTombs: List<String>,
+    val notableFeatures: List<String>,
+    val keyArtifacts: List<String>,
+    val architecturalFeatures: List<String>,
+    val wikipediaExtract: String?,
     val wikipediaUrl: String?,
+    val children: List<LandmarkChild>,
+    val parent: LandmarkParent?,
     val recommendations: List<Recommendation>,
+)
+
+data class LandmarkChild(
+    val slug: String,
+    val name: String,
+    val nameAr: String?,
+    val description: String?,
+    val thumbnail: String?,
+)
+
+data class LandmarkParent(
+    val slug: String,
+    val name: String,
+    val nameAr: String?,
 )
 
 data class LandmarkImage(
@@ -66,10 +89,15 @@ data class IdentifyMatch(
     val slug: String,
     val name: String,
     val confidence: Float,
+    val source: String?,
 )
 
 data class IdentifyResult(
     val topMatch: IdentifyMatch?,
     val matches: List<IdentifyMatch>,
-    val detail: LandmarkDetail?,
+    val source: String?,
+    val agreement: String?,
+    val description: String?,
+    val isKnownLandmark: Boolean,
+    val isEgyptian: Boolean,
 )

@@ -63,7 +63,7 @@ class ScanRepositoryImpl @Inject constructor(
             gardinerSequence = result.gardinerSequence,
             translationEn = result.translationEn,
             translationAr = result.translationAr,
-            pipeline = result.pipeline,
+            detectionSource = result.detectionSource,
             totalMs = result.totalMs,
         )
         scanResultDao.insert(entity).toInt()
@@ -122,14 +122,13 @@ class ScanRepositoryImpl @Inject constructor(
         layoutMode = layoutMode,
         translationEn = translationEn,
         translationAr = translationAr,
-        annotatedImageBase64 = annotatedImage,
-        detectionMs = detectionMs,
-        classificationMs = classificationMs,
-        transliterationMs = transliterationMs,
-        translationMs = translationMs,
-        totalMs = totalMs,
+        detectionMs = timing?.detectionMs ?: 0.0,
+        classificationMs = timing?.classificationMs ?: 0.0,
+        transliterationMs = timing?.transliterationMs ?: 0.0,
+        translationMs = timing?.translationMs ?: 0.0,
+        totalMs = timing?.totalMs ?: 0.0,
         mode = mode,
-        pipeline = pipeline,
+        detectionSource = detectionSource,
         aiNotes = aiReading?.notes,
         aiUnverified = aiUnverified == true,
         qualityHints = qualityHints,
@@ -149,7 +148,7 @@ class ScanRepositoryImpl @Inject constructor(
         transliteration = transliteration,
         gardinerSequence = gardinerSequence,
         translationEn = translationEn,
-        pipeline = pipeline,
+        detectionSource = detectionSource,
         totalMs = totalMs,
         createdAt = createdAt,
     )
@@ -165,17 +164,25 @@ class ScanRepositoryImpl @Inject constructor(
         val layoutMode: String? = null,
         val translationEn: String?,
         val translationAr: String?,
-        val annotatedImageBase64: String?,
-        val detectionMs: Long,
-        val classificationMs: Long,
-        val transliterationMs: Long?,
-        val translationMs: Long?,
-        val totalMs: Long,
+        val detectionMs: Double = 0.0,
+        val classificationMs: Double = 0.0,
+        val transliterationMs: Double = 0.0,
+        val translationMs: Double = 0.0,
+        val totalMs: Double = 0.0,
         val mode: String,
-        val pipeline: String?,
+        val detectionSource: String? = null,
         val aiNotes: String? = null,
         val aiUnverified: Boolean = false,
         val qualityHints: List<String> = emptyList(),
+        val confidenceSummary: ConfidenceSummarySerializable? = null,
+    )
+
+    @kotlinx.serialization.Serializable
+    private data class ConfidenceSummarySerializable(
+        val avg: Float,
+        val min: Float,
+        val max: Float,
+        val lowCount: Int,
     )
 
     @kotlinx.serialization.Serializable
@@ -202,17 +209,19 @@ class ScanRepositoryImpl @Inject constructor(
         layoutMode = layoutMode,
         translationEn = translationEn,
         translationAr = translationAr,
-        annotatedImageBase64 = annotatedImageBase64,
         detectionMs = detectionMs,
         classificationMs = classificationMs,
         transliterationMs = transliterationMs,
         translationMs = translationMs,
         totalMs = totalMs,
         mode = mode,
-        pipeline = pipeline,
+        detectionSource = detectionSource,
         aiNotes = aiNotes,
         aiUnverified = aiUnverified,
         qualityHints = qualityHints,
+        confidenceSummary = confidenceSummary?.let {
+            ConfidenceSummarySerializable(avg = it.avg, min = it.min, max = it.max, lowCount = it.lowCount)
+        },
     )
 
     private fun ScanResultSerializable.toDomain() = ScanResult(
@@ -231,18 +240,21 @@ class ScanRepositoryImpl @Inject constructor(
         layoutMode = layoutMode,
         translationEn = translationEn,
         translationAr = translationAr,
-        annotatedImageBase64 = annotatedImageBase64,
         detectionMs = detectionMs,
         classificationMs = classificationMs,
         transliterationMs = transliterationMs,
         translationMs = translationMs,
         totalMs = totalMs,
         mode = mode,
-        pipeline = pipeline,
+        detectionSource = detectionSource,
         aiNotes = aiNotes,
         aiUnverified = aiUnverified,
         qualityHints = qualityHints,
-        confidenceSummary = null,
+        confidenceSummary = confidenceSummary?.let {
+            com.wadjet.core.domain.model.ConfidenceSummary(
+                avg = it.avg, min = it.min, max = it.max, lowCount = it.lowCount,
+            )
+        },
     )
 }
 

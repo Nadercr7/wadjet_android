@@ -14,6 +14,7 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -33,6 +34,7 @@ private val TABS = listOf("Browse", "Learn", "Write", "Translate")
 @Composable
 fun DictionaryScreen(
     onNavigateToLesson: (Int) -> Unit,
+    initialTab: Int = 0,
     modifier: Modifier = Modifier,
     dictionaryViewModel: DictionaryViewModel = hiltViewModel(),
     writeViewModel: WriteViewModel = hiltViewModel(),
@@ -43,7 +45,16 @@ fun DictionaryScreen(
     val writeState by writeViewModel.state.collectAsStateWithLifecycle()
     val translateState by translateViewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    val pagerState = rememberPagerState(pageCount = { TABS.size })
+    val pagerState = rememberPagerState(
+        initialPage = initialTab.coerceIn(0, TABS.size - 1),
+        pageCount = { TABS.size },
+    )
+
+    LaunchedEffect(initialTab) {
+        if (initialTab in TABS.indices && pagerState.currentPage != initialTab) {
+            pagerState.animateScrollToPage(initialTab)
+        }
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
         // Tab row
@@ -98,10 +109,10 @@ fun DictionaryScreen(
                 2 -> WriteTab(
                     state = writeState,
                     onInputChange = writeViewModel::onInputChange,
-                    onModeSelect = writeViewModel::selectMode,
                     onConvert = writeViewModel::convert,
                     onClear = writeViewModel::clear,
                     onAppendGlyph = writeViewModel::appendGlyph,
+                    onSpeak = dictionaryViewModel::speakSign,
                 )
                 3 -> TranslateTab(
                     state = translateState,
@@ -125,7 +136,9 @@ fun DictionaryScreen(
         ) {
             SignDetailSheet(
                 sign = browseState.selectedSign!!,
+                isFavorite = browseState.selectedSign!!.code in browseState.favorites,
                 onSpeak = { text -> dictionaryViewModel.speakSign(text) },
+                onToggleFavorite = { dictionaryViewModel.toggleGlyphFavorite(browseState.selectedSign!!.code) },
             )
         }
     }

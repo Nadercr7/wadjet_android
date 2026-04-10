@@ -7,6 +7,7 @@ import com.wadjet.core.domain.model.Category
 import com.wadjet.core.domain.model.Sign
 import com.wadjet.core.domain.model.SignPage
 import com.wadjet.core.domain.repository.DictionaryRepository
+import com.wadjet.core.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -36,6 +37,7 @@ data class BrowseUiState(
     val isLoadingMore: Boolean = false,
     val error: String? = null,
     val selectedSign: Sign? = null,
+    val favorites: Set<String> = emptySet(),
 )
 
 val SIGN_TYPES = listOf("All", "uniliteral", "biliteral", "triliteral", "logogram", "determinative")
@@ -43,6 +45,7 @@ val SIGN_TYPES = listOf("All", "uniliteral", "biliteral", "triliteral", "logogra
 @HiltViewModel
 class DictionaryViewModel @Inject constructor(
     private val repository: DictionaryRepository,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(BrowseUiState())
@@ -57,6 +60,33 @@ class DictionaryViewModel @Inject constructor(
     init {
         loadCategories()
         loadSigns()
+        loadFavorites()
+    }
+
+    private fun loadFavorites() {
+        viewModelScope.launch {
+            userRepository.getFavorites().onSuccess { items ->
+                val glyphIds = items.filter { it.itemType == "glyph" }.map { it.itemId }.toSet()
+                _state.update { it.copy(favorites = glyphIds) }
+            }
+        }
+    }
+
+    fun toggleGlyphFavorite(signCode: String) {
+        val isFav = signCode in _state.value.favorites
+        viewModelScope.launch {
+            if (isFav) {
+                _state.update { it.copy(favorites = it.favorites - signCode) }
+                userRepository.removeFavorite("glyph", signCode).onFailure {
+                    _state.update { it.copy(favorites = it.favorites + signCode) }
+                }
+            } else {
+                _state.update { it.copy(favorites = it.favorites + signCode) }
+                userRepository.addFavorite("glyph", signCode).onFailure {
+                    _state.update { it.copy(favorites = it.favorites - signCode) }
+                }
+            }
+        }
     }
 
     private fun loadCategories() {

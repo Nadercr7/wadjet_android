@@ -16,6 +16,7 @@ import javax.inject.Inject
 data class HistoryUiState(
     val items: List<ScanHistorySummary> = emptyList(),
     val isLoading: Boolean = true,
+    val error: String? = null,
 )
 
 @HiltViewModel
@@ -32,10 +33,20 @@ class HistoryViewModel @Inject constructor(
 
     private fun loadHistory() {
         viewModelScope.launch {
-            scanRepository.getScanHistory().collect { items ->
-                _state.update { it.copy(items = items, isLoading = false) }
+            try {
+                scanRepository.getScanHistory().collect { items ->
+                    _state.update { it.copy(items = items, isLoading = false, error = null) }
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to load scan history")
+                _state.update { it.copy(isLoading = false, error = e.message) }
             }
         }
+    }
+
+    fun refresh() {
+        _state.update { it.copy(isLoading = true, error = null) }
+        loadHistory()
     }
 
     fun deleteScan(scanId: Int) {

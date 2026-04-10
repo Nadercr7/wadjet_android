@@ -1,0 +1,45 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Background -->
+    <path
+        android:fillColor="#141414"
+        android:pathData="M0,0h96v96H0z" />
+    <!-- Image frame outline -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="2"
+        android:pathData="M20,24h56v48H20z" />
+    <!-- Mountain (bottom-left scene) -->
+    <path
+        android:fillColor="#D4AF37"
+        android:fillAlpha="0.25"
+        android:pathData="M20,72L38,50L56,72Z" />
+    <!-- Small mountain -->
+    <path
+        android:fillColor="#D4AF37"
+        android:fillAlpha="0.2"
+        android:pathData="M50,72L62,56L76,72Z" />
+    <!-- Sun -->
+    <path
+        android:fillColor="#D4AF37"
+        android:fillAlpha="0.3"
+        android:pathData="M64,36m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
+    <!-- Diagonal crack / break line -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#EF4444"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M32,30L64,66" />
+    <!-- Second crack -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#EF4444"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M48,28L36,60" />
+</vector>

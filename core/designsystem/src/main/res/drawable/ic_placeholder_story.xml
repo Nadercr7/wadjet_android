@@ -1,0 +1,50 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- Background -->
+    <path
+        android:fillColor="#141414"
+        android:pathData="M0,0h96v96H0z" />
+    <!-- Papyrus scroll body -->
+    <path
+        android:fillColor="#D4AF37"
+        android:fillAlpha="0.25"
+        android:pathData="M30,18h36v60H30z" />
+    <!-- Top roll -->
+    <path
+        android:fillColor="#D4AF37"
+        android:fillAlpha="0.5"
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="1.5"
+        android:pathData="M26,18 Q26,12 30,12 L66,12 Q70,12 70,18 Q70,24 66,24 L30,24 Q26,24 26,18Z" />
+    <!-- Bottom roll -->
+    <path
+        android:fillColor="#D4AF37"
+        android:fillAlpha="0.5"
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="1.5"
+        android:pathData="M26,78 Q26,72 30,72 L66,72 Q70,72 70,78 Q70,84 66,84 L30,84 Q26,84 26,78Z" />
+    <!-- Text lines on scroll -->
+    <path
+        android:fillColor="#D4AF37"
+        android:fillAlpha="0.4"
+        android:pathData="M36,32h24v2H36z" />
+    <path
+        android:fillColor="#D4AF37"
+        android:fillAlpha="0.4"
+        android:pathData="M36,40h20v2H36z" />
+    <path
+        android:fillColor="#D4AF37"
+        android:fillAlpha="0.4"
+        android:pathData="M36,48h24v2H36z" />
+    <path
+        android:fillColor="#D4AF37"
+        android:fillAlpha="0.4"
+        android:pathData="M36,56h16v2H36z" />
+    <path
+        android:fillColor="#D4AF37"
+        android:fillAlpha="0.4"
+        android:pathData="M36,64h22v2H36z" />
+</vector>

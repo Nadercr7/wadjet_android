@@ -7,6 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -57,22 +59,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.core.designsystem.WadjetColors
+import androidx.compose.ui.res.painterResource
 import com.wadjet.core.designsystem.animation.FadeUp
 import com.wadjet.core.designsystem.animation.KenBurnsImage
 import com.wadjet.core.designsystem.component.ShimmerDetail
+import com.wadjet.core.domain.model.LandmarkChild
 import com.wadjet.core.domain.model.LandmarkDetail
 import com.wadjet.core.domain.model.LandmarkImage
 import com.wadjet.core.domain.model.Recommendation
 import com.wadjet.feature.explore.DetailUiState
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun LandmarkDetailScreen(
     state: DetailUiState,
     onTabSelected: (Int) -> Unit,
     onToggleFavorite: () -> Unit,
     onRecommendationTap: (String) -> Unit,
+    onChildTap: (String) -> Unit,
     onChatAbout: (String) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -122,7 +128,7 @@ fun LandmarkDetailScreen(
             state.error != null -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     com.wadjet.core.designsystem.component.ErrorState(
-                        message = state.error,
+                        message = state.error ?: "Couldn't load landmark details. Check your connection",
                         onRetry = onBack,
                     )
                 }
@@ -135,6 +141,7 @@ fun LandmarkDetailScreen(
                     onTabSelected = onTabSelected,
                     onToggleFavorite = onToggleFavorite,
                     onRecommendationTap = onRecommendationTap,
+                    onChildTap = onChildTap,
                     onChatAbout = onChatAbout,
                     onDirections = { coords ->
                         val gmmUri = Uri.parse("google.navigation:q=${coords.first},${coords.second}")
@@ -163,6 +170,7 @@ private fun DetailContent(
     onTabSelected: (Int) -> Unit,
     onToggleFavorite: () -> Unit,
     onRecommendationTap: (String) -> Unit,
+    onChildTap: (String) -> Unit,
     onChatAbout: (String) -> Unit,
     onDirections: (Pair<Double, Double>) -> Unit,
 ) {
@@ -204,10 +212,32 @@ private fun DetailContent(
 
             // Badges
             FadeUp(visible = true) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
                     detail.type?.let { DetailBadge(text = it, color = WadjetColors.Gold) }
                     detail.city?.let { DetailBadge(text = it, color = WadjetColors.Sand) }
                     detail.era?.let { DetailBadge(text = it, color = WadjetColors.Dust) }
+                    detail.dynasty?.let { DetailBadge(text = it, color = WadjetColors.Sand) }
+                }
+            }
+
+            // Parent breadcrumb
+            detail.parent?.let { parent ->
+                Spacer(Modifier.height(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = WadjetColors.Surface,
+                    onClick = { onChildTap(parent.slug) },
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    ) {
+                        Text("Part of: ", style = MaterialTheme.typography.labelSmall, color = WadjetColors.TextMuted)
+                        Text(parent.name, style = MaterialTheme.typography.labelSmall, color = WadjetColors.Gold, fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
 
@@ -299,6 +329,48 @@ private fun DetailContent(
                 )
             }
 
+            // Children
+            if (detail.children.isNotEmpty()) {
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    "Related Sites",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = WadjetColors.Gold,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Spacer(Modifier.height(8.dp))
+                ChildrenRow(children = detail.children, onTap = onChildTap)
+            }
+
+            // Wikipedia
+            if (!detail.wikipediaExtract.isNullOrBlank() || !detail.wikipediaUrl.isNullOrBlank()) {
+                val context = LocalContext.current
+                Spacer(Modifier.height(24.dp))
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = WadjetColors.Surface,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Wikipedia", style = MaterialTheme.typography.titleSmall, color = WadjetColors.Gold, fontWeight = FontWeight.SemiBold)
+                        detail.wikipediaExtract?.let { extract ->
+                            Spacer(Modifier.height(4.dp))
+                            Text(extract, style = MaterialTheme.typography.bodySmall, color = WadjetColors.Text, maxLines = 6, overflow = TextOverflow.Ellipsis)
+                        }
+                        detail.wikipediaUrl?.let { url ->
+                            Spacer(Modifier.height(8.dp))
+                            Surface(
+                                onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) },
+                                shape = RoundedCornerShape(8.dp),
+                                color = WadjetColors.Gold.copy(alpha = 0.15f),
+                            ) {
+                                Text("Read on Wikipedia →", color = WadjetColors.Gold, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
+                            }
+                        }
+                    }
+                }
+            }
+
             Spacer(Modifier.height(32.dp))
         }
     }
@@ -319,6 +391,9 @@ private fun ImageCarousel(images: List<LandmarkImage>) {
                 model = images[page].url,
                 contentDescription = images[page].caption,
                 contentScale = ContentScale.Crop,
+                placeholder = painterResource(DesignR.drawable.ic_placeholder_landmark),
+                error = painterResource(DesignR.drawable.ic_placeholder_error),
+                fallback = painterResource(DesignR.drawable.ic_placeholder_landmark),
                 modifier = Modifier.fillMaxSize(),
             )
         }
@@ -408,6 +483,12 @@ private fun OverviewTab(detail: LandmarkDetail) {
             Spacer(Modifier.height(4.dp))
             Text(highlights, style = MaterialTheme.typography.bodyMedium, color = WadjetColors.Text)
         }
+
+        BulletList("Notable Pharaohs", detail.notablePharaohs)
+        BulletList("Notable Tombs", detail.notableTombs)
+        BulletList("Notable Features", detail.notableFeatures)
+        BulletList("Key Artifacts", detail.keyArtifacts)
+        BulletList("Architectural Features", detail.architecturalFeatures)
     }
 }
 
@@ -445,6 +526,9 @@ private fun GalleryTab(images: List<LandmarkImage>) {
                 model = image.url,
                 contentDescription = image.caption,
                 contentScale = ContentScale.Crop,
+                placeholder = painterResource(DesignR.drawable.ic_placeholder_landmark),
+                error = painterResource(DesignR.drawable.ic_placeholder_error),
+                fallback = painterResource(DesignR.drawable.ic_placeholder_landmark),
                 modifier = Modifier
                     .aspectRatio(1f)
                     .clip(RoundedCornerShape(8.dp)),
@@ -488,6 +572,69 @@ private fun RecommendationsRow(
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BulletList(title: String, items: List<String>) {
+    if (items.isEmpty()) return
+    Spacer(Modifier.height(16.dp))
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleSmall,
+        color = WadjetColors.Gold,
+        fontWeight = FontWeight.SemiBold,
+    )
+    Spacer(Modifier.height(4.dp))
+    items.forEach { item ->
+        Row(modifier = Modifier.padding(start = 8.dp, top = 2.dp)) {
+            Text("•  ", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodyMedium)
+            Text(item, style = MaterialTheme.typography.bodyMedium, color = WadjetColors.Text)
+        }
+    }
+}
+
+@Composable
+private fun ChildrenRow(
+    children: List<LandmarkChild>,
+    onTap: (String) -> Unit,
+) {
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        items(children) { child ->
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = WadjetColors.Surface,
+                modifier = Modifier
+                    .width(140.dp)
+                    .clickable { onTap(child.slug) },
+            ) {
+                Column {
+                    child.thumbnail?.let { thumb ->
+                        AsyncImage(
+                            model = thumb,
+                            contentDescription = child.name,
+                            contentScale = ContentScale.Crop,
+                            placeholder = painterResource(DesignR.drawable.ic_placeholder_landmark),
+                            error = painterResource(DesignR.drawable.ic_placeholder_error),
+                            fallback = painterResource(DesignR.drawable.ic_placeholder_landmark),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(80.dp)
+                                .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
+                        )
+                    }
+                    Text(
+                        text = child.name,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = WadjetColors.Text,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(8.dp),
+                    )
                 }
             }
         }

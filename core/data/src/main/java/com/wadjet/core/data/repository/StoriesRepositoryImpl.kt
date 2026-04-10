@@ -16,8 +16,10 @@ import com.wadjet.core.domain.model.StorySummary
 import com.wadjet.core.domain.repository.StoriesRepository
 import com.wadjet.core.network.api.AudioApiService
 import com.wadjet.core.network.api.StoriesApiService
+import com.wadjet.core.network.api.UserApiService
 import com.wadjet.core.network.model.InteractRequest
 import com.wadjet.core.network.model.InteractionDto
+import com.wadjet.core.network.model.SaveProgressRequest
 import com.wadjet.core.network.model.SpeakRequest
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -31,6 +33,7 @@ import javax.inject.Singleton
 class StoriesRepositoryImpl @Inject constructor(
     private val storiesApi: StoriesApiService,
     private val audioApi: AudioApiService,
+    private val userApi: UserApiService,
     private val firebaseAuth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
 ) : StoriesRepository {
@@ -123,7 +126,8 @@ class StoriesRepositoryImpl @Inject constructor(
             InteractionResult(
                 correct = r.correct,
                 type = r.type,
-                explanation = r.explanation,
+                explanationEn = r.explanation?.en,
+                explanationAr = r.explanation?.ar,
                 outcomeEn = r.outcome?.en,
                 outcomeAr = r.outcome?.ar,
             )
@@ -229,7 +233,21 @@ class StoriesRepositoryImpl @Inject constructor(
                 .collection("story_progress").document(progress.storyId)
                 .set(data).await()
         } catch (e: Exception) {
-            Timber.e(e, "Failed to save story progress")
+            Timber.e(e, "Failed to save story progress to Firestore")
+        }
+        // Also sync to REST API
+        try {
+            userApi.saveProgress(
+                SaveProgressRequest(
+                    storyId = progress.storyId,
+                    chapterIndex = progress.chapterIndex,
+                    glyphsLearned = progress.glyphsLearned,
+                    score = progress.score,
+                    completed = progress.completed,
+                ),
+            )
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to sync progress to REST API")
         }
     }
 

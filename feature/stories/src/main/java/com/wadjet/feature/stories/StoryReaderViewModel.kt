@@ -11,14 +11,17 @@ import com.wadjet.core.domain.model.StoryFull
 import com.wadjet.core.domain.model.StoryProgress
 import com.wadjet.core.domain.repository.StoriesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
+import kotlin.coroutines.resume
 
 data class ReaderUiState(
     val story: StoryFull? = null,
@@ -33,6 +36,8 @@ data class ReaderUiState(
     val score: Int = 0,
     val glyphsLearned: MutableSet<String> = mutableSetOf(),
     val isSpeaking: Boolean = false,
+    val isNarrating: Boolean = false,
+    val narratingParagraphIndex: Int = -1,
     val showAnnotation: Int? = null, // paragraph-level annotation index
 ) {
     val chapter: Chapter? get() = story?.chapters?.getOrNull(currentChapter)
@@ -64,6 +69,7 @@ class StoryReaderViewModel @Inject constructor(
     fun goToChapter(index: Int) {
         val total = _state.value.totalChapters
         if (index < 0 || index >= total) return
+        stopNarration()
         saveCurrentProgress()
         _state.update {
             it.copy(
@@ -142,26 +148,63 @@ class StoryReaderViewModel @Inject constructor(
         }
     }
 
+    private var narrationJob: Job? = null
+
     fun speakChapter() {
-        val chapter = _state.value.chapter ?: return
-        if (_state.value.isSpeaking) {
-            stopSpeaking()
+        if (_state.value.isNarrating || _state.value.isSpeaking) {
+            stopNarration()
             return
         }
-        val text = chapter.paragraphs.joinToString(" ") { it.textEn }
-        _state.update { it.copy(isSpeaking = true) }
+        val chapter = _state.value.chapter ?: return
+        val paragraphs = chapter.paragraphs
+        if (paragraphs.isEmpty()) return
 
-        viewModelScope.launch {
-            storiesRepository.speakChapter(text, voice = chapter.ttsVoice, style = chapter.ttsStyle).onSuccess { bytes ->
-                if (bytes != null) {
-                    playWavBytes(bytes)
-                } else {
-                    _state.update { it.copy(isSpeaking = false, error = "LOCAL_TTS:$text") }
-                }
-            }.onFailure {
-                Timber.e(it, "Story TTS failed")
-                _state.update { state -> state.copy(isSpeaking = false) }
+        _state.update { it.copy(isNarrating = true, isSpeaking = true, narratingParagraphIndex = 0) }
+        narrationJob = viewModelScope.launch {
+            for ((idx, paragraph) in paragraphs.withIndex()) {
+                if (!_state.value.isNarrating) break
+                _state.update { it.copy(narratingParagraphIndex = idx) }
+
+                val spoken = speakAndWait(paragraph.textEn, chapter.ttsVoice, chapter.ttsStyle)
+                if (!spoken || !_state.value.isNarrating) break
             }
+            _state.update { it.copy(isNarrating = false, isSpeaking = false, narratingParagraphIndex = -1) }
+        }
+    }
+
+    private fun stopNarration() {
+        narrationJob?.cancel()
+        narrationJob = null
+        stopSpeaking()
+        _state.update { it.copy(isNarrating = false, narratingParagraphIndex = -1) }
+    }
+
+    /**
+     * Speaks text via server TTS and suspends until playback finishes.
+     * Returns true if playback completed, false if it should fall back to local TTS / failed.
+     */
+    private suspend fun speakAndWait(text: String, voice: String?, style: String?): Boolean {
+        return suspendCancellableCoroutine { cont ->
+            viewModelScope.launch {
+                storiesRepository.speakChapter(text, voice = voice, style = style)
+                    .onSuccess { bytes ->
+                        if (bytes != null) {
+                            playWavBytesAndWait(bytes) { cont.resume(true) }
+                        } else {
+                            // LOCAL_TTS fallback
+                            _state.update { it.copy(error = "LOCAL_TTS:$text") }
+                            // Give local TTS time to speak — roughly 80ms per word
+                            val estimatedMs = text.split(" ").size * 80L + 500L
+                            kotlinx.coroutines.delay(estimatedMs)
+                            if (cont.isActive) cont.resume(true)
+                        }
+                    }
+                    .onFailure {
+                        Timber.e(it, "Narration TTS failed for paragraph")
+                        if (cont.isActive) cont.resume(false)
+                    }
+            }
+            cont.invokeOnCancellation { stopSpeaking() }
         }
     }
 
@@ -229,7 +272,7 @@ class StoryReaderViewModel @Inject constructor(
         }
     }
 
-    private fun playWavBytes(bytes: ByteArray) {
+    private fun playWavBytesAndWait(bytes: ByteArray, onDone: () -> Unit) {
         try {
             val tempFile = File.createTempFile("story_tts_", ".wav")
             tempFile.writeBytes(bytes)
@@ -238,23 +281,23 @@ class StoryReaderViewModel @Inject constructor(
                 setDataSource(tempFile.absolutePath)
                 prepare()
                 setOnCompletionListener {
-                    _state.update { it.copy(isSpeaking = false) }
                     release()
                     mediaPlayer = null
                     tempFile.delete()
+                    onDone()
                 }
                 setOnErrorListener { _, _, _ ->
-                    _state.update { it.copy(isSpeaking = false) }
                     release()
                     mediaPlayer = null
                     tempFile.delete()
+                    onDone()
                     true
                 }
                 start()
             }
         } catch (e: Exception) {
             Timber.e(e, "MediaPlayer failed")
-            _state.update { it.copy(isSpeaking = false) }
+            onDone()
         }
     }
 
@@ -269,6 +312,6 @@ class StoryReaderViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         saveCurrentProgress()
-        stopSpeaking()
+        stopNarration()
     }
 }

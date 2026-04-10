@@ -7,10 +7,17 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -22,7 +29,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -104,15 +114,39 @@ private fun WadjetApp(
             }
         },
     ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding)) {
-            OfflineIndicator(isOffline = !isOffline)
+        Box(modifier = Modifier.padding(innerPadding)) {
+            Column {
+                OfflineIndicator(isOffline = !isOffline)
 
-            WadjetNavGraph(
-                navController = navController,
-                startDestination = startDestination,
-                webClientId = webClientId,
-                modifier = Modifier.weight(1f),
-            )
+                WadjetNavGraph(
+                    navController = navController,
+                    startDestination = startDestination,
+                    webClientId = webClientId,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            // Floating avatar for Dashboard access on bottom-nav screens
+            if (showBottomBar) {
+                IconButton(
+                    onClick = { navController.navigate(Route.Dashboard) },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 12.dp, end = 12.dp)
+                        .zIndex(1f)
+                        .size(40.dp),
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = WadjetColors.Surface.copy(alpha = 0.85f),
+                    ),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = "Dashboard",
+                        tint = WadjetColors.Gold,
+                        modifier = Modifier.size(28.dp),
+                    )
+                }
+            }
         }
     }
 }

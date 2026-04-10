@@ -4,6 +4,7 @@ import com.wadjet.core.domain.model.DashboardStoryProgress
 import com.wadjet.core.domain.model.FavoriteItem
 import com.wadjet.core.domain.model.ScanHistoryItem
 import com.wadjet.core.domain.model.User
+import com.wadjet.core.domain.model.UserLimits
 import com.wadjet.core.domain.model.UserStats
 
 interface UserRepository {
@@ -13,6 +14,8 @@ interface UserRepository {
     suspend fun getStats(): Result<UserStats>
     suspend fun getScanHistory(): Result<List<ScanHistoryItem>>
     suspend fun getFavorites(): Result<List<FavoriteItem>>
+    suspend fun addFavorite(itemType: String, itemId: String): Result<Unit>
     suspend fun removeFavorite(itemType: String, itemId: String): Result<Unit>
     suspend fun getStoryProgress(): Result<List<DashboardStoryProgress>>
+    suspend fun getLimits(): Result<UserLimits>
 }

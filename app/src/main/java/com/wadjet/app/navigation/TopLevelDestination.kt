@@ -1,11 +1,11 @@
 package com.wadjet.app.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CameraAlt
+import androidx.compose.material.icons.automirrored.outlined.Chat
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.HistoryEdu
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.MenuBook
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.ui.graphics.vector.ImageVector
 
 enum class TopLevelDestination(
@@ -14,8 +14,8 @@ enum class TopLevelDestination(
     val label: String,
 ) {
     HOME(Route.Landing, Icons.Outlined.Home, "Home"),
-    SCAN(Route.Scan, Icons.Outlined.CameraAlt, "Scan"),
+    HIEROGLYPHS(Route.Hieroglyphs, Icons.Outlined.HistoryEdu, "Hieroglyphs"),
     EXPLORE(Route.Explore, Icons.Outlined.Explore, "Explore"),
-    STORIES(Route.Stories, Icons.Outlined.MenuBook, "Stories"),
-    PROFILE(Route.Dashboard, Icons.Outlined.Person, "Profile"),
+    STORIES(Route.Stories, Icons.AutoMirrored.Outlined.MenuBook, "Stories"),
+    THOTH(Route.Chat, Icons.AutoMirrored.Outlined.Chat, "Thoth"),
 }

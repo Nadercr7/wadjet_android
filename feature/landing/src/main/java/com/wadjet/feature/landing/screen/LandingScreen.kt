@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs
+import com.wadjet.core.designsystem.R as DesignR
+import androidx.compose.ui.res.painterResource
 import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.animation.BorderBeam
 import com.wadjet.core.designsystem.animation.DotPattern
@@ -363,6 +365,9 @@ private fun ContinueScanCard(
                 model = scan.thumbnailPath,
                 contentDescription = "Recent scan",
                 contentScale = ContentScale.Crop,
+                placeholder = painterResource(DesignR.drawable.ic_placeholder_glyph),
+                error = painterResource(DesignR.drawable.ic_placeholder_error),
+                fallback = painterResource(DesignR.drawable.ic_placeholder_glyph),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)

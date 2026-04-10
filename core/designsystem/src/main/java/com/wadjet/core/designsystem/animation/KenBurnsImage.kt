@@ -13,8 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.wadjet.core.designsystem.R
 
 @Composable
 fun KenBurnsImage(
@@ -45,6 +47,9 @@ fun KenBurnsImage(
     AsyncImage(
         model = url,
         contentDescription = contentDescription,
+        placeholder = painterResource(R.drawable.ic_placeholder_landmark),
+        error = painterResource(R.drawable.ic_placeholder_error),
+        fallback = painterResource(R.drawable.ic_placeholder_landmark),
         modifier = modifier
             .graphicsLayer {
                 scaleX = scale

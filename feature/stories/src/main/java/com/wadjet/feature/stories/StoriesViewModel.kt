@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.wadjet.core.domain.model.StoryProgress
 import com.wadjet.core.domain.model.StorySummary
 import com.wadjet.core.domain.repository.StoriesRepository
+import com.wadjet.core.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +23,7 @@ data class StoriesUiState(
     val selectedDifficulty: String = "All",
     val isLoading: Boolean = false,
     val error: String? = null,
+    val favorites: Set<String> = emptySet(),
 ) {
     val filteredStories: List<StorySummary>
         get() = if (selectedDifficulty == "All") {
@@ -34,6 +36,7 @@ data class StoriesUiState(
 @HiltViewModel
 class StoriesViewModel @Inject constructor(
     private val storiesRepository: StoriesRepository,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StoriesUiState())
@@ -42,6 +45,24 @@ class StoriesViewModel @Inject constructor(
     init {
         loadStories()
         observeProgress()
+        loadFavorites()
+    }
+
+    fun toggleStoryFavorite(storyId: String) {
+        val isFav = storyId in _state.value.favorites
+        viewModelScope.launch {
+            if (isFav) {
+                _state.update { it.copy(favorites = it.favorites - storyId) }
+                userRepository.removeFavorite("story", storyId).onFailure {
+                    _state.update { it.copy(favorites = it.favorites + storyId) }
+                }
+            } else {
+                _state.update { it.copy(favorites = it.favorites + storyId) }
+                userRepository.addFavorite("story", storyId).onFailure {
+                    _state.update { it.copy(favorites = it.favorites - storyId) }
+                }
+            }
+        }
     }
 
     fun selectDifficulty(difficulty: String) {
@@ -74,6 +95,15 @@ class StoriesViewModel @Inject constructor(
         viewModelScope.launch {
             storiesRepository.getAllProgress().collect { progress ->
                 _state.update { it.copy(progress = progress) }
+            }
+        }
+    }
+
+    private fun loadFavorites() {
+        viewModelScope.launch {
+            userRepository.getFavorites().onSuccess { items ->
+                val storyIds = items.filter { it.itemType == "story" }.map { it.itemId }.toSet()
+                _state.update { it.copy(favorites = storyIds) }
             }
         }
     }

@@ -6,9 +6,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +26,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,24 +36,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -71,7 +68,6 @@ import com.wadjet.core.designsystem.component.WadjetBadge
 import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.domain.model.DetectedGlyph
 import com.wadjet.core.domain.model.ScanResult
-import com.wadjet.feature.scan.rememberBase64Bitmap
 import com.wadjet.feature.scan.util.gardinerToUnicode
 import kotlinx.coroutines.delay
 
@@ -82,12 +78,15 @@ fun ScanResultScreen(
     ttsStates: Map<String, TtsState>,
     onSpeak: (key: String, text: String, lang: String) -> Unit,
     onScanAgain: () -> Unit,
+    onNavigateToDictionarySign: (code: String) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
     var showArabic by remember { mutableStateOf(false) }
+    var selectedGlyph by remember { mutableStateOf<DetectedGlyph?>(null) }
+    val sheetState = rememberModalBottomSheetState()
 
     // Haptic confirm on result arrival
     LaunchedEffect(Unit) {
@@ -174,13 +173,6 @@ fun ScanResultScreen(
                 }
             }
 
-            // Annotated image with ShineSweep
-            FadeUp(visible = visibleSections >= 1) {
-                Box(modifier = Modifier.shineSweep()) {
-                    AnnotatedImageView(base64 = result.annotatedImageBase64)
-                }
-            }
-
             Spacer(modifier = Modifier.height(12.dp))
 
             // Confidence badge + reading direction/layout badges
@@ -197,6 +189,18 @@ fun ScanResultScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
+                    // Pipeline source badge
+                    result.detectionSource?.let { source ->
+                        val sourceLabel = when {
+                            source.contains("gemini", ignoreCase = true) -> "AI Vision (Gemini)"
+                            source.contains("ai_vision", ignoreCase = true) -> "AI Vision"
+                            source.contains("onnx_fallback", ignoreCase = true) -> "ONNX (Fallback)"
+                            source.contains("onnx", ignoreCase = true) && source.contains("ai", ignoreCase = true) -> "ONNX + AI Verified"
+                            source.contains("onnx", ignoreCase = true) -> "ONNX"
+                            else -> source.replaceFirstChar { it.uppercase() }
+                        }
+                        WadjetBadge(text = "Detected by: $sourceLabel", variant = BadgeVariant.Gold)
+                    }
                     WadjetBadge(text = "Confidence: $avgConf%", variant = variant)
                     result.readingDirection?.let { dir ->
                         WadjetBadge(text = dir.replaceFirstChar { it.uppercase() }, variant = BadgeVariant.Muted)
@@ -259,7 +263,10 @@ fun ScanResultScreen(
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             result.glyphs.forEach { glyph ->
-                                GlyphChip(glyph)
+                                GlyphChip(
+                                    glyph = glyph,
+                                    onClick = { selectedGlyph = glyph },
+                                )
                             }
                         }
                     }
@@ -353,24 +360,46 @@ fun ScanResultScreen(
                 }
             }
 
-            // AI Notes card
+            // AI Notes card (collapsible)
             val aiNotes = result.aiNotes
             if (!aiNotes.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 FadeUp(visible = visibleSections >= 6) {
+                    var aiNotesExpanded by remember { mutableStateOf(false) }
                     Surface(
                         shape = RoundedCornerShape(12.dp),
                         color = WadjetColors.Gold.copy(alpha = 0.08f),
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            SectionLabel("AI Notes")
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = aiNotes,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = WadjetColors.Text,
-                            )
+                        Column(
+                            modifier = Modifier
+                                .padding(12.dp)
+                                .animateContentSize(),
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { aiNotesExpanded = !aiNotesExpanded },
+                            ) {
+                                SectionLabel("AI Notes")
+                                Spacer(modifier = Modifier.weight(1f))
+                                Icon(
+                                    imageVector = if (aiNotesExpanded) Icons.Default.KeyboardArrowUp
+                                    else Icons.Default.KeyboardArrowDown,
+                                    contentDescription = if (aiNotesExpanded) "Collapse" else "Expand",
+                                    tint = WadjetColors.Gold,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            }
+                            if (aiNotesExpanded) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = aiNotes,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = WadjetColors.Text,
+                                )
+                            }
                         }
                     }
                 }
@@ -398,67 +427,143 @@ fun ScanResultScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
         }
-    }
-}
 
-@Composable
-private fun AnnotatedImageView(base64: String?) {
-    val bitmap = rememberBase64Bitmap(base64)
-
-    if (bitmap != null) {
-        var scale by remember { mutableFloatStateOf(1f) }
-        var offsetX by remember { mutableFloatStateOf(0f) }
-        var offsetY by remember { mutableFloatStateOf(0f) }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(280.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(WadjetColors.Surface)
-                .pointerInput(Unit) {
-                    detectTransformGestures { _, pan, zoom, _ ->
-                        scale = (scale * zoom).coerceIn(0.5f, 4f)
-                        offsetX += pan.x
-                        offsetY += pan.y
-                    }
+        // Glyph detail bottom sheet
+        selectedGlyph?.let { glyph ->
+            GlyphDetailSheet(
+                glyph = glyph,
+                onDismiss = { selectedGlyph = null },
+                onViewInDictionary = {
+                    selectedGlyph = null
+                    onNavigateToDictionarySign(glyph.gardinerCode)
                 },
-            contentAlignment = Alignment.Center,
-        ) {
-            Image(
-                bitmap = bitmap,
-                contentDescription = "Annotated scan result",
-                modifier = Modifier
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        translationX = offsetX,
-                        translationY = offsetY,
-                    ),
+                sheetState = sheetState,
             )
         }
-    } else {
-        Box(
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GlyphDetailSheet(
+    glyph: DetectedGlyph,
+    onDismiss: () -> Unit,
+    onViewInDictionary: () -> Unit,
+    sheetState: androidx.compose.material3.SheetState,
+) {
+    val unicode = gardinerToUnicode(glyph.gardinerCode)
+    val confidence = (glyph.classConfidence * 100).toInt()
+    val detConfidence = (glyph.detectionConfidence * 100).toInt()
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = WadjetColors.Surface,
+        contentColor = WadjetColors.Text,
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(WadjetColors.Surface),
-            contentAlignment = Alignment.Center,
+                .padding(horizontal = 24.dp, vertical = 8.dp)
+                .padding(bottom = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text("No annotated image", color = WadjetColors.TextMuted)
+            // Large glyph unicode
+            Text(
+                text = unicode,
+                style = HieroglyphStyle.copy(fontSize = 64.sp),
+                color = WadjetColors.Gold,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Gardiner code
+            Text(
+                text = glyph.gardinerCode,
+                style = MaterialTheme.typography.titleLarge,
+                color = WadjetColors.Sand,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Unicode codepoint
+            if (unicode != glyph.gardinerCode) {
+                val codepoint = unicode.codePointAt(0)
+                Text(
+                    text = "U+${codepoint.toString(16).uppercase().padStart(5, '0')}",
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                    color = WadjetColors.TextMuted,
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // Confidence bars
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                ConfidenceBar(label = "Classification", value = confidence, fraction = glyph.classConfidence)
+                ConfidenceBar(label = "Detection", value = detConfidence, fraction = glyph.detectionConfidence)
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // View in Dictionary button
+            WadjetButton(
+                text = "View in Dictionary",
+                onClick = onViewInDictionary,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
 
 @Composable
-private fun GlyphChip(glyph: DetectedGlyph) {
+private fun ConfidenceBar(label: String, value: Int, fraction: Float) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(120.dp),
+    ) {
+        Text(
+            text = "$value%",
+            style = MaterialTheme.typography.titleMedium,
+            color = when {
+                value >= 70 -> WadjetColors.Success
+                value >= 40 -> WadjetColors.Gold
+                else -> WadjetColors.Error
+            },
+            fontWeight = FontWeight.Bold,
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        LinearProgressIndicator(
+            progress = { fraction },
+            color = when {
+                value >= 70 -> WadjetColors.Success
+                value >= 40 -> WadjetColors.Gold
+                else -> WadjetColors.Error
+            },
+            trackColor = WadjetColors.Night,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp),
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = WadjetColors.TextMuted,
+        )
+    }
+}
+
+@Composable
+private fun GlyphChip(glyph: DetectedGlyph, onClick: () -> Unit) {
     val unicode = gardinerToUnicode(glyph.gardinerCode)
     val confidence = (glyph.classConfidence * 100).toInt()
 
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = WadjetColors.Surface,
+        onClick = onClick,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -535,14 +640,14 @@ private fun TimingStats(result: ScanResult) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                StatItem("Detection", "${result.detectionMs}ms")
-                StatItem("Classification", "${result.classificationMs}ms")
-                StatItem("Total", "${result.totalMs}ms")
+                StatItem("Detection", "${result.detectionMs.toLong()}ms")
+                StatItem("Classification", "${result.classificationMs.toLong()}ms")
+                StatItem("Total", "${result.totalMs.toLong()}ms")
             }
             result.mode.let {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Pipeline: ${result.pipeline ?: result.mode}",
+                    text = "Source: ${result.detectionSource ?: result.mode}",
                     style = MaterialTheme.typography.labelSmall,
                     color = WadjetColors.TextMuted,
                 )

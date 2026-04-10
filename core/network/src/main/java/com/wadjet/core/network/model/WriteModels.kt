@@ -14,29 +14,40 @@ data class WriteResponse(
     val hieroglyphs: String = "",
     val glyphs: List<WriteGlyphDto> = emptyList(),
     val mode: String = "",
-    val mdc: String? = null,
+    val input: String = "",
+    val provider: String = "",
 )
 
 @Serializable
 data class WriteGlyphDto(
-    @SerialName("gardiner_code") val gardinerCode: String = "",
-    val glyph: String = "",
+    val type: String = "glyph",
+    val code: String = "",
     val transliteration: String? = null,
-    @SerialName("phonetic_value") val phoneticValue: String? = null,
-    val meaning: String? = null,
+    @SerialName("unicode_char") val unicodeChar: String = "",
+    val description: String? = null,
+    val verified: Boolean = false,
 )
 
 @Serializable
 data class PaletteResponse(
-    val signs: List<PaletteSignDto> = emptyList(),
+    val groups: PaletteGroupsDto = PaletteGroupsDto(),
+)
+
+@Serializable
+data class PaletteGroupsDto(
+    val uniliteral: List<PaletteSignDto> = emptyList(),
+    val biliteral: List<PaletteSignDto> = emptyList(),
+    val triliteral: List<PaletteSignDto> = emptyList(),
+    val logogram: List<PaletteSignDto> = emptyList(),
 )
 
 @Serializable
 data class PaletteSignDto(
     val code: String = "",
-    val glyph: String = "",
+    @SerialName("unicode_char") val unicodeChar: String = "",
     val transliteration: String? = null,
-    val category: String = "",
+    val description: String? = null,
+    @SerialName("phonetic_value") val phoneticValue: String? = null,
 )
 
 @Serializable

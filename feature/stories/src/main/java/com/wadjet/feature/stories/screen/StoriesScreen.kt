@@ -21,6 +21,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -43,6 +45,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -50,6 +54,9 @@ import androidx.compose.ui.unit.sp
 import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.animation.FadeUp
 import com.wadjet.core.designsystem.animation.shineSweep
+import com.wadjet.core.designsystem.component.EmptyState
+import com.wadjet.core.designsystem.component.ErrorState
+import com.wadjet.core.designsystem.component.ShimmerCardList
 import com.wadjet.core.domain.model.StoryProgress
 import com.wadjet.core.domain.model.StorySummary
 import com.wadjet.feature.stories.DIFFICULTY_FILTERS
@@ -64,6 +71,7 @@ fun StoriesScreen(
     state: StoriesUiState,
     onDifficultySelected: (String) -> Unit,
     onStoryTap: (String) -> Unit,
+    onToggleFavorite: (String) -> Unit,
     onRefresh: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -154,9 +162,24 @@ fun StoriesScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    if (filtered.isEmpty() && !state.isLoading) {
+                    if (state.isLoading && filtered.isEmpty()) {
                         item {
-                            com.wadjet.core.designsystem.component.EmptyState(
+                            ShimmerCardList(
+                                itemCount = 5,
+                                modifier = Modifier.padding(top = 8.dp),
+                            )
+                        }
+                    } else if (state.error != null && filtered.isEmpty()) {
+                        item {
+                            ErrorState(
+                                message = state.error ?: "Couldn't load stories. Check your connection",
+                                onRetry = onRefresh,
+                                modifier = Modifier.fillParentMaxHeight(0.6f),
+                            )
+                        }
+                    } else if (filtered.isEmpty() && !state.isLoading) {
+                        item {
+                            EmptyState(
                                 glyph = "\uD80C\uDC5F",
                                 title = "No stories found",
                                 subtitle = "Try a different difficulty filter",
@@ -177,7 +200,9 @@ fun StoriesScreen(
                                 story = story,
                                 progress = progress,
                                 isLocked = isLocked,
+                                isFavorite = story.id in state.favorites,
                                 onClick = { if (!isLocked) onStoryTap(story.id) },
+                                onToggleFavorite = { onToggleFavorite(story.id) },
                             )
                         }
                     }
@@ -192,7 +217,9 @@ private fun StoryCard(
     story: StorySummary,
     progress: StoryProgress?,
     isLocked: Boolean,
+    isFavorite: Boolean,
     onClick: () -> Unit,
+    onToggleFavorite: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val progressFraction = if (progress != null && story.chapterCount > 0) {
@@ -200,6 +227,8 @@ private fun StoryCard(
     } else {
         0f
     }
+
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
 
     Box(
         modifier = modifier
@@ -215,7 +244,16 @@ private fun StoryCard(
                 modifier = Modifier
                     .size(64.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(WadjetColors.SurfaceAlt)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = when (story.difficulty.lowercase()) {
+                                "beginner" -> listOf(WadjetColors.Gold, Color(0xFF8B6914))
+                                "intermediate" -> listOf(Color(0xFF4A90D9), Color(0xFF1A3A6B))
+                                "advanced" -> listOf(Color(0xFF9B59B6), Color(0xFF4A1A6B))
+                                else -> listOf(WadjetColors.Gold, Color(0xFF8B6914))
+                            },
+                        ),
+                    )
                     .shineSweep(),
                 contentAlignment = Alignment.Center,
             ) {
@@ -307,6 +345,24 @@ private fun StoryCard(
                             fontStyle = FontStyle.Italic,
                         )
                     }
+                }
+            }
+
+            // Favorite button
+            if (!isLocked) {
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                        onToggleFavorite()
+                    },
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                        tint = if (isFavorite) WadjetColors.Error else WadjetColors.TextMuted,
+                        modifier = Modifier.size(20.dp),
+                    )
                 }
             }
         }

@@ -2,6 +2,7 @@ package com.wadjet.core.network.di
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.wadjet.core.network.AuthInterceptor
+import com.wadjet.core.network.RateLimitInterceptor
 import com.wadjet.core.network.TokenManager
 import com.wadjet.core.network.api.AuthApiService
 import com.wadjet.core.network.api.AudioApiService
@@ -43,8 +44,10 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(
         authInterceptor: AuthInterceptor,
+        rateLimitInterceptor: RateLimitInterceptor,
     ): OkHttpClient = OkHttpClient.Builder()
         .addInterceptor(authInterceptor)
+        .addInterceptor(rateLimitInterceptor)
         .addInterceptor(
             HttpLoggingInterceptor().apply {
                 level = if (com.wadjet.core.network.BuildConfig.DEBUG) {

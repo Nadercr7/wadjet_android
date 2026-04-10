@@ -9,6 +9,6 @@ data class SignFtsEntity(
     val code: String,
     val glyph: String,
     val transliteration: String,
-    val meaning: String,
+    val description: String,
     @androidx.room.ColumnInfo(name = "category_name") val categoryName: String,
 )

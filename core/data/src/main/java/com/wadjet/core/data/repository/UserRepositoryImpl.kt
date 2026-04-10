@@ -5,9 +5,11 @@ import com.wadjet.core.domain.model.DashboardStoryProgress
 import com.wadjet.core.domain.model.FavoriteItem
 import com.wadjet.core.domain.model.ScanHistoryItem
 import com.wadjet.core.domain.model.User
+import com.wadjet.core.domain.model.UserLimits
 import com.wadjet.core.domain.model.UserStats
 import com.wadjet.core.domain.repository.UserRepository
 import com.wadjet.core.network.api.UserApiService
+import com.wadjet.core.network.model.AddFavoriteRequest
 import com.wadjet.core.network.model.ChangePasswordRequest
 import com.wadjet.core.network.model.UpdateProfileRequest
 import timber.log.Timber
@@ -105,6 +107,16 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun addFavorite(
+        itemType: String,
+        itemId: String,
+    ): Result<Unit> = suspendRunCatching {
+        val response = userApi.addFavorite(AddFavoriteRequest(itemType, itemId))
+        if (!response.isSuccessful) {
+            throw Exception("Failed to add favorite: ${response.code()}")
+        }
+    }
+
     override suspend fun removeFavorite(
         itemType: String,
         itemId: String,
@@ -127,6 +139,19 @@ class UserRepositoryImpl @Inject constructor(
                 completed = it.completed,
             )
         }
+    }
+
+    override suspend fun getLimits(): Result<UserLimits> = suspendRunCatching {
+        val response = userApi.getLimits()
+        val body = response.body() ?: throw Exception("Failed to load limits")
+        UserLimits(
+            tier = body.tier,
+            scansPerDay = body.limits.scansPerDay,
+            chatMessagesPerDay = body.limits.chatMessagesPerDay,
+            storiesAccessible = body.limits.storiesAccessible,
+            scansToday = body.usage.scansToday,
+            chatMessagesToday = body.usage.chatMessagesToday,
+        )
     }
 
     private fun parseError(body: String?): String? {

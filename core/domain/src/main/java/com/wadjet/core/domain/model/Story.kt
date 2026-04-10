@@ -110,7 +110,8 @@ data class DecisionChoice(
 data class InteractionResult(
     val correct: Boolean,
     val type: String,
-    val explanation: String?,
+    val explanationEn: String?,
+    val explanationAr: String?,
     val outcomeEn: String?,
     val outcomeAr: String?,
 )

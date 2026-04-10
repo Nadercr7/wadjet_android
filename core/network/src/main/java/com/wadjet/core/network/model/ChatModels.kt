@@ -21,5 +21,5 @@ data class ClearChatRequest(
 
 @Serializable
 data class ClearChatResponse(
-    val detail: String = "",
+    val status: String = "",
 )

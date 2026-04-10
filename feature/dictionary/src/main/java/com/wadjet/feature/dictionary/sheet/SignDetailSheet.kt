@@ -21,6 +21,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Icon
@@ -32,7 +34,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wadjet.core.designsystem.GardinerCodeStyle
@@ -44,10 +45,13 @@ import com.wadjet.core.domain.model.Sign
 @Composable
 fun SignDetailSheet(
     sign: Sign,
+    isFavorite: Boolean,
     onSpeak: (String) -> Unit,
+    onToggleFavorite: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
 
     Column(
         modifier = modifier
@@ -107,20 +111,20 @@ fun SignDetailSheet(
             DetailRow("Transliteration", sign.transliteration)
         }
 
-        // Phonetic
-        val phonetic = sign.phoneticValue
-        if (!phonetic.isNullOrBlank()) {
-            DetailRow("Phonetic", phonetic)
+        // Reading
+        val reading = sign.reading
+        if (!reading.isNullOrBlank()) {
+            DetailRow("Reading", reading)
         }
 
-        // Meaning
-        if (sign.meaning.isNotBlank()) {
-            DetailRow("Meaning", sign.meaning)
+        // Description
+        if (sign.description.isNotBlank()) {
+            DetailRow("Description", sign.description)
         }
 
         // Pronunciation guide
         if (!sign.pronunciationSound.isNullOrBlank()) {
-            DetailRow("Pronunciation", "${sign.pronunciationSound} — ${sign.pronunciationDesc.orEmpty()}")
+            DetailRow("Pronunciation", "${sign.pronunciationSound} — ${sign.pronunciationExample.orEmpty()}")
         }
 
         // Fun fact
@@ -148,36 +152,27 @@ fun SignDetailSheet(
             }
         }
 
-        // Examples
-        if (sign.examples.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = "Examples",
-                style = MaterialTheme.typography.labelMedium,
-                color = WadjetColors.Gold,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            sign.examples.forEach { example ->
-                Text(
-                    text = "• $example",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = WadjetColors.Text,
-                    fontStyle = FontStyle.Italic,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp),
-                )
-            }
-        }
-
         // Action buttons
         Spacer(modifier = Modifier.height(20.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
-            // TTS — prefer speech field (richer pronunciation), fall back to phonetic
-            val ttsText = sign.speech?.takeIf { it.isNotBlank() } ?: phonetic
+            // Favorite
+            IconButton(onClick = {
+                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                onToggleFavorite()
+            }) {
+                Icon(
+                    if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                    tint = if (isFavorite) WadjetColors.Error else WadjetColors.Gold,
+                    modifier = Modifier.size(28.dp),
+                )
+            }
+
+            // TTS — prefer speechText, fall back to reading
+            val ttsText = sign.speechText?.takeIf { it.isNotBlank() } ?: sign.reading
             if (!ttsText.isNullOrBlank()) {
                 IconButton(onClick = { onSpeak(ttsText) }) {
                     Icon(
@@ -192,7 +187,7 @@ fun SignDetailSheet(
             // Copy
             IconButton(onClick = {
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText("glyph", "${sign.glyph} ${sign.code} — ${sign.meaning}"))
+                clipboard.setPrimaryClip(ClipData.newPlainText("glyph", "${sign.glyph} ${sign.code} — ${sign.description}"))
                 Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
             }) {
                 Icon(
@@ -205,7 +200,7 @@ fun SignDetailSheet(
 
             // Share
             IconButton(onClick = {
-                val shareText = "${sign.glyph} ${sign.code}\n${sign.meaning}\nTransliteration: ${sign.transliteration}"
+                val shareText = "${sign.glyph} ${sign.code}\n${sign.description}\nTransliteration: ${sign.transliteration}"
                 val intent = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
                     putExtra(Intent.EXTRA_TEXT, shareText)

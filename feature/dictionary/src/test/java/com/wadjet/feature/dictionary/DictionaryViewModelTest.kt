@@ -33,16 +33,17 @@ class DictionaryViewModelTest {
         code = "A1",
         glyph = "\uD80C\uDC02",
         transliteration = "s",
-        phoneticValue = "s",
-        meaning = "seated man",
+        description = "seated man",
         type = "logogram",
+        typeName = "Logogram",
         category = "A",
         categoryName = "Man and his activities",
-        examples = listOf("sit", "man"),
+        reading = null,
+        isPhonetic = false,
         funFact = "Most common sign",
-        speech = null,
+        speechText = null,
         pronunciationSound = null,
-        pronunciationDesc = null,
+        pronunciationExample = null,
     )
 
     @Before

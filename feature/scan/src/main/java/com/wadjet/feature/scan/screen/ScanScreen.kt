@@ -135,7 +135,7 @@ fun ScanScreen(
                     .fillMaxWidth(),
             ) {
                 com.wadjet.core.designsystem.component.ErrorState(
-                    message = error,
+                    message = error ?: "Couldn't read hieroglyphs. Try again with better lighting",
                 )
             }
         }

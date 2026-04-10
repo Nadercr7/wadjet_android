@@ -30,10 +30,9 @@ class DictionaryRepositoryImplTest {
 
     private val testDto = SignDetailDto(
         code = "A1",
-        glyph = "\uD80C\uDC02",
+        unicodeChar = "\uD80C\uDC02",
         transliteration = "s",
-        phoneticValue = "s",
-        meaning = "seated man",
+        description = "seated man",
         type = "logogram",
         category = "A",
         categoryName = "Man and his activities",
@@ -56,7 +55,7 @@ class DictionaryRepositoryImplTest {
         val page = result.getOrThrow()
         assertEquals(1, page.signs.size)
         assertEquals("A1", page.signs.first().code)
-        assertEquals("seated man", page.signs.first().meaning)
+        assertEquals("seated man", page.signs.first().description)
     }
 
     @Test
@@ -79,8 +78,7 @@ class DictionaryRepositoryImplTest {
             code = "A1",
             glyph = "\uD80C\uDC02",
             transliteration = "s",
-            phoneticValue = "s",
-            meaning = "seated man",
+            description = "seated man",
             type = "logogram",
             category = "A",
             categoryName = "Man and his activities",
@@ -103,8 +101,7 @@ class DictionaryRepositoryImplTest {
             code = "A1",
             glyph = "\uD80C\uDC02",
             transliteration = "s",
-            phoneticValue = "s",
-            meaning = "seated man",
+            description = "seated man",
             type = "logogram",
             category = "A",
             categoryName = "Man and his activities",
@@ -113,7 +110,7 @@ class DictionaryRepositoryImplTest {
 
         val result = repository.getSign("A1")
         assertTrue(result.isSuccess)
-        assertEquals("seated man", result.getOrThrow().meaning)
+        assertEquals("seated man", result.getOrThrow().description)
     }
 
     @Test
@@ -134,8 +131,7 @@ class DictionaryRepositoryImplTest {
             code = "A1",
             glyph = "\uD80C\uDC02",
             transliteration = "s",
-            phoneticValue = "s",
-            meaning = "seated man",
+            description = "seated man",
             type = "logogram",
             category = "A",
             categoryName = "Man and his activities",

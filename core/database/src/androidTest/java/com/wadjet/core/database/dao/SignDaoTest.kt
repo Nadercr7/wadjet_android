@@ -25,8 +25,7 @@ class SignDaoTest {
         code = "A1",
         glyph = "\uD80C\uDC02",
         transliteration = "s",
-        phoneticValue = "s",
-        meaning = "seated man",
+        description = "seated man",
         type = "logogram",
         category = "A",
         categoryName = "Man and his activities",
@@ -52,7 +51,7 @@ class SignDaoTest {
 
         val result = signDao.getByCode("A1")
         assertNotNull(result)
-        assertEquals("seated man", result!!.meaning)
+        assertEquals("seated man", result!!.description)
         assertEquals("logogram", result.type)
     }
 
@@ -124,10 +123,10 @@ class SignDaoTest {
     @Test
     fun upsert_replaceOnConflict() = runTest {
         signDao.insertAll(listOf(testSign))
-        signDao.insertAll(listOf(testSign.copy(meaning = "updated meaning")))
+        signDao.insertAll(listOf(testSign.copy(description = "updated description")))
 
         val result = signDao.getByCode("A1")
-        assertEquals("updated meaning", result!!.meaning)
+        assertEquals("updated description", result!!.description)
     }
 
     @Test

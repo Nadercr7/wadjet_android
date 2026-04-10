@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.wadjet.core.designsystem.component.TtsState
 import com.wadjet.core.domain.model.ScanResult
 import com.wadjet.core.domain.repository.ScanRepository
+import com.wadjet.core.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -45,6 +46,7 @@ sealed class ScanEvent {
 @HiltViewModel
 class ScanViewModel @Inject constructor(
     private val scanRepository: ScanRepository,
+    private val userRepository: UserRepository,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -116,6 +118,15 @@ class ScanViewModel @Inject constructor(
 
     fun onImageCaptured(file: File) {
         viewModelScope.launch {
+            // Check free-tier limits
+            userRepository.getLimits().onSuccess { limits ->
+                if (limits.scansToday >= limits.scansPerDay) {
+                    _state.update { it.copy(error = "Daily scan limit reached (${limits.scansPerDay}). Try again tomorrow.") }
+                    _events.emit(ScanEvent.ShowToast("Daily scan limit reached"))
+                    return@launch
+                }
+            }
+
             _state.update { it.copy(cameraActive = false, isLoading = true, error = null, scanStep = ScanStep.DETECTING) }
 
             // Compress image

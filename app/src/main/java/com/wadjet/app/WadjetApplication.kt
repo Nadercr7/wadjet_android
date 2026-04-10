@@ -70,14 +70,16 @@ class WadjetApplication : Application(), SingletonImageLoader.Factory {
 /**
  * Coil pipeline interceptor that prepends the server base URL to relative paths.
  * E.g. "/static/cache/images/foo.jpg" → "https://server.com/static/cache/images/foo.jpg"
- * Absolute URLs (http/https) are left unchanged.
+ * E.g. "static/cache/images/foo.jpg" → "https://server.com/static/cache/images/foo.jpg"
+ * Absolute URLs (http/https) and local file URIs are left unchanged.
  */
 private class BaseUrlInterceptor(private val baseUrl: String) : Interceptor {
     override suspend fun intercept(chain: Interceptor.Chain): coil3.request.ImageResult {
         val data = chain.request.data
-        if (data is String && data.startsWith("/")) {
+        if (data is String && !data.startsWith("http") && !data.startsWith("file:") && !data.startsWith("content:")) {
+            val path = if (data.startsWith("/")) data else "/$data"
             val newRequest = chain.request.newBuilder()
-                .data("$baseUrl$data")
+                .data("$baseUrl$path")
                 .build()
             return chain.withRequest(newRequest).proceed()
         }

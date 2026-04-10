@@ -16,7 +16,7 @@ data class ScanResultEntity(
     @ColumnInfo(name = "gardiner_sequence") val gardinerSequence: String? = null,
     @ColumnInfo(name = "translation_en") val translationEn: String? = null,
     @ColumnInfo(name = "translation_ar") val translationAr: String? = null,
-    @ColumnInfo(name = "pipeline") val pipeline: String? = null,
-    @ColumnInfo(name = "total_ms") val totalMs: Long = 0,
+    @ColumnInfo(name = "detection_source") val detectionSource: String? = null,
+    @ColumnInfo(name = "total_ms") val totalMs: Double = 0.0,
     @ColumnInfo(name = "created_at") val createdAt: Long = System.currentTimeMillis(),
 )

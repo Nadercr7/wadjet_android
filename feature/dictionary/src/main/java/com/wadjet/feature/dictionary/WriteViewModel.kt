@@ -18,7 +18,6 @@ import javax.inject.Inject
 
 data class WriteUiState(
     val inputText: String = "",
-    val selectedMode: String = "alpha",
     val result: WriteResult? = null,
     val preview: WriteResult? = null,
     val isPreviewLoading: Boolean = false,
@@ -26,8 +25,6 @@ data class WriteUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
 )
-
-val WRITE_MODES = listOf("alpha" to "Alphabetic", "smart" to "Smart", "mdc" to "MdC")
 
 @HiltViewModel
 class WriteViewModel @Inject constructor(
@@ -59,18 +56,14 @@ class WriteViewModel @Inject constructor(
         previewJob = viewModelScope.launch {
             delay(500)
             _state.update { it.copy(isPreviewLoading = true) }
-            repository.write(text, _state.value.selectedMode)
+            repository.write(text, "smart")
                 .onSuccess { r -> _state.update { it.copy(preview = r, isPreviewLoading = false) } }
                 .onFailure { _state.update { it.copy(isPreviewLoading = false) } }
         }
     }
 
-    fun selectMode(mode: String) {
-        _state.update { it.copy(selectedMode = mode) }
-    }
-
     fun appendGlyph(sign: PaletteSign) {
-        val text = if (_state.value.selectedMode == "mdc") sign.code else sign.glyph
+        val text = sign.glyph
         _state.update { it.copy(inputText = it.inputText + text) }
     }
 
@@ -79,7 +72,7 @@ class WriteViewModel @Inject constructor(
         if (s.inputText.isBlank()) return
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
-            repository.write(s.inputText, s.selectedMode)
+            repository.write(s.inputText, "smart")
                 .onSuccess { result -> _state.update { it.copy(result = result, isLoading = false) } }
                 .onFailure { e -> _state.update { it.copy(isLoading = false, error = e.message) } }
         }

@@ -43,8 +43,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.core.designsystem.WadjetColors
+import androidx.compose.ui.res.painterResource
 import com.wadjet.core.designsystem.component.ShimmerCardList
+import com.wadjet.core.designsystem.component.ErrorState
 import com.wadjet.core.domain.model.ScanHistorySummary
 import com.wadjet.feature.scan.HistoryUiState
 import java.io.File
@@ -58,6 +61,7 @@ fun ScanHistoryScreen(
     state: HistoryUiState,
     onScanTap: (Int) -> Unit,
     onDelete: (Int) -> Unit,
+    onRefresh: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -82,6 +86,18 @@ fun ScanHistoryScreen(
                     itemCount = 5,
                     modifier = Modifier.padding(16.dp),
                 )
+            }
+
+            state.error != null -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    ErrorState(
+                        message = state.error ?: "Couldn't load scan history. Check your connection",
+                        onRetry = onRefresh,
+                    )
+                }
             }
 
             state.items.isEmpty() -> {
@@ -181,6 +197,9 @@ private fun HistoryCard(
                 model = File(item.thumbnailPath),
                 contentDescription = "Scan thumbnail",
                 contentScale = ContentScale.Crop,
+                placeholder = painterResource(DesignR.drawable.ic_placeholder_glyph),
+                error = painterResource(DesignR.drawable.ic_placeholder_error),
+                fallback = painterResource(DesignR.drawable.ic_placeholder_glyph),
                 modifier = Modifier
                     .size(64.dp)
                     .clip(RoundedCornerShape(8.dp))
@@ -216,7 +235,7 @@ private fun HistoryCard(
                         color = WadjetColors.Gold,
                     )
                     Text(
-                        text = "${item.totalMs}ms",
+                        text = "${item.totalMs.toLong()}ms",
                         style = MaterialTheme.typography.labelSmall,
                         color = WadjetColors.TextMuted,
                     )

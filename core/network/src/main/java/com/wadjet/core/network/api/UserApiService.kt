@@ -4,6 +4,7 @@ import com.wadjet.core.network.model.AddFavoriteRequest
 import com.wadjet.core.network.model.ChangePasswordRequest
 import com.wadjet.core.network.model.FavoriteItemDto
 import com.wadjet.core.network.model.OkResponse
+import com.wadjet.core.network.model.SaveProgressRequest
 import com.wadjet.core.network.model.ScanHistoryItemDto
 import com.wadjet.core.network.model.StoryProgressItemDto
 import com.wadjet.core.network.model.UpdateProfileRequest
@@ -49,6 +50,9 @@ interface UserApiService {
 
     @GET("api/user/progress")
     suspend fun getStoryProgress(): Response<List<StoryProgressItemDto>>
+
+    @POST("api/user/progress")
+    suspend fun saveProgress(@Body body: SaveProgressRequest): Response<OkResponse>
 
     @GET("api/user/limits")
     suspend fun getLimits(): Response<UserLimitsResponse>

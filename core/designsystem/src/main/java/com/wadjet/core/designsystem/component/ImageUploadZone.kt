@@ -30,12 +30,14 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs
+import com.wadjet.core.designsystem.R
 import com.wadjet.core.designsystem.WadjetColors
 
 @Composable
@@ -90,6 +92,9 @@ fun ImageUploadZone(
                     model = localUri,
                     contentDescription = "Selected image",
                     contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.ic_placeholder_glyph),
+                    error = painterResource(R.drawable.ic_placeholder_error),
+                    fallback = painterResource(R.drawable.ic_placeholder_glyph),
                     modifier = Modifier.fillMaxSize(),
                 )
                 // "Change" overlay

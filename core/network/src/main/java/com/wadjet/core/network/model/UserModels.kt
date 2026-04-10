@@ -79,4 +79,14 @@ data class LimitsDto(
 @Serializable
 data class UsageDto(
     @SerialName("scans_today") val scansToday: Int = 0,
+    @SerialName("chat_messages_today") val chatMessagesToday: Int = 0,
+)
+
+@Serializable
+data class SaveProgressRequest(
+    @SerialName("story_id") val storyId: String,
+    @SerialName("chapter_index") val chapterIndex: Int,
+    @SerialName("glyphs_learned") val glyphsLearned: List<String>,
+    val score: Int,
+    val completed: Boolean,
 )

@@ -13,18 +13,22 @@ data class ScanResponse(
     @SerialName("layout_mode") val layoutMode: String? = null,
     @SerialName("translation_en") val translationEn: String? = null,
     @SerialName("translation_ar") val translationAr: String? = null,
-    @SerialName("detection_ms") val detectionMs: Long = 0,
-    @SerialName("classification_ms") val classificationMs: Long = 0,
-    @SerialName("transliteration_ms") val transliterationMs: Long? = null,
-    @SerialName("translation_ms") val translationMs: Long? = null,
-    @SerialName("total_ms") val totalMs: Long = 0,
-    @SerialName("annotated_image") val annotatedImage: String? = null,
+    val timing: TimingDto? = null,
     val mode: String = "auto",
-    val pipeline: String? = null,
+    @SerialName("detection_source") val detectionSource: String? = null,
     @SerialName("ai_reading") val aiReading: AiReadingDto? = null,
     @SerialName("ai_unverified") val aiUnverified: Boolean? = null,
     @SerialName("quality_hints") val qualityHints: List<String> = emptyList(),
     @SerialName("confidence_summary") val confidenceSummary: ConfidenceSummaryDto? = null,
+)
+
+@Serializable
+data class TimingDto(
+    @SerialName("detection_ms") val detectionMs: Double = 0.0,
+    @SerialName("classification_ms") val classificationMs: Double = 0.0,
+    @SerialName("transliteration_ms") val transliterationMs: Double = 0.0,
+    @SerialName("translation_ms") val translationMs: Double = 0.0,
+    @SerialName("total_ms") val totalMs: Double = 0.0,
 )
 
 @Serializable

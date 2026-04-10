@@ -138,7 +138,7 @@ fun BrowseTab(
                     contentAlignment = Alignment.Center,
                 ) {
                     com.wadjet.core.designsystem.component.ErrorState(
-                        message = state.error,
+                        message = state.error ?: "Couldn't load hieroglyphs. Check your connection",
                     )
                 }
             } else {
@@ -202,7 +202,7 @@ private fun SignGridItem(sign: Sign, onClick: () -> Unit) {
             modifier = Modifier.padding(top = 4.dp),
         )
         Text(
-            text = sign.meaning,
+            text = sign.description,
             style = MaterialTheme.typography.labelSmall,
             color = WadjetColors.TextMuted,
             maxLines = 1,

@@ -129,12 +129,16 @@ class ExploreRepositoryImpl @Inject constructor(
             val topName = body.name
             IdentifyResult(
                 topMatch = if (topSlug != null && topName != null) {
-                    IdentifyMatch(topSlug, topName, body.confidence)
+                    IdentifyMatch(topSlug, topName, body.confidence, body.source)
                 } else {
                     null
                 },
-                matches = body.top3.map { IdentifyMatch(it.slug, it.name, it.confidence) },
-                detail = body.landmark?.toDomain(),
+                matches = body.top3.map { IdentifyMatch(it.slug, it.name, it.confidence, it.source) },
+                source = body.source,
+                agreement = body.agreement,
+                description = body.description,
+                isKnownLandmark = body.isKnownLandmark,
+                isEgyptian = body.isEgyptian,
             )
         } else {
             throw ApiException("Identify failed: ${response.code()}")
@@ -268,7 +272,20 @@ class ExploreRepositoryImpl @Inject constructor(
         highlights = highlights,
         visitingTips = visitingTips,
         historicalSignificance = historicalSignificance,
+        dynasty = dynasty,
+        notablePharaohs = notablePharaohs ?: emptyList(),
+        notableTombs = notableTombs ?: emptyList(),
+        notableFeatures = notableFeatures ?: emptyList(),
+        keyArtifacts = keyArtifacts ?: emptyList(),
+        architecturalFeatures = architecturalFeatures ?: emptyList(),
+        wikipediaExtract = wikipediaExtract,
         wikipediaUrl = wikipediaUrl,
+        children = children?.map {
+            com.wadjet.core.domain.model.LandmarkChild(it.slug, it.name, it.nameAr, it.description, it.thumbnail)
+        } ?: emptyList(),
+        parent = parent?.let {
+            com.wadjet.core.domain.model.LandmarkParent(it.slug, it.name, it.nameAr)
+        },
         recommendations = recommendations?.map {
             Recommendation(it.slug, it.name, it.score, it.reasons)
         } ?: emptyList(),

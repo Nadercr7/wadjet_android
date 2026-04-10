@@ -48,7 +48,16 @@ data class LandmarkDetailDto(
     val highlights: String? = null,
     @SerialName("visiting_tips") val visitingTips: String? = null,
     @SerialName("historical_significance") val historicalSignificance: String? = null,
+    val dynasty: String? = null,
+    @SerialName("notable_pharaohs") val notablePharaohs: List<String>? = null,
+    @SerialName("notable_tombs") val notableTombs: List<String>? = null,
+    @SerialName("notable_features") val notableFeatures: List<String>? = null,
+    @SerialName("key_artifacts") val keyArtifacts: List<String>? = null,
+    @SerialName("architectural_features") val architecturalFeatures: List<String>? = null,
+    @SerialName("wikipedia_extract") val wikipediaExtract: String? = null,
     @SerialName("wikipedia_url") val wikipediaUrl: String? = null,
+    val children: List<LandmarkChildDto>? = null,
+    val parent: LandmarkParentDto? = null,
     val recommendations: List<RecommendationDto>? = null,
 )
 
@@ -91,12 +100,32 @@ data class LandmarkChildrenResponse(
 )
 
 @Serializable
+data class LandmarkChildDto(
+    val slug: String,
+    val name: String = "",
+    @SerialName("name_ar") val nameAr: String? = null,
+    val description: String? = null,
+    val thumbnail: String? = null,
+)
+
+@Serializable
+data class LandmarkParentDto(
+    val slug: String,
+    val name: String = "",
+    @SerialName("name_ar") val nameAr: String? = null,
+)
+
+@Serializable
 data class IdentifyResponse(
     val slug: String? = null,
     val name: String? = null,
     val confidence: Float = 0f,
+    val source: String? = null,
+    val agreement: String? = null,
+    val description: String? = null,
+    @SerialName("is_known_landmark") val isKnownLandmark: Boolean = false,
+    @SerialName("is_egyptian") val isEgyptian: Boolean = true,
     val top3: List<IdentifyMatchDto> = emptyList(),
-    val landmark: LandmarkDetailDto? = null,
 )
 
 @Serializable
@@ -104,4 +133,5 @@ data class IdentifyMatchDto(
     val slug: String,
     val name: String = "",
     val confidence: Float = 0f,
+    val source: String? = null,
 )

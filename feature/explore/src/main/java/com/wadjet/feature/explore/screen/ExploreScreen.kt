@@ -29,8 +29,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -39,7 +38,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -49,7 +48,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -62,7 +61,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.core.designsystem.WadjetColors
+import androidx.compose.ui.res.painterResource
 import com.wadjet.core.designsystem.animation.goldPulse
 import com.wadjet.core.designsystem.animation.shineSweep
 import com.wadjet.core.designsystem.component.ShimmerCardList
@@ -167,23 +168,55 @@ fun ExploreScreen(
                 )
             } else if (state.landmarks.isEmpty() && !state.isLoading) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("𓉐", style = MaterialTheme.typography.displayLarge, color = WadjetColors.Gold.copy(alpha = 0.5f))
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = if (state.searchQuery.isNotBlank()) "No results for \"${state.searchQuery}\""
+                    com.wadjet.core.designsystem.component.EmptyState(
+                        glyph = "𓉐",
+                        title = if (state.searchQuery.isNotBlank()) "No results for \"${state.searchQuery}\""
                             else "No landmarks found",
-                            color = WadjetColors.TextMuted,
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                    }
+                        subtitle = if (state.searchQuery.isNotBlank()) "Try a different search term"
+                            else "Explore Egypt's ancient wonders — check back soon",
+                    )
                 }
             } else {
+                val featured = remember(state.landmarks) {
+                    state.landmarks.filter { it.featured }
+                }
+
                 LazyColumn(
                     state = listState,
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    if (featured.isNotEmpty() && state.searchQuery.isBlank()) {
+                        item(key = "featured_header") {
+                            Text(
+                                "Featured",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = WadjetColors.Gold,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
+                        item(key = "featured_carousel") {
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                items(featured, key = { "ft_${it.slug}" }) { landmark ->
+                                    FeaturedCard(
+                                        landmark = landmark,
+                                        onClick = { onLandmarkTap(landmark.slug) },
+                                    )
+                                }
+                            }
+                        }
+                        item(key = "all_header") {
+                            Text(
+                                "All Landmarks",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = WadjetColors.Gold,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(top = 8.dp),
+                            )
+                        }
+                    }
                     items(state.landmarks, key = { it.slug }) { landmark ->
                         LandmarkCard(
                             landmark = landmark,
@@ -216,7 +249,7 @@ fun ExploreScreen(
                         .fillMaxWidth(),
                 ) {
                     com.wadjet.core.designsystem.component.ErrorState(
-                        message = error,
+                        message = error ?: "Couldn't load landmarks. Check your connection",
                         onRetry = onRefresh,
                     )
                 }
@@ -289,39 +322,36 @@ private fun CityFilter(
     selected: String?,
     onSelect: (String?) -> Unit,
 ) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Box(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(vertical = 4.dp),
     ) {
-        TextButton(onClick = { expanded = true }) {
-            Text(
-                text = selected ?: "All Cities",
-                color = WadjetColors.Gold,
-                style = MaterialTheme.typography.bodyMedium,
+        item {
+            FilterChip(
+                selected = selected == null,
+                onClick = { onSelect(null) },
+                label = { Text("All Cities") },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = WadjetColors.Gold,
+                    selectedLabelColor = WadjetColors.Night,
+                    containerColor = WadjetColors.Surface,
+                    labelColor = WadjetColors.TextMuted,
+                ),
             )
-            Text(" ▾", color = WadjetColors.Gold)
         }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            containerColor = WadjetColors.Surface,
-        ) {
-            DropdownMenuItem(
-                text = { Text("All Cities", color = WadjetColors.Text) },
-                onClick = { onSelect(null); expanded = false },
+        items(cities) { city ->
+            FilterChip(
+                selected = city == selected,
+                onClick = { onSelect(city) },
+                label = { Text(city) },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = WadjetColors.Gold,
+                    selectedLabelColor = WadjetColors.Night,
+                    containerColor = WadjetColors.Surface,
+                    labelColor = WadjetColors.TextMuted,
+                ),
             )
-            cities.forEach { city ->
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            city,
-                            color = if (city == selected) WadjetColors.Gold else WadjetColors.Text,
-                        )
-                    },
-                    onClick = { onSelect(city); expanded = false },
-                )
-            }
         }
     }
 }
@@ -353,6 +383,9 @@ private fun LandmarkCard(
                     model = landmark.thumbnail,
                     contentDescription = landmark.name,
                     contentScale = ContentScale.Crop,
+                    placeholder = painterResource(DesignR.drawable.ic_placeholder_landmark),
+                    error = painterResource(DesignR.drawable.ic_placeholder_error),
+                    fallback = painterResource(DesignR.drawable.ic_placeholder_landmark),
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
@@ -375,7 +408,7 @@ private fun LandmarkCard(
                     )
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "Favorite",
+                        contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
                         tint = heartColor,
                         modifier = Modifier.size(20.dp),
                     )
@@ -425,6 +458,52 @@ private fun LandmarkCard(
                     landmark.era?.let { era ->
                         Badge(text = era, color = WadjetColors.Dust)
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FeaturedCard(
+    landmark: Landmark,
+    onClick: () -> Unit,
+) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = WadjetColors.Surface,
+        modifier = Modifier
+            .width(220.dp)
+            .clickable(onClick = onClick),
+    ) {
+        Column {
+            AsyncImage(
+                model = landmark.thumbnail,
+                contentDescription = landmark.name,
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(DesignR.drawable.ic_placeholder_landmark),
+                error = painterResource(DesignR.drawable.ic_placeholder_error),
+                fallback = painterResource(DesignR.drawable.ic_placeholder_landmark),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+            )
+            Column(modifier = Modifier.padding(10.dp)) {
+                Text(
+                    text = landmark.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = WadjetColors.Text,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                landmark.city?.let { city ->
+                    Text(
+                        text = city,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = WadjetColors.TextMuted,
+                    )
                 }
             }
         }

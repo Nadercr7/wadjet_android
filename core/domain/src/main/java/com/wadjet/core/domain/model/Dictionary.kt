@@ -4,16 +4,17 @@ data class Sign(
     val code: String,
     val glyph: String,
     val transliteration: String,
-    val phoneticValue: String?,
-    val meaning: String,
+    val description: String,
     val type: String,
+    val typeName: String,
     val category: String,
     val categoryName: String,
-    val examples: List<String>,
+    val reading: String?,
+    val isPhonetic: Boolean,
     val funFact: String?,
-    val speech: String?,
+    val speechText: String?,
     val pronunciationSound: String?,
-    val pronunciationDesc: String?,
+    val pronunciationExample: String?,
 )
 
 data class SignPage(
@@ -32,43 +33,49 @@ data class Category(
 data class Lesson(
     val level: Int,
     val title: String,
+    val subtitle: String,
     val description: String,
+    val tip: String?,
+    val introParagraphs: List<String>,
     val signs: List<Sign>,
-    val exercises: List<Exercise>,
+    val exampleWords: List<ExampleWord>,
+    val practiceWords: List<PracticeWord>,
+    val prevLessonLevel: Int?,
+    val nextLessonLevel: Int?,
+    val totalLessons: Int,
 )
 
-data class Exercise(
-    val type: String,
-    val question: String,
-    val options: List<ExerciseOption>,
-    val correctAnswer: String,
-    val hint: String?,
+data class ExampleWord(
+    val hieroglyphs: String,
+    val codes: List<String>,
+    val transliteration: String,
+    val translation: String,
+    val highlightCodes: List<String>,
 )
 
-data class ExerciseOption(
-    val code: String,
-    val glyph: String,
-    val label: String,
+data class PracticeWord(
+    val hieroglyphs: String,
+    val transliteration: String,
+    val translation: String,
+    val hint: String,
 )
 
 data class WriteResult(
     val hieroglyphs: String,
     val glyphs: List<WriteGlyph>,
     val mode: String,
-    val mdc: String?,
 )
 
 data class WriteGlyph(
-    val gardinerCode: String,
+    val code: String,
     val glyph: String,
     val transliteration: String?,
-    val phoneticValue: String?,
-    val meaning: String?,
+    val description: String?,
+    val type: String,
 )
 
 data class PaletteSign(
     val code: String,
     val glyph: String,
     val transliteration: String?,
-    val category: String,
 )

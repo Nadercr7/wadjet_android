@@ -119,12 +119,12 @@ data class InteractRequest(
 data class InteractResponse(
     val correct: Boolean = false,
     val type: String = "",
-    val explanation: String? = null,
+    val explanation: BilingualText? = null,
     val outcome: BilingualText? = null,
     @SerialName("correct_answer") val correctAnswer: String? = null,
     @SerialName("target_glyph") val targetGlyph: String? = null,
     @SerialName("gardiner_code") val gardinerCode: String? = null,
-    val hint: String? = null,
+    val hint: BilingualText? = null,
     @SerialName("choice_id") val choiceId: String? = null,
 )
 

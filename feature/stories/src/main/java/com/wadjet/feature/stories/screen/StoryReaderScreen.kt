@@ -80,7 +80,9 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.core.designsystem.WadjetColors
+import androidx.compose.ui.res.painterResource
 import com.wadjet.core.designsystem.animation.FadeUp
 import com.wadjet.core.domain.model.GlyphAnnotation
 import com.wadjet.core.domain.model.Interaction
@@ -117,7 +119,20 @@ fun StoryReaderScreen(
     LaunchedEffect(state.error) {
         val err = state.error ?: return@LaunchedEffect
         if (err.startsWith("LOCAL_TTS:")) {
-            ttsInstance?.speak(err.removePrefix("LOCAL_TTS:"), TextToSpeech.QUEUE_FLUSH, null, null)
+            val text = err.removePrefix("LOCAL_TTS:")
+            val isArabic = text.any { it in '\u0600'..'\u06FF' || it in '\u0750'..'\u077F' }
+            ttsInstance?.language = if (isArabic) Locale("ar") else Locale.US
+            ttsInstance?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+            onDismissError()
+        }
+    }
+
+    // Show general errors via Snackbar
+    val snackbarHostState = androidx.compose.material3.SnackbarHostState()
+    LaunchedEffect(state.error) {
+        val err = state.error ?: return@LaunchedEffect
+        if (!err.startsWith("LOCAL_TTS:")) {
+            snackbarHostState.showSnackbar(err)
             onDismissError()
         }
     }
@@ -127,6 +142,7 @@ fun StoryReaderScreen(
 
     Scaffold(
         containerColor = WadjetColors.Night,
+        snackbarHost = { androidx.compose.material3.SnackbarHost(snackbarHostState) },
         topBar = {
             Column {
                 TopAppBar(
@@ -220,7 +236,10 @@ fun StoryReaderScreen(
 
             paragraphs.forEachIndexed { pIdx, paragraph ->
                 item(key = "p_$pIdx") {
-                    ParagraphBlock(paragraph = paragraph)
+                    ParagraphBlock(
+                        paragraph = paragraph,
+                        isNarrating = state.narratingParagraphIndex == pIdx,
+                    )
                 }
 
                 // Show interactions that go after this paragraph
@@ -412,13 +431,18 @@ private fun SceneImage(
                     .crossfade(true)
                     .build(),
                 contentDescription = "Scene illustration",
+                placeholder = painterResource(DesignR.drawable.ic_placeholder_story),
+                error = painterResource(DesignR.drawable.ic_placeholder_error),
+                fallback = painterResource(DesignR.drawable.ic_placeholder_story),
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer(scaleX = scale.value, scaleY = scale.value),
                 contentScale = ContentScale.Crop,
             )
         } else if (isLoading) {
-            Text("Generating scene...", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+            com.wadjet.core.designsystem.component.ShimmerEffect(
+                modifier = Modifier.fillMaxSize(),
+            )
         } else {
             Text(
                 text = "𓁟",
@@ -433,11 +457,34 @@ private fun SceneImage(
 @Composable
 private fun ParagraphBlock(
     paragraph: Paragraph,
+    isNarrating: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     var selectedAnnotation by remember { mutableStateOf<GlyphAnnotation?>(null) }
 
-    Column(modifier = modifier) {
+    val borderAlpha = animateFloatAsState(
+        targetValue = if (isNarrating) 1f else 0f,
+        animationSpec = tween(300),
+        label = "narrateBorder",
+    )
+
+    Column(
+        modifier = modifier.then(
+            if (borderAlpha.value > 0f) {
+                Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(WadjetColors.Gold.copy(alpha = 0.06f * borderAlpha.value))
+                    .border(
+                        width = 1.dp,
+                        color = WadjetColors.Gold.copy(alpha = 0.4f * borderAlpha.value),
+                        shape = RoundedCornerShape(8.dp),
+                    )
+                    .padding(8.dp)
+            } else {
+                Modifier
+            },
+        ),
+    ) {
         val annotatedText = buildAnnotatedString {
             val text = paragraph.textEn
             val annotations = paragraph.glyphAnnotations
@@ -823,7 +870,7 @@ private fun FeedbackBanner(
                         fontWeight = FontWeight.Bold,
                     )
                 }
-                val explanation = result.explanation
+                val explanation = result.explanationEn
                     ?: result.outcomeEn
                     ?: (interaction as? Interaction.ChooseGlyph)?.explanationEn
                 if (!explanation.isNullOrBlank()) {

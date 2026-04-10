@@ -52,6 +52,7 @@ import com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs
 import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.animation.FadeUp
 import com.wadjet.core.designsystem.animation.shineSweep
+import com.wadjet.core.designsystem.component.ErrorState
 import com.wadjet.core.domain.model.DashboardStoryProgress
 import com.wadjet.core.domain.model.FavoriteItem
 import com.wadjet.core.domain.model.ScanHistoryItem
@@ -114,6 +115,16 @@ fun DashboardScreen(
                 verticalArrangement = Arrangement.spacedBy(20.dp),
                 modifier = Modifier.fillMaxSize(),
             ) {
+                // Error state
+                if (state.error != null) {
+                    item {
+                        ErrorState(
+                            message = state.error ?: "Couldn't load your dashboard. Check your connection",
+                            onRetry = onRefresh,
+                        )
+                    }
+                }
+
                 // User header
                 item {
                     FadeUp(visible = true) {
@@ -183,7 +194,7 @@ fun DashboardScreen(
                             com.wadjet.core.designsystem.component.EmptyState(
                                 glyph = "\uD80C\uDEB9",
                                 title = "No favorites yet",
-                                subtitle = "Heart landmarks to save them here",
+                                subtitle = "Tap ♡ on landmarks, glyphs, or stories to save them here",
                             )
                         }
                     }

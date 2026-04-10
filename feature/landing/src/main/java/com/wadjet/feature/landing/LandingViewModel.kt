@@ -6,9 +6,11 @@ import com.wadjet.core.domain.model.ScanHistorySummary
 import com.wadjet.core.domain.model.StoryProgress
 import com.wadjet.core.domain.model.StorySummary
 import com.wadjet.core.domain.model.User
+import com.wadjet.core.domain.model.UserLimits
 import com.wadjet.core.domain.repository.AuthRepository
 import com.wadjet.core.domain.repository.ScanRepository
 import com.wadjet.core.domain.repository.StoriesRepository
+import com.wadjet.core.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +25,7 @@ data class LandingUiState(
     val recentScan: ScanHistorySummary? = null,
     val inProgressStory: StorySummary? = null,
     val inProgressStoryChapter: Int = 0,
+    val limits: UserLimits? = null,
 )
 
 @HiltViewModel
@@ -30,6 +33,7 @@ class LandingViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val scanRepository: ScanRepository,
     private val storiesRepository: StoriesRepository,
+    private val userRepository: UserRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LandingUiState())
@@ -44,6 +48,11 @@ class LandingViewModel @Inject constructor(
             // Load user name
             val user: User? = authRepository.currentUser.firstOrNull()
             _state.update { it.copy(userName = user?.displayName) }
+        }
+        viewModelScope.launch {
+            // Load usage limits
+            userRepository.getLimits()
+                .onSuccess { limits -> _state.update { it.copy(limits = limits) } }
         }
         viewModelScope.launch {
             // Load most recent scan

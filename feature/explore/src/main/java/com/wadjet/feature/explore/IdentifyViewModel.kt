@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.domain.model.IdentifyMatch
 import com.wadjet.core.domain.model.IdentifyResult
+import com.wadjet.core.domain.model.LandmarkDetail
 import com.wadjet.core.domain.repository.ExploreRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -25,6 +26,8 @@ data class IdentifyUiState(
     val cameraActive: Boolean = true,
     val isLoading: Boolean = false,
     val result: IdentifyResult? = null,
+    val detailPreview: LandmarkDetail? = null,
+    val isLoadingDetail: Boolean = false,
     val error: String? = null,
 )
 
@@ -44,6 +47,7 @@ class IdentifyViewModel @Inject constructor(
             exploreRepository.identifyLandmark(compressed)
                 .onSuccess { result ->
                     _state.update { it.copy(result = result, isLoading = false) }
+                    autoFetchDetail(result)
                 }
                 .onFailure { error ->
                     Timber.e(error, "Identify failed")
@@ -54,6 +58,22 @@ class IdentifyViewModel @Inject constructor(
                             cameraActive = true,
                         )
                     }
+                }
+        }
+    }
+
+    private fun autoFetchDetail(result: IdentifyResult) {
+        val topMatch = result.topMatch ?: return
+        if (topMatch.confidence < 0.60f || !result.isKnownLandmark) return
+        viewModelScope.launch {
+            _state.update { it.copy(isLoadingDetail = true) }
+            exploreRepository.getLandmarkDetail(topMatch.slug)
+                .onSuccess { detail ->
+                    _state.update { it.copy(detailPreview = detail, isLoadingDetail = false) }
+                }
+                .onFailure {
+                    Timber.w(it, "Auto-fetch detail failed for ${topMatch.slug}")
+                    _state.update { it.copy(isLoadingDetail = false) }
                 }
         }
     }

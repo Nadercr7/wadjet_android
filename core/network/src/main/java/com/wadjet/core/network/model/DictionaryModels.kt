@@ -15,23 +15,45 @@ data class DictionaryResponse(
 @Serializable
 data class SignDetailDto(
     val code: String,
-    val glyph: String,
+    @SerialName("unicode_char") val unicodeChar: String = "",
     val transliteration: String = "",
-    @SerialName("phonetic_value") val phoneticValue: String? = null,
-    val meaning: String = "",
+    val description: String = "",
     val type: String = "",
+    @SerialName("type_name") val typeName: String = "",
     val category: String = "",
     @SerialName("category_name") val categoryName: String = "",
-    val examples: List<String>? = null,
+    val reading: String? = null,
+    @SerialName("logographic_value") val logographicValue: String? = null,
+    @SerialName("determinative_class") val determinativeClass: String? = null,
+    @SerialName("is_phonetic") val isPhonetic: Boolean = false,
+    val pronunciation: PronunciationGuideDto? = null,
     @SerialName("fun_fact") val funFact: String? = null,
-    val speech: String? = null,
-    @SerialName("pronunciation_guide") val pronunciationGuide: PronunciationGuideDto? = null,
+    @SerialName("speech_text") val speechText: String? = null,
+    // Single-sign detail extras
+    @SerialName("example_usages") val exampleUsages: List<ExampleUsageDto>? = null,
+    @SerialName("related_signs") val relatedSigns: List<RelatedSignDto>? = null,
 )
 
 @Serializable
 data class PronunciationGuideDto(
     val sound: String = "",
-    val description: String = "",
+    val example: String = "",
+)
+
+@Serializable
+data class ExampleUsageDto(
+    val hieroglyphs: String = "",
+    val transliteration: String = "",
+    val translation: String = "",
+)
+
+@Serializable
+data class RelatedSignDto(
+    val code: String = "",
+    @SerialName("unicode_char") val unicodeChar: String = "",
+    val transliteration: String = "",
+    val reading: String? = null,
+    val type: String = "",
 )
 
 @Serializable
@@ -48,30 +70,48 @@ data class CategoryDto(
 
 @Serializable
 data class AlphabetResponse(
-    val alphabet: List<SignDetailDto>,
+    val signs: List<SignDetailDto> = emptyList(),
+    val count: Int = 0,
 )
 
 @Serializable
 data class LessonResponse(
     val level: Int,
     val title: String = "",
+    val subtitle: String = "",
     val description: String = "",
+    val tip: String? = null,
+    @SerialName("intro_paragraphs") val introParagraphs: List<String> = emptyList(),
+    @SerialName("prev_lesson") val prevLesson: LessonNavDto? = null,
+    @SerialName("next_lesson") val nextLesson: LessonNavDto? = null,
+    @SerialName("total_lessons") val totalLessons: Int = 5,
     val signs: List<SignDetailDto> = emptyList(),
-    val exercises: List<ExerciseDto> = emptyList(),
+    val count: Int = 0,
+    @SerialName("example_words") val exampleWords: List<ExampleWordDto> = emptyList(),
+    @SerialName("practice_words") val practiceWords: List<PracticeWordDto> = emptyList(),
 )
 
 @Serializable
-data class ExerciseDto(
-    val type: String = "",
-    val question: String = "",
-    val options: List<ExerciseOptionDto> = emptyList(),
-    @SerialName("correct_answer") val correctAnswer: String = "",
-    val hint: String? = null,
+data class LessonNavDto(
+    val level: Int,
+    val title: String = "",
 )
 
 @Serializable
-data class ExerciseOptionDto(
-    val code: String = "",
-    val glyph: String = "",
-    val label: String = "",
+data class ExampleWordDto(
+    val hieroglyphs: String = "",
+    val codes: List<String> = emptyList(),
+    val transliteration: String = "",
+    val translation: String = "",
+    @SerialName("highlight_codes") val highlightCodes: List<String> = emptyList(),
+    @SerialName("speech_text") val speechText: String? = null,
+)
+
+@Serializable
+data class PracticeWordDto(
+    val hieroglyphs: String = "",
+    val transliteration: String = "",
+    val translation: String = "",
+    val hint: String = "",
+    @SerialName("speech_text") val speechText: String? = null,
 )

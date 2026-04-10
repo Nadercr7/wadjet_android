@@ -29,9 +29,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -45,7 +44,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -56,17 +54,16 @@ import com.wadjet.core.designsystem.component.StreamingDots
 import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.designsystem.component.WadjetTextField
 import com.wadjet.core.domain.model.PaletteSign
-import com.wadjet.feature.dictionary.WRITE_MODES
 import com.wadjet.feature.dictionary.WriteUiState
 
 @Composable
 fun WriteTab(
     state: WriteUiState,
     onInputChange: (String) -> Unit,
-    onModeSelect: (String) -> Unit,
     onConvert: () -> Unit,
     onClear: () -> Unit,
     onAppendGlyph: (PaletteSign) -> Unit,
+    onSpeak: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -87,25 +84,6 @@ fun WriteTab(
             singleLine = false,
             modifier = Modifier.fillMaxWidth(),
         )
-
-        Spacer(Modifier.height(12.dp))
-
-        // Mode selector
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            WRITE_MODES.forEach { (mode, label) ->
-                FilterChip(
-                    selected = state.selectedMode == mode,
-                    onClick = { onModeSelect(mode) },
-                    label = { Text(label) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = WadjetColors.Gold,
-                        selectedLabelColor = WadjetColors.Night,
-                        containerColor = WadjetColors.Surface,
-                        labelColor = WadjetColors.TextMuted,
-                    ),
-                )
-            }
-        }
 
         Spacer(Modifier.height(12.dp))
 
@@ -186,23 +164,6 @@ fun WriteTab(
                 )
             }
 
-            // MdC output
-            val mdc = result.mdc
-            if (!mdc.isNullOrBlank()) {
-                Spacer(Modifier.height(8.dp))
-                Text("MdC:", style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
-                Text(
-                    text = mdc,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-                    color = WadjetColors.Sand,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(WadjetColors.Surface)
-                        .padding(8.dp),
-                )
-            }
-
             // Glyph breakdown
             if (result.glyphs.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
@@ -214,17 +175,14 @@ fun WriteTab(
                     ) {
                         Text(g.glyph, style = HieroglyphStyle.copy(fontSize = 24.sp))
                         Spacer(Modifier.width(8.dp))
-                        Text(g.gardinerCode, style = GardinerCodeStyle)
+                        Text(g.code, style = GardinerCodeStyle)
                         Spacer(Modifier.width(8.dp))
                         Column {
                             g.transliteration?.let { t ->
                                 Text(t, style = MaterialTheme.typography.bodySmall, color = WadjetColors.Sand)
                             }
-                            g.phoneticValue?.let { p ->
-                                Text("/$p/", style = MaterialTheme.typography.bodySmall, color = WadjetColors.Sand)
-                            }
-                            g.meaning?.let { m ->
-                                Text(m, style = MaterialTheme.typography.bodySmall, color = WadjetColors.TextMuted)
+                            g.description?.let { d ->
+                                Text(d, style = MaterialTheme.typography.bodySmall, color = WadjetColors.TextMuted)
                             }
                         }
                     }
@@ -234,6 +192,9 @@ fun WriteTab(
             // Copy + Share
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
+                IconButton(onClick = { onSpeak(result.hieroglyphs) }) {
+                    Icon(Icons.Default.VolumeUp, "Read aloud", tint = WadjetColors.Gold, modifier = Modifier.size(28.dp))
+                }
                 IconButton(onClick = {
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     clipboard.setPrimaryClip(ClipData.newPlainText("hieroglyphs", result.hieroglyphs))

@@ -2,6 +2,7 @@ package com.wadjet.feature.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wadjet.core.data.datastore.UserPreferencesDataStore
 import com.wadjet.core.domain.model.User
 import com.wadjet.core.domain.repository.AuthRepository
 import com.wadjet.core.domain.repository.UserRepository
@@ -33,6 +34,7 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
+    private val preferencesDataStore: UserPreferencesDataStore,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsUiState())
@@ -40,6 +42,7 @@ class SettingsViewModel @Inject constructor(
 
     init {
         observeUser()
+        observePreferences()
     }
 
     fun startEditName() {
@@ -105,10 +108,12 @@ class SettingsViewModel @Inject constructor(
 
     fun setTtsEnabled(enabled: Boolean) {
         _state.update { it.copy(ttsEnabled = enabled) }
+        viewModelScope.launch { preferencesDataStore.setTtsEnabled(enabled) }
     }
 
     fun setTtsSpeed(speed: Float) {
         _state.update { it.copy(ttsSpeed = speed) }
+        viewModelScope.launch { preferencesDataStore.setTtsSpeed(speed) }
     }
 
     fun setCacheSize(sizeBytes: Long) {
@@ -130,6 +135,19 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.currentUser.collect { user ->
                 _state.update { it.copy(user = user) }
+            }
+        }
+    }
+
+    private fun observePreferences() {
+        viewModelScope.launch {
+            preferencesDataStore.ttsEnabled.collect { enabled ->
+                _state.update { it.copy(ttsEnabled = enabled) }
+            }
+        }
+        viewModelScope.launch {
+            preferencesDataStore.ttsSpeed.collect { speed ->
+                _state.update { it.copy(ttsSpeed = speed) }
             }
         }
     }

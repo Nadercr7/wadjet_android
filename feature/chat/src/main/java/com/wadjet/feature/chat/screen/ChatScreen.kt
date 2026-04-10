@@ -136,6 +136,8 @@ fun ChatScreen(
         val error = state.error ?: return@LaunchedEffect
         if (error.startsWith("LOCAL_TTS:")) {
             val text = error.removePrefix("LOCAL_TTS:")
+            val isArabic = text.any { it in '\u0600'..'\u06FF' || it in '\u0750'..'\u077F' }
+            ttsInstance?.language = if (isArabic) Locale("ar") else Locale.US
             ttsInstance?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
             onDismissError()
         }
@@ -306,7 +308,7 @@ fun ChatScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.History,
-                                contentDescription = null,
+                                contentDescription = "Conversation history",
                                 tint = WadjetColors.Sand,
                                 modifier = Modifier.size(16.dp),
                             )
@@ -545,6 +547,7 @@ private fun ChatInputBar(
     isRecording: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
     Column(modifier = modifier.fillMaxWidth()) {
         // Character counter
         if (text.isNotEmpty()) {
@@ -617,7 +620,10 @@ private fun ChatInputBar(
             }
         } else {
             IconButton(
-                onClick = onSend,
+                onClick = {
+                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                    onSend()
+                },
                 enabled = text.isNotBlank(),
             ) {
                 Icon(

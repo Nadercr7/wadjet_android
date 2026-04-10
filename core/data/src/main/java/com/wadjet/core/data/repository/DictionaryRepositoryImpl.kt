@@ -4,10 +4,10 @@ import com.wadjet.core.common.suspendRunCatching
 import com.wadjet.core.database.dao.SignDao
 import com.wadjet.core.database.entity.SignEntity
 import com.wadjet.core.domain.model.Category
-import com.wadjet.core.domain.model.Exercise
-import com.wadjet.core.domain.model.ExerciseOption
+import com.wadjet.core.domain.model.ExampleWord
 import com.wadjet.core.domain.model.Lesson
 import com.wadjet.core.domain.model.PaletteSign
+import com.wadjet.core.domain.model.PracticeWord
 import com.wadjet.core.domain.model.Sign
 import com.wadjet.core.domain.model.SignPage
 import com.wadjet.core.domain.model.WriteGlyph
@@ -105,17 +105,31 @@ class DictionaryRepositoryImpl @Inject constructor(
             Lesson(
                 level = body.level,
                 title = body.title,
+                subtitle = body.subtitle,
                 description = body.description,
+                tip = body.tip,
+                introParagraphs = body.introParagraphs,
                 signs = body.signs.map { it.toDomain() },
-                exercises = body.exercises.map { ex ->
-                    Exercise(
-                        type = ex.type,
-                        question = ex.question,
-                        options = ex.options.map { ExerciseOption(code = it.code, glyph = it.glyph, label = it.label) },
-                        correctAnswer = ex.correctAnswer,
-                        hint = ex.hint,
+                exampleWords = body.exampleWords.map {
+                    ExampleWord(
+                        hieroglyphs = it.hieroglyphs,
+                        codes = it.codes,
+                        transliteration = it.transliteration,
+                        translation = it.translation,
+                        highlightCodes = it.highlightCodes,
                     )
                 },
+                practiceWords = body.practiceWords.map {
+                    PracticeWord(
+                        hieroglyphs = it.hieroglyphs,
+                        transliteration = it.transliteration,
+                        translation = it.translation,
+                        hint = it.hint,
+                    )
+                },
+                prevLessonLevel = body.prevLesson?.level,
+                nextLessonLevel = body.nextLesson?.level,
+                totalLessons = body.totalLessons,
             )
         } else {
             throw ApiException("Failed to load lesson $level: ${response.code()}")
@@ -125,7 +139,7 @@ class DictionaryRepositoryImpl @Inject constructor(
     override suspend fun getAlphabet(lang: String): Result<List<Sign>> = suspendRunCatching {
         val response = dictionaryApi.getAlphabet(lang = lang)
         if (response.isSuccessful) {
-            response.body()!!.alphabet.map { it.toDomain() }
+            response.body()!!.signs.map { it.toDomain() }
         } else {
             throw ApiException("Failed to load alphabet: ${response.code()}")
         }
@@ -139,15 +153,14 @@ class DictionaryRepositoryImpl @Inject constructor(
                 hieroglyphs = body.hieroglyphs,
                 glyphs = body.glyphs.map {
                     WriteGlyph(
-                        gardinerCode = it.gardinerCode,
-                        glyph = it.glyph,
+                        code = it.code,
+                        glyph = it.unicodeChar,
                         transliteration = it.transliteration,
-                        phoneticValue = it.phoneticValue,
-                        meaning = it.meaning,
+                        description = it.description,
+                        type = it.type,
                     )
                 },
                 mode = body.mode,
-                mdc = body.mdc,
             )
         } else {
             throw ApiException("Write failed: ${response.code()}")
@@ -157,8 +170,9 @@ class DictionaryRepositoryImpl @Inject constructor(
     override suspend fun getPalette(): Result<List<PaletteSign>> = suspendRunCatching {
         val response = writeApi.getPalette()
         if (response.isSuccessful) {
-            response.body()!!.signs.map {
-                PaletteSign(code = it.code, glyph = it.glyph, transliteration = it.transliteration, category = it.category)
+            val groups = response.body()!!.groups
+            (groups.uniliteral + groups.biliteral + groups.triliteral + groups.logogram).map {
+                PaletteSign(code = it.code, glyph = it.unicodeChar, transliteration = it.transliteration)
             }
         } else {
             throw ApiException("Failed to load palette: ${response.code()}")
@@ -189,48 +203,51 @@ internal class ApiException(message: String) : Exception(message)
 
 private fun SignDetailDto.toDomain() = Sign(
     code = code,
-    glyph = glyph,
+    glyph = unicodeChar,
     transliteration = transliteration,
-    phoneticValue = phoneticValue,
-    meaning = meaning,
+    description = description,
     type = type,
+    typeName = typeName,
     category = category,
     categoryName = categoryName,
-    examples = examples.orEmpty(),
+    reading = reading,
+    isPhonetic = isPhonetic,
     funFact = funFact,
-    speech = speech,
-    pronunciationSound = pronunciationGuide?.sound,
-    pronunciationDesc = pronunciationGuide?.description,
+    speechText = speechText,
+    pronunciationSound = pronunciation?.sound,
+    pronunciationExample = pronunciation?.example,
 )
 
 private fun SignDetailDto.toEntity() = SignEntity(
     code = code,
-    glyph = glyph,
+    glyph = unicodeChar,
     transliteration = transliteration,
-    phoneticValue = phoneticValue,
-    meaning = meaning,
+    description = description,
     type = type,
+    typeName = typeName,
     category = category,
     categoryName = categoryName,
-    examples = examples?.joinToString("|"),
+    reading = reading,
+    isPhonetic = isPhonetic,
     funFact = funFact,
-    speech = speech,
-    pronunciationSound = pronunciationGuide?.sound,
-    pronunciationDesc = pronunciationGuide?.description,
+    speechText = speechText,
+    pronunciationSound = pronunciation?.sound,
+    pronunciationExample = pronunciation?.example,
 )
 
 private fun SignEntity.toDomain() = Sign(
     code = code,
     glyph = glyph,
     transliteration = transliteration,
-    phoneticValue = phoneticValue,
-    meaning = meaning,
+    description = description,
     type = type,
+    typeName = typeName,
     category = category,
     categoryName = categoryName,
-    examples = examples?.split("|").orEmpty(),
+    reading = reading,
+    isPhonetic = isPhonetic,
     funFact = funFact,
-    speech = speech,
+    speechText = speechText,
     pronunciationSound = pronunciationSound,
-    pronunciationDesc = pronunciationDesc,
+    pronunciationExample = pronunciationExample,
 )
