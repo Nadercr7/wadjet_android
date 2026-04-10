@@ -21,7 +21,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -90,19 +89,11 @@ fun ScanHistoryScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "No scans yet",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = WadjetColors.TextMuted,
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Scan hieroglyphs to see them here",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = WadjetColors.TextMuted,
-                        )
-                    }
+                    com.wadjet.core.designsystem.component.EmptyState(
+                        glyph = "\uD80C\uDC80",
+                        title = "No scans yet",
+                        subtitle = "Scan hieroglyphs to see them here",
+                    )
                 }
             }
 

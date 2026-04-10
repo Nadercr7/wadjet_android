@@ -763,7 +763,15 @@ private fun FeedbackBanner(
     interaction: Interaction,
     modifier: Modifier = Modifier,
 ) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
     val isDecision = interaction is Interaction.StoryDecision
+
+    // Haptic on correct answer
+    LaunchedEffect(result.correct) {
+        if (result.correct && !isDecision) {
+            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+        }
+    }
     val bgColor = when {
         isDecision -> WadjetColors.Gold.copy(alpha = 0.1f)
         result.correct -> WadjetColors.Success.copy(alpha = 0.12f)

@@ -29,7 +29,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -147,10 +146,20 @@ fun ExploreScreen(
         }
 
         // Content
+        val pullState = androidx.compose.material3.pulltorefresh.rememberPullToRefreshState()
         PullToRefreshBox(
             isRefreshing = state.isRefreshing,
             onRefresh = onRefresh,
             modifier = Modifier.fillMaxSize(),
+            state = pullState,
+            indicator = {
+                androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator(
+                    state = pullState,
+                    isRefreshing = state.isRefreshing,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    color = WadjetColors.Gold,
+                )
+            },
         ) {
             if (state.isLoading && state.landmarks.isEmpty()) {
                 ShimmerCardList(
@@ -190,9 +199,8 @@ fun ExploreScreen(
                                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                CircularProgressIndicator(
-                                    color = WadjetColors.Gold,
-                                    modifier = Modifier.size(24.dp),
+                                com.wadjet.core.designsystem.component.WadjetSectionLoader(
+                                    text = "Loading more...",
                                 )
                             }
                         }
@@ -202,19 +210,15 @@ fun ExploreScreen(
 
             // Error display
             state.error?.let { error ->
-                Surface(
-                    color = WadjetColors.Surface,
-                    shape = RoundedCornerShape(12.dp),
+                Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(16.dp)
                         .fillMaxWidth(),
                 ) {
-                    Text(
-                        text = error,
-                        color = Color(0xFFFF6B6B),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(16.dp),
+                    com.wadjet.core.designsystem.component.ErrorState(
+                        message = error,
+                        onRetry = onRefresh,
                     )
                 }
             }
@@ -330,6 +334,7 @@ private fun LandmarkCard(
     onClick: () -> Unit,
     onToggleFavorite: () -> Unit,
 ) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = WadjetColors.Surface,
@@ -355,11 +360,14 @@ private fun LandmarkCard(
                 )
                 // Favorite heart
                 IconButton(
-                    onClick = onToggleFavorite,
+                    onClick = {
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                        onToggleFavorite()
+                    },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(8.dp)
-                        .size(36.dp)
+                        .size(48.dp)
                         .background(WadjetColors.Night.copy(alpha = 0.6f), CircleShape),
                 ) {
                     val heartColor by animateColorAsState(

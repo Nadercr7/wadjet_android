@@ -75,6 +75,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -337,6 +339,16 @@ fun ChatScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                if (state.messages.isEmpty()) {
+                    item {
+                        com.wadjet.core.designsystem.component.EmptyState(
+                            glyph = "\uD80C\uDD5D",
+                            title = "Ask Thoth anything",
+                            subtitle = "Questions about ancient Egypt, hieroglyphs, pharaohs, and more",
+                            modifier = Modifier.fillParentMaxHeight(0.6f),
+                        )
+                    }
+                }
                 items(
                     items = state.messages,
                     key = { it.id },
@@ -457,8 +469,7 @@ private fun ChatBubble(
                 Text(
                     text = "𓅝",
                     fontSize = 18.sp,
-                    color = WadjetColors.Night,
-                )
+                    color = WadjetColors.Night,                    modifier = Modifier.semantics { contentDescription = "Thoth" },                )
             }
             Spacer(modifier = Modifier.width(8.dp))
         }
@@ -505,7 +516,7 @@ private fun ChatBubble(
             if (!isUser && message.content.isNotEmpty() && !message.isStreaming) {
                 IconButton(
                     onClick = onSpeak,
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier.size(48.dp),
                 ) {
                     Icon(
                         imageVector = if (isSpeaking) {

@@ -28,6 +28,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -53,6 +54,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -83,7 +86,13 @@ fun ScanResultScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
     var showArabic by remember { mutableStateOf(false) }
+
+    // Haptic confirm on result arrival
+    LaunchedEffect(Unit) {
+        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+    }
 
     // Stagger animation
     var visibleSections by remember { mutableStateOf(0) }
@@ -127,7 +136,12 @@ fun ScanResultScreen(
                             modifier = Modifier.padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text("⚠", fontSize = 18.sp)
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = "Warning",
+                                tint = WadjetColors.Warning,
+                                modifier = Modifier.size(18.dp),
+                            )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "AI verification unavailable — results may be less accurate",
@@ -454,6 +468,7 @@ private fun GlyphChip(glyph: DetectedGlyph) {
                 text = unicode,
                 style = HieroglyphStyle.copy(fontSize = 32.sp),
                 color = WadjetColors.Gold,
+                modifier = Modifier.semantics { contentDescription = "Hieroglyph ${glyph.gardinerCode}" },
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(

@@ -56,8 +56,10 @@ fun ForgotPasswordSheet(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    text = "✅",
+                    text = "𓂋",
                     style = MaterialTheme.typography.displaySmall,
+                    fontFamily = com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs,
+                    color = WadjetColors.Gold,
                 )
                 Text(
                     text = "Check your inbox",

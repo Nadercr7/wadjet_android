@@ -93,12 +93,22 @@ fun StoriesScreen(
         },
         modifier = modifier,
     ) { padding ->
+        val pullState = androidx.compose.material3.pulltorefresh.rememberPullToRefreshState()
         PullToRefreshBox(
             isRefreshing = state.isLoading,
             onRefresh = onRefresh,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
+            state = pullState,
+            indicator = {
+                androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator(
+                    state = pullState,
+                    isRefreshing = state.isLoading,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    color = WadjetColors.Gold,
+                )
+            },
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 // Difficulty filter chips
@@ -144,6 +154,16 @@ fun StoriesScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxSize(),
                 ) {
+                    if (filtered.isEmpty() && !state.isLoading) {
+                        item {
+                            com.wadjet.core.designsystem.component.EmptyState(
+                                glyph = "\uD80C\uDC5F",
+                                title = "No stories found",
+                                subtitle = "Try a different difficulty filter",
+                                modifier = Modifier.fillParentMaxHeight(0.6f),
+                            )
+                        }
+                    }
                     items(
                         items = filtered,
                         key = { it.id },

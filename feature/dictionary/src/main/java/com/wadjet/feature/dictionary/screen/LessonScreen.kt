@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -53,16 +52,17 @@ fun LessonScreen(
     when {
         state.isLoading -> {
             Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = WadjetColors.Gold)
+                com.wadjet.core.designsystem.component.WadjetSectionLoader(
+                    text = "Loading lesson...",
+                )
             }
         }
         state.error != null -> {
             Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(state.error, color = WadjetColors.Error, style = MaterialTheme.typography.bodyLarge)
-                    Spacer(Modifier.height(16.dp))
-                    WadjetButton(text = "Go Back", onClick = onBack)
-                }
+                com.wadjet.core.designsystem.component.ErrorState(
+                    message = state.error,
+                    onRetry = onRetry,
+                )
             }
         }
         state.isCompleted -> {

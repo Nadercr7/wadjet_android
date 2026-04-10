@@ -35,7 +35,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -122,14 +121,10 @@ fun LandmarkDetailScreen(
             }
             state.error != null -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(state.error, color = Color(0xFFFF6B6B))
-                        Spacer(Modifier.height(16.dp))
-                        com.wadjet.core.designsystem.component.WadjetButton(
-                            text = "Retry",
-                            onClick = { /* retry handled by VM */ },
-                        )
-                    }
+                    com.wadjet.core.designsystem.component.ErrorState(
+                        message = state.error,
+                        onRetry = onBack,
+                    )
                 }
             }
             state.detail != null -> {

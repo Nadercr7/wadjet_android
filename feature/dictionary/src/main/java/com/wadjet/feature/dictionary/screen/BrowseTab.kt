@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -133,15 +132,26 @@ fun BrowseTab(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
         } else if (state.signs.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = if (state.error != null) state.error else "No signs found",
-                    color = WadjetColors.TextMuted,
-                    style = MaterialTheme.typography.bodyLarge,
-                )
+            if (state.error != null) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    com.wadjet.core.designsystem.component.ErrorState(
+                        message = state.error,
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    com.wadjet.core.designsystem.component.EmptyState(
+                        glyph = "\uD80C\uDEB9",
+                        title = "No signs found",
+                        subtitle = "Try a different search or filter",
+                    )
+                }
             }
         } else {
             LazyVerticalGrid(
@@ -160,10 +170,8 @@ fun BrowseTab(
                             modifier = Modifier.fillMaxWidth().padding(16.dp),
                             contentAlignment = Alignment.Center,
                         ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = WadjetColors.Gold,
-                                strokeWidth = 2.dp,
+                            com.wadjet.core.designsystem.component.WadjetSectionLoader(
+                                text = "Loading more signs...",
                             )
                         }
                     }

@@ -92,12 +92,22 @@ fun DashboardScreen(
         },
         modifier = modifier,
     ) { padding ->
+        val pullState = androidx.compose.material3.pulltorefresh.rememberPullToRefreshState()
         PullToRefreshBox(
             isRefreshing = state.isLoading,
             onRefresh = onRefresh,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
+            state = pullState,
+            indicator = {
+                androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator(
+                    state = pullState,
+                    isRefreshing = state.isLoading,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    color = WadjetColors.Gold,
+                )
+            },
         ) {
             LazyColumn(
                 contentPadding = PaddingValues(16.dp),
@@ -170,7 +180,11 @@ fun DashboardScreen(
                                 .padding(24.dp),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text("No favorites yet", color = WadjetColors.TextMuted)
+                            com.wadjet.core.designsystem.component.EmptyState(
+                                glyph = "\uD80C\uDEB9",
+                                title = "No favorites yet",
+                                subtitle = "Heart landmarks to save them here",
+                            )
                         }
                     }
                 } else {

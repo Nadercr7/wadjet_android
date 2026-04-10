@@ -29,7 +29,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -114,14 +113,8 @@ fun IdentifyScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator(color = WadjetColors.Gold, modifier = Modifier.size(48.dp))
-                    Spacer(Modifier.height(16.dp))
-                    Text("Identifying landmark...", color = WadjetColors.Gold, style = MaterialTheme.typography.bodyLarge)
-                    Spacer(Modifier.height(8.dp))
-                    LinearProgressIndicator(
-                        color = WadjetColors.Gold,
-                        trackColor = WadjetColors.Surface,
-                        modifier = Modifier.fillMaxWidth(0.6f).height(4.dp),
+                    com.wadjet.core.designsystem.component.WadjetSectionLoader(
+                        text = "Identifying landmark...",
                     )
                 }
             }
@@ -142,19 +135,15 @@ fun IdentifyScreen(
 
         // Error
         state.error?.let { error ->
-            Surface(
-                color = WadjetColors.Surface,
-                shape = RoundedCornerShape(12.dp),
+            Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(16.dp)
                     .fillMaxWidth(),
             ) {
-                Text(
-                    text = error,
-                    color = Color(0xFFFF6B6B),
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(16.dp),
+                com.wadjet.core.designsystem.component.ErrorState(
+                    message = error,
+                    onRetry = onRetry,
                 )
             }
         }

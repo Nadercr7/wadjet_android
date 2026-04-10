@@ -19,10 +19,12 @@ import com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs
 import com.wadjet.core.designsystem.WadjetColors
 
 @Composable
-fun ErrorState(
-    message: String,
+fun EmptyState(
+    glyph: String,
+    title: String,
+    subtitle: String,
     modifier: Modifier = Modifier,
-    onRetry: (() -> Unit)? = null,
+    action: (@Composable () -> Unit)? = null,
 ) {
     Column(
         modifier = modifier.padding(32.dp),
@@ -30,22 +32,29 @@ fun ErrorState(
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = "𓂀",
+            text = glyph,
             fontSize = 56.sp,
             fontFamily = NotoSansEgyptianHieroglyphs,
             color = WadjetColors.Gold.copy(alpha = 0.5f),
-            modifier = Modifier.semantics { contentDescription = "Error" },
+            modifier = Modifier.semantics { contentDescription = title },
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = message,
-            style = MaterialTheme.typography.bodyLarge,
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = WadjetColors.Text,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodyMedium,
             color = WadjetColors.TextMuted,
             textAlign = TextAlign.Center,
         )
-        if (onRetry != null) {
+        if (action != null) {
             Spacer(modifier = Modifier.height(16.dp))
-            WadjetButton(text = "Try Again", onClick = onRetry)
+            action()
         }
     }
 }

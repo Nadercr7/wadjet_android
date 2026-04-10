@@ -3,8 +3,11 @@ package com.wadjet.app.navigation
 import androidx.compose.animation.core.EaseIn
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandIn
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
@@ -88,7 +91,13 @@ fun WadjetNavGraph(
             )
         }
 
-        composable<Route.Landing> {
+        // --- Bottom-nav tab transitions: fadeIn(200ms) + scaleIn(0.96f) ---
+        composable<Route.Landing>(
+            enterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
+            exitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
+            popEnterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
+            popExitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
+        ) {
             val viewModel: LandingViewModel = hiltViewModel()
             val landingState by viewModel.state.collectAsStateWithLifecycle()
             LandingScreen(
@@ -103,7 +112,12 @@ fun WadjetNavGraph(
         }
 
         // Scan
-        composable<Route.Scan> {
+        composable<Route.Scan>(
+            enterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
+            exitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
+            popEnterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
+            popExitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
+        ) {
             val viewModel: ScanViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -155,7 +169,12 @@ fun WadjetNavGraph(
                 onBack = { navController.popBackStack() },
             )
         }
-        composable<Route.Explore> {
+        composable<Route.Explore>(
+            enterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
+            exitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
+            popEnterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
+            popExitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
+        ) {
             val viewModel: ExploreViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
             ExploreScreen(
@@ -237,7 +256,12 @@ fun WadjetNavGraph(
                 onBack = { navController.popBackStack() },
             )
         }
-        composable<Route.Stories> {
+        composable<Route.Stories>(
+            enterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
+            exitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
+            popEnterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
+            popExitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
+        ) {
             val viewModel: StoriesViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
             StoriesScreen(
@@ -265,7 +289,12 @@ fun WadjetNavGraph(
             )
         }
 
-        composable<Route.Dashboard> {
+        composable<Route.Dashboard>(
+            enterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
+            exitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
+            popEnterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
+            popExitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
+        ) {
             val viewModel: DashboardViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
             DashboardScreen(

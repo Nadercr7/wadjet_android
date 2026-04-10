@@ -50,6 +50,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -126,19 +128,14 @@ fun ScanScreen(
 
         // Error
         state.error?.let { error ->
-            Surface(
-                color = WadjetColors.Surface,
-                shape = RoundedCornerShape(12.dp),
+            Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(16.dp)
                     .fillMaxWidth(),
             ) {
-                Text(
-                    text = error,
-                    color = Color(0xFFFF6B6B),
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(16.dp),
+                com.wadjet.core.designsystem.component.ErrorState(
+                    message = error,
                 )
             }
         }
@@ -297,7 +294,12 @@ private fun ScanProgressOverlay(step: ScanStep) {
             modifier = Modifier.padding(32.dp).fillMaxWidth(),
         ) {
             // Hieroglyph branding icon
-            Text("𓂀", fontSize = 48.sp, color = WadjetColors.Gold)
+            Text(
+                "𓂀",
+                fontSize = 48.sp,
+                color = WadjetColors.Gold,
+                modifier = Modifier.semantics { contentDescription = "Eye of Horus" },
+            )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 "Analyzing Inscription",
