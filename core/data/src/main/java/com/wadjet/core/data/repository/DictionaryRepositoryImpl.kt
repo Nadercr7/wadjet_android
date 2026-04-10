@@ -165,12 +165,12 @@ class DictionaryRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun speakPhonetic(text: String): Result<ByteArray> = suspendRunCatching {
+    override suspend fun speakPhonetic(text: String): Result<ByteArray?> = suspendRunCatching {
         val response = audioApi.speak(SpeakRequest(text = text, lang = "en", context = "pronunciation"))
-        if (response.isSuccessful) {
-            response.body()?.bytes() ?: throw ApiException("Empty audio response")
-        } else {
-            throw ApiException("TTS failed: ${response.code()}")
+        when (response.code()) {
+            200 -> response.body()?.bytes()
+            204 -> null
+            else -> throw ApiException("TTS failed: ${response.code()}")
         }
     }
 

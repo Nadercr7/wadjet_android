@@ -49,6 +49,9 @@ class ExploreViewModelTest {
             LandmarkPage(landmarks = listOf(testLandmark), total = 1, page = 1, totalPages = 1),
         )
         coEvery { repository.getCities() } returns listOf("Cairo", "Giza", "Luxor")
+        coEvery { repository.getCategories() } returns Result.success(
+            listOf("All", "Pharaonic", "Islamic") to listOf("All", "Cairo", "Giza"),
+        )
         every { repository.getFavorites() } returns flowOf(emptySet())
     }
 

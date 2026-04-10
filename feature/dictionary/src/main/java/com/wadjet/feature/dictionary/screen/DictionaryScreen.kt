@@ -22,11 +22,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.feature.dictionary.AlphabetUiState
 import com.wadjet.feature.dictionary.DictionaryViewModel
+import com.wadjet.feature.dictionary.TranslateViewModel
 import com.wadjet.feature.dictionary.WriteViewModel
 import com.wadjet.feature.dictionary.sheet.SignDetailSheet
 import kotlinx.coroutines.launch
 
-private val TABS = listOf("Browse", "Learn", "Write")
+private val TABS = listOf("Browse", "Learn", "Write", "Translate")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,10 +36,12 @@ fun DictionaryScreen(
     modifier: Modifier = Modifier,
     dictionaryViewModel: DictionaryViewModel = hiltViewModel(),
     writeViewModel: WriteViewModel = hiltViewModel(),
+    translateViewModel: TranslateViewModel = hiltViewModel(),
 ) {
     val browseState by dictionaryViewModel.state.collectAsStateWithLifecycle()
     val alphabetState by dictionaryViewModel.alphabetState.collectAsStateWithLifecycle()
     val writeState by writeViewModel.state.collectAsStateWithLifecycle()
+    val translateState by translateViewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(pageCount = { TABS.size })
 
@@ -99,6 +102,13 @@ fun DictionaryScreen(
                     onConvert = writeViewModel::convert,
                     onClear = writeViewModel::clear,
                     onAppendGlyph = writeViewModel::appendGlyph,
+                )
+                3 -> TranslateTab(
+                    state = translateState,
+                    onInputChange = translateViewModel::onInputChange,
+                    onGardinerChange = translateViewModel::onGardinerChange,
+                    onTranslate = translateViewModel::translate,
+                    onClear = translateViewModel::clear,
                 )
             }
         }

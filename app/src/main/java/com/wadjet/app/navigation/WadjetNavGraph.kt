@@ -11,6 +11,10 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -34,10 +38,12 @@ import com.wadjet.feature.feedback.screen.FeedbackScreen
 import com.wadjet.feature.landing.LandingViewModel
 import com.wadjet.feature.landing.screen.LandingScreen
 import com.wadjet.feature.scan.HistoryViewModel
+import com.wadjet.feature.scan.ScanResultViewModel
 import com.wadjet.feature.scan.ScanViewModel
 import com.wadjet.feature.scan.screen.ScanHistoryScreen
 import com.wadjet.feature.scan.screen.ScanResultScreen
 import com.wadjet.feature.scan.screen.ScanScreen
+import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.feature.settings.SettingsViewModel
 import com.wadjet.feature.settings.screen.SettingsScreen
 import com.wadjet.feature.stories.StoriesViewModel
@@ -47,6 +53,7 @@ import com.wadjet.feature.stories.screen.StoryReaderScreen
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 
 @Composable
 fun WadjetNavGraph(
@@ -105,6 +112,8 @@ fun WadjetNavGraph(
                 onNavigateToScan = { navController.navigate(Route.Scan) },
                 onNavigateToExplore = { navController.navigate(Route.Explore) },
                 onNavigateToDictionary = { navController.navigate(Route.Dictionary) },
+                onNavigateToWrite = { navController.navigate(Route.Dictionary) },
+                onNavigateToIdentify = { navController.navigate(Route.Identify) },
                 onNavigateToStories = { navController.navigate(Route.Stories) },
                 onNavigateToChat = { navController.navigate(Route.Chat) },
                 onNavigateToStoryReader = { storyId -> navController.navigate(Route.StoryReader(storyId)) },
@@ -146,10 +155,51 @@ fun WadjetNavGraph(
             val state by viewModel.state.collectAsStateWithLifecycle()
             ScanHistoryScreen(
                 state = state,
-                onScanTap = { /* TODO: load cached result */ },
+                onScanTap = { scanId -> navController.navigate(Route.ScanResult(scanId.toString())) },
                 onDelete = { viewModel.deleteScan(it) },
                 onBack = { navController.popBackStack() },
             )
+        }
+
+        composable<Route.ScanResult> {
+            val viewModel: ScanResultViewModel = hiltViewModel()
+            val state by viewModel.state.collectAsStateWithLifecycle()
+            val result = state.result
+            when {
+                state.isLoading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(WadjetColors.Night),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        com.wadjet.core.designsystem.component.ShimmerCardList(itemCount = 3)
+                    }
+                }
+                result != null -> {
+                    ScanResultScreen(
+                        result = result,
+                        ttsStates = state.ttsStates,
+                        onSpeak = { key, text, lang -> viewModel.speak(key, text, lang) },
+                        onScanAgain = { navController.popBackStack() },
+                        onBack = { navController.popBackStack() },
+                    )
+                }
+                else -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(WadjetColors.Night),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        com.wadjet.core.designsystem.component.EmptyState(
+                            glyph = "\uD80C\uDC80",
+                            title = "Scan not found",
+                            subtitle = state.error ?: "This scan result is no longer available",
+                        )
+                    }
+                }
+            }
         }
         composable<Route.Dictionary> {
             DictionaryScreen(
@@ -310,6 +360,8 @@ fun WadjetNavGraph(
         composable<Route.Settings> {
             val viewModel: SettingsViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
 
             if (state.signedOut) {
                 androidx.compose.runtime.LaunchedEffect(Unit) {
@@ -330,7 +382,19 @@ fun WadjetNavGraph(
                 onChangePassword = viewModel::changePassword,
                 onTtsEnabledChanged = viewModel::setTtsEnabled,
                 onTtsSpeedChanged = viewModel::setTtsSpeed,
-                onClearCache = { /* TODO: clear Coil + app cache */ },
+                onClearCache = {
+                    coroutineScope.launch {
+                        val imageLoader = coil3.SingletonImageLoader.get(context)
+                        imageLoader.diskCache?.clear()
+                        imageLoader.memoryCache?.clear()
+                        val db = dagger.hilt.EntryPoints.get(
+                            context.applicationContext,
+                            CacheClearEntryPoint::class.java,
+                        ).database()
+                        db.clearAllTables()
+                        viewModel.setCacheSize(0)
+                    }
+                },
                 onSignOut = viewModel::signOut,
                 onFeedback = { navController.navigate(Route.Feedback) },
                 onDismissMessage = viewModel::dismissMessage,
@@ -353,4 +417,10 @@ fun WadjetNavGraph(
             )
         }
     }
+}
+
+@dagger.hilt.EntryPoint
+@dagger.hilt.InstallIn(dagger.hilt.components.SingletonComponent::class)
+interface CacheClearEntryPoint {
+    fun database(): com.wadjet.core.database.WadjetDatabase
 }

@@ -11,6 +11,7 @@ import com.wadjet.core.network.api.LandmarkApiService
 import com.wadjet.core.network.api.ScanApiService
 import com.wadjet.core.network.api.FeedbackApiService
 import com.wadjet.core.network.api.StoriesApiService
+import com.wadjet.core.network.api.TranslateApiService
 import com.wadjet.core.network.api.UserApiService
 import com.wadjet.core.network.api.WriteApiService
 import dagger.Module
@@ -125,4 +126,9 @@ object NetworkModule {
     @Singleton
     fun provideFeedbackApiService(retrofit: Retrofit): FeedbackApiService =
         retrofit.create(FeedbackApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideTranslateApiService(retrofit: Retrofit): TranslateApiService =
+        retrofit.create(TranslateApiService::class.java)
 }

@@ -74,7 +74,15 @@ data class RecommendationDto(
 
 @Serializable
 data class LandmarkCategoriesResponse(
-    val categories: List<String> = emptyList(),
+    val types: List<NameCountDto> = emptyList(),
+    val cities: List<NameCountDto> = emptyList(),
+    val total: Int = 0,
+)
+
+@Serializable
+data class NameCountDto(
+    val name: String = "",
+    val count: Int = 0,
 )
 
 @Serializable

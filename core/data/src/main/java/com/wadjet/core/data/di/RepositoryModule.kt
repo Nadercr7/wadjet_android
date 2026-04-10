@@ -7,6 +7,7 @@ import com.wadjet.core.data.repository.ExploreRepositoryImpl
 import com.wadjet.core.data.repository.FeedbackRepositoryImpl
 import com.wadjet.core.data.repository.ScanRepositoryImpl
 import com.wadjet.core.data.repository.StoriesRepositoryImpl
+import com.wadjet.core.data.repository.TranslateRepositoryImpl
 import com.wadjet.core.data.repository.UserRepositoryImpl
 import com.wadjet.core.domain.repository.AuthRepository
 import com.wadjet.core.domain.repository.ChatRepository
@@ -15,6 +16,7 @@ import com.wadjet.core.domain.repository.ExploreRepository
 import com.wadjet.core.domain.repository.FeedbackRepository
 import com.wadjet.core.domain.repository.ScanRepository
 import com.wadjet.core.domain.repository.StoriesRepository
+import com.wadjet.core.domain.repository.TranslateRepository
 import com.wadjet.core.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
@@ -57,4 +59,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindFeedbackRepository(impl: FeedbackRepositoryImpl): FeedbackRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTranslateRepository(impl: TranslateRepositoryImpl): TranslateRepository
 }

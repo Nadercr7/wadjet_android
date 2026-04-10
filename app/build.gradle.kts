@@ -120,6 +120,7 @@ dependencies {
 
     // Coil (for SingletonImageLoader.Factory in Application)
     implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 
     // Timber
     implementation(libs.timber)

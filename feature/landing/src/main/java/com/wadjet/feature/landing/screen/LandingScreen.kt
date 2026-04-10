@@ -51,6 +51,8 @@ fun LandingScreen(
     onNavigateToScan: () -> Unit,
     onNavigateToExplore: () -> Unit,
     onNavigateToDictionary: () -> Unit,
+    onNavigateToWrite: () -> Unit,
+    onNavigateToIdentify: () -> Unit,
     onNavigateToStories: () -> Unit,
     onNavigateToChat: () -> Unit,
     onNavigateToStoryReader: (String) -> Unit,
@@ -108,9 +110,10 @@ fun LandingScreen(
                     title = "Hieroglyphs",
                     subtitle = "Decode Ancient Egypt",
                     features = listOf(
-                        "Scan & detect hieroglyphs from photos",
-                        "Translate inscriptions to English",
-                        "Browse 1,000+ Gardiner signs",
+                        "Scan & Identify — detect glyphs from photos",
+                        "Translate — English & Arabic translation",
+                        "Dictionary — 1,000+ Gardiner signs",
+                        "Write — compose in hieroglyphs",
                     ),
                     buttonText = "Start Scanning",
                     onClick = onNavigateToScan,
@@ -126,9 +129,10 @@ fun LandingScreen(
                     title = "Landmarks",
                     subtitle = "Explore Sites & Monuments",
                     features = listOf(
-                        "Explore 260+ Egyptian landmarks",
-                        "Identify landmarks from photos",
-                        "Rich details, maps & history",
+                        "Explore — pyramids, temples, museums",
+                        "Identify — snap a photo, AI tells you",
+                        "AI Descriptions — rich history for each site",
+                        "Discover — recommendations & similar sites",
                     ),
                     buttonText = "Start Exploring",
                     onClick = onNavigateToExplore,
@@ -158,7 +162,15 @@ fun LandingScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
+                        QuickAction(Modifier.weight(1f), "�", "Write", onNavigateToWrite)
                         QuickAction(Modifier.weight(1f), "𓇯", "Explore", onNavigateToExplore)
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        QuickAction(Modifier.weight(1f), "𓉐", "Identify", onNavigateToIdentify)
                         QuickAction(Modifier.weight(1f), "𓁟", "Stories", onNavigateToStories)
                     }
                 }

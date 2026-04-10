@@ -46,31 +46,51 @@ class ChatViewModel @Inject constructor(
     private val _state = MutableStateFlow(ChatUiState())
     val state: StateFlow<ChatUiState> = _state.asStateFlow()
 
-    private val sessionId: String = UUID.randomUUID().toString()
+    private val sessionId: String
     private var streamJob: Job? = null
     private var mediaPlayer: MediaPlayer? = null
 
     init {
-        // Check for landmark context from navigation
+        // Resolve or create session
         val landmarkSlug = try {
             savedStateHandle.get<String>("slug")
         } catch (_: Exception) {
             null
         }
+
         if (landmarkSlug != null) {
+            // Landmark-specific chat always gets a fresh session
+            sessionId = UUID.randomUUID().toString()
+            chatHistoryStore.storeSessionId(sessionId)
             _state.update { it.copy(landmarkSlug = landmarkSlug) }
-            // Auto-send a greeting about the landmark
             sendMessage("Tell me about this landmark")
         } else {
-            // Add initial bot greeting
-            val greeting = ChatMessage(
-                id = UUID.randomUUID().toString(),
-                role = Role.ASSISTANT,
-                content = "I am Thoth, keeper of wisdom and scribe of the gods. Ask me anything about ancient Egypt — hieroglyphs, pharaohs, temples, or the mysteries of the Nile.",
-            )
-            _state.update { it.copy(messages = listOf(greeting)) }
+            // Try to resume an existing session
+            val activeId = chatHistoryStore.getActiveSessionId()
+            if (activeId != null) {
+                sessionId = activeId
+                val restored = chatHistoryStore.loadConversation(activeId)
+                if (!restored.isNullOrEmpty()) {
+                    _state.update { it.copy(messages = restored) }
+                } else {
+                    addGreeting()
+                }
+            } else {
+                sessionId = UUID.randomUUID().toString()
+                chatHistoryStore.storeSessionId(sessionId)
+                addGreeting()
+            }
         }
         loadChatHistory()
+    }
+
+    private fun addGreeting() {
+        val greeting = ChatMessage(
+            id = UUID.randomUUID().toString(),
+            role = Role.ASSISTANT,
+            content = "I am Thoth, keeper of wisdom and scribe of the gods. Ask me anything about ancient Egypt — hieroglyphs, pharaohs, temples, or the mysteries of the Nile.",
+        )
+        _state.update { it.copy(messages = listOf(greeting)) }
     }
 
     fun updateInput(text: String) {
@@ -254,7 +274,12 @@ class ChatViewModel @Inject constructor(
                 }
             }.onFailure {
                 Timber.e(it, "Server STT failed, use local fallback")
-                _state.update { s -> s.copy(error = "STT_FALLBACK", isRecording = false) }
+                _state.update { s ->
+                    s.copy(
+                        error = "Voice-to-text unavailable on server. Tap the mic button to use on-device speech recognition.",
+                        isRecording = false,
+                    )
+                }
             }
         }
     }
@@ -278,10 +303,12 @@ class ChatViewModel @Inject constructor(
         streamJob?.cancel()
         stopSpeaking()
         // Save current conversation to history before clearing
-        chatHistoryStore.saveConversation(sessionId, _state.value.messages)
+        saveCurrentConversation()
         viewModelScope.launch {
             chatRepository.clearSession(sessionId)
         }
+        // Clear stored session so next init creates fresh
+        chatHistoryStore.clearSessionId()
         val greeting = ChatMessage(
             id = UUID.randomUUID().toString(),
             role = Role.ASSISTANT,
@@ -320,9 +347,15 @@ class ChatViewModel @Inject constructor(
         _state.update { it.copy(error = null) }
     }
 
+    private fun saveCurrentConversation() {
+        chatHistoryStore.saveConversation(sessionId, _state.value.messages)
+    }
+
     override fun onCleared() {
         super.onCleared()
         streamJob?.cancel()
-        stopSpeaking()
+        saveCurrentConversation()
+        mediaPlayer?.release()
+        mediaPlayer = null
     }
 }

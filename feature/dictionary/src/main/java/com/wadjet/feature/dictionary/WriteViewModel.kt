@@ -69,8 +69,9 @@ class WriteViewModel @Inject constructor(
         _state.update { it.copy(selectedMode = mode) }
     }
 
-    fun appendGlyph(glyph: String) {
-        _state.update { it.copy(inputText = it.inputText + glyph) }
+    fun appendGlyph(sign: PaletteSign) {
+        val text = if (_state.value.selectedMode == "mdc") sign.code else sign.glyph
+        _state.update { it.copy(inputText = it.inputText + text) }
     }
 
     fun convert() {

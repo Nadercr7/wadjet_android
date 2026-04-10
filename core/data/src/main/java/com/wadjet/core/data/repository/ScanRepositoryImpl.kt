@@ -77,6 +77,13 @@ class ScanRepositoryImpl @Inject constructor(
             ?: throw ApiException("Scan result not found: $scanId")
     }
 
+    override suspend fun getScanResult(scanId: Int): Result<ScanResult> = suspendRunCatching {
+        val entity = scanResultDao.getById(scanId)
+            ?: throw ApiException("Scan result not found: $scanId")
+        val serializable = json.decodeFromString<ScanResultSerializable>(entity.resultsJson)
+        serializable.toDomain()
+    }
+
     override suspend fun deleteScan(scanId: Int): Result<Unit> = suspendRunCatching {
         val entity = scanResultDao.getById(scanId)
         if (entity != null) {
@@ -206,6 +213,36 @@ class ScanRepositoryImpl @Inject constructor(
         aiNotes = aiNotes,
         aiUnverified = aiUnverified,
         qualityHints = qualityHints,
+    )
+
+    private fun ScanResultSerializable.toDomain() = ScanResult(
+        numDetections = numDetections,
+        glyphs = glyphs.map {
+            DetectedGlyph(
+                bbox = it.bbox,
+                detectionConfidence = it.detectionConfidence,
+                gardinerCode = it.gardinerCode,
+                classConfidence = it.classConfidence,
+            )
+        },
+        transliteration = transliteration,
+        gardinerSequence = gardinerSequence,
+        readingDirection = readingDirection,
+        layoutMode = layoutMode,
+        translationEn = translationEn,
+        translationAr = translationAr,
+        annotatedImageBase64 = annotatedImageBase64,
+        detectionMs = detectionMs,
+        classificationMs = classificationMs,
+        transliterationMs = transliterationMs,
+        translationMs = translationMs,
+        totalMs = totalMs,
+        mode = mode,
+        pipeline = pipeline,
+        aiNotes = aiNotes,
+        aiUnverified = aiUnverified,
+        qualityHints = qualityHints,
+        confidenceSummary = null,
     )
 }
 

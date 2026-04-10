@@ -66,7 +66,7 @@ fun WriteTab(
     onModeSelect: (String) -> Unit,
     onConvert: () -> Unit,
     onClear: () -> Unit,
-    onAppendGlyph: (String) -> Unit,
+    onAppendGlyph: (PaletteSign) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -267,7 +267,7 @@ fun WriteTab(
                 contentPadding = PaddingValues(0.dp),
             ) {
                 items(state.palette) { sign ->
-                    PaletteItem(sign = sign, onClick = { onAppendGlyph(sign.glyph) })
+                    PaletteItem(sign = sign, onClick = { onAppendGlyph(sign) })
                 }
             }
         }

@@ -133,20 +133,28 @@ class DictionaryViewModel @Inject constructor(
     fun speakSign(text: String) {
         viewModelScope.launch {
             repository.speakPhonetic(text).onSuccess { bytes ->
-                try {
-                    val tmp = File.createTempFile("dict_tts_", ".wav")
-                    tmp.writeBytes(bytes)
-                    mediaPlayer?.apply { if (isPlaying) stop(); release() }
-                    mediaPlayer = MediaPlayer().apply {
-                        setDataSource(tmp.absolutePath)
-                        prepare()
-                        setOnCompletionListener { release(); mediaPlayer = null }
-                        start()
+                if (bytes != null) {
+                    try {
+                        val tmp = File.createTempFile("dict_tts_", ".wav")
+                        tmp.writeBytes(bytes)
+                        mediaPlayer?.apply { if (isPlaying) stop(); release() }
+                        mediaPlayer = MediaPlayer().apply {
+                            setDataSource(tmp.absolutePath)
+                            prepare()
+                            setOnCompletionListener { release(); mediaPlayer = null; tmp.delete() }
+                            start()
+                        }
+                    } catch (e: Exception) {
+                        Timber.e(e, "Dictionary TTS playback failed")
+                        _state.update { it.copy(error = "LOCAL_TTS:$text") }
                     }
-                } catch (e: Exception) {
-                    Timber.e(e, "Dictionary TTS playback failed")
+                } else {
+                    _state.update { it.copy(error = "LOCAL_TTS:$text") }
                 }
-            }.onFailure { Timber.e(it, "Dictionary TTS failed") }
+            }.onFailure {
+                Timber.e(it, "Dictionary TTS failed")
+                _state.update { it.copy(error = "LOCAL_TTS:$text") }
+            }
         }
     }
 

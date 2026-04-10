@@ -25,6 +25,8 @@ interface ExploreRepository {
 
     suspend fun getCities(): List<String>
 
+    suspend fun getCategories(): Result<Pair<List<String>, List<String>>>
+
     suspend fun searchOffline(query: String): List<Landmark>
 
     suspend fun toggleFavorite(

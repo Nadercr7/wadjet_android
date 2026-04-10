@@ -22,6 +22,36 @@ class ChatHistoryStore @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
     private val dir get() = File(context.filesDir, "chat_history").also { it.mkdirs() }
+    private val prefs by lazy {
+        context.getSharedPreferences("chat_session", Context.MODE_PRIVATE)
+    }
+
+    companion object {
+        private const val KEY_SESSION_ID = "session_id"
+        private const val KEY_SESSION_TIMESTAMP = "session_timestamp"
+        private const val SESSION_TTL_MS = 60 * 60 * 1000L // 1 hour
+    }
+
+    /** Returns stored sessionId if it exists and is less than 1 hour old, otherwise null. */
+    fun getActiveSessionId(): String? {
+        val id = prefs.getString(KEY_SESSION_ID, null) ?: return null
+        val ts = prefs.getLong(KEY_SESSION_TIMESTAMP, 0L)
+        return if (System.currentTimeMillis() - ts < SESSION_TTL_MS) id else null
+    }
+
+    fun storeSessionId(sessionId: String) {
+        prefs.edit()
+            .putString(KEY_SESSION_ID, sessionId)
+            .putLong(KEY_SESSION_TIMESTAMP, System.currentTimeMillis())
+            .apply()
+    }
+
+    fun clearSessionId() {
+        prefs.edit()
+            .remove(KEY_SESSION_ID)
+            .remove(KEY_SESSION_TIMESTAMP)
+            .apply()
+    }
 
     fun listConversations(): List<ConversationSummary> =
         dir.listFiles { f -> f.extension == "json" }
@@ -87,5 +117,22 @@ class ChatHistoryStore @Inject constructor(
 
     fun clearAll() {
         dir.listFiles()?.forEach { it.delete() }
+    }
+
+    /** Returns the most recent conversation's messages, or null if none exist. */
+    fun loadLatestConversation(): Pair<String, List<ChatMessage>>? {
+        val latest = dir.listFiles { f -> f.extension == "json" }
+            ?.mapNotNull { file ->
+                try {
+                    val obj = JSONObject(file.readText())
+                    obj.getString("id") to obj.getLong("createdAt")
+                } catch (_: Exception) {
+                    null
+                }
+            }
+            ?.maxByOrNull { it.second }
+            ?: return null
+        val messages = loadConversation(latest.first) ?: return null
+        return latest.first to messages
     }
 }

@@ -15,13 +15,14 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-val CATEGORIES = listOf("All", "Pharaonic", "Islamic", "Coptic", "Greco-Roman", "Museum", "Natural")
+private val FALLBACK_CATEGORIES = listOf("All", "Pharaonic", "Islamic", "Coptic", "Greco-Roman", "Museum", "Natural")
 
 data class ExploreUiState(
     val landmarks: List<Landmark> = emptyList(),
     val isLoading: Boolean = false,
     val isLoadingMore: Boolean = false,
     val error: String? = null,
+    val categories: List<String> = FALLBACK_CATEGORIES,
     val selectedCategory: String = "All",
     val selectedCity: String? = null,
     val searchQuery: String = "",
@@ -44,7 +45,7 @@ class ExploreViewModel @Inject constructor(
 
     init {
         loadLandmarks()
-        loadCities()
+        loadCategories()
         observeFavorites()
     }
 
@@ -155,10 +156,23 @@ class ExploreViewModel @Inject constructor(
         }
     }
 
-    private fun loadCities() {
+    private fun loadCategories() {
         viewModelScope.launch {
-            val cities = exploreRepository.getCities()
-            _state.update { it.copy(cities = cities) }
+            exploreRepository.getCategories()
+                .onSuccess { (types, cities) ->
+                    _state.update {
+                        it.copy(
+                            categories = listOf("All") + types,
+                            cities = cities,
+                        )
+                    }
+                }
+                .onFailure {
+                    Timber.w(it, "Failed to load categories, using fallback")
+                    // Fall back to Room-cached cities
+                    val cachedCities = exploreRepository.getCities()
+                    _state.update { it.copy(cities = cachedCities) }
+                }
         }
     }
 

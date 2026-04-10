@@ -26,7 +26,7 @@ android {
 
 dependencies {
     // Room
-    implementation(libs.room.runtime)
+    api(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 

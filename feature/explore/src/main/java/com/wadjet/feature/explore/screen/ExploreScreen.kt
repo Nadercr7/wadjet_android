@@ -67,7 +67,6 @@ import com.wadjet.core.designsystem.animation.goldPulse
 import com.wadjet.core.designsystem.animation.shineSweep
 import com.wadjet.core.designsystem.component.ShimmerCardList
 import com.wadjet.core.domain.model.Landmark
-import com.wadjet.feature.explore.CATEGORIES
 import com.wadjet.feature.explore.ExploreUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -131,7 +130,7 @@ fun ExploreScreen(
 
         // Category chips
         CategoryChips(
-            categories = CATEGORIES,
+            categories = state.categories,
             selected = state.selectedCategory,
             onSelect = onCategorySelected,
         )

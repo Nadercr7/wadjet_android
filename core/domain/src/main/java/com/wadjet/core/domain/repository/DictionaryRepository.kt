@@ -30,7 +30,7 @@ interface DictionaryRepository {
 
     suspend fun getPalette(): Result<List<PaletteSign>>
 
-    suspend fun speakPhonetic(text: String): Result<ByteArray>
+    suspend fun speakPhonetic(text: String): Result<ByteArray?>
 
     suspend fun searchOffline(query: String): List<Sign>
 }

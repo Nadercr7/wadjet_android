@@ -1,8 +1,6 @@
 package com.wadjet.core.data.repository
 
 import com.wadjet.core.common.suspendRunCatching
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import com.wadjet.core.database.dao.LandmarkDao
 import com.wadjet.core.database.entity.LandmarkEntity
 import com.wadjet.core.domain.model.IdentifyMatch
@@ -15,13 +13,15 @@ import com.wadjet.core.domain.model.LandmarkSection
 import com.wadjet.core.domain.model.Recommendation
 import com.wadjet.core.domain.repository.ExploreRepository
 import com.wadjet.core.network.api.LandmarkApiService
+import com.wadjet.core.network.api.UserApiService
+import com.wadjet.core.network.model.AddFavoriteRequest
 import com.wadjet.core.network.model.LandmarkDetailDto
 import com.wadjet.core.network.model.LandmarkSummaryDto
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.update
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -36,10 +36,12 @@ import javax.inject.Singleton
 class ExploreRepositoryImpl @Inject constructor(
     private val landmarkApi: LandmarkApiService,
     private val landmarkDao: LandmarkDao,
-    private val firestore: FirebaseFirestore,
-    private val firebaseAuth: FirebaseAuth,
+    private val userApi: UserApiService,
     private val json: Json,
 ) : ExploreRepository {
+
+    private val _favorites = MutableStateFlow<Set<String>>(emptySet())
+    private var favoritesLoaded = false
 
     override suspend fun getLandmarks(
         category: String?,
@@ -146,6 +148,18 @@ class ExploreRepositoryImpl @Inject constructor(
 
     override suspend fun getCities(): List<String> = landmarkDao.getCities()
 
+    override suspend fun getCategories(): Result<Pair<List<String>, List<String>>> = suspendRunCatching {
+        val response = landmarkApi.getCategories()
+        if (response.isSuccessful) {
+            val body = response.body()!!
+            val types = body.types.map { it.name }
+            val cities = body.cities.map { it.name }
+            Pair(types, cities)
+        } else {
+            throw ApiException("Failed to load categories: ${response.code()}")
+        }
+    }
+
     override suspend fun searchOffline(query: String): List<Landmark> =
         landmarkDao.search(query).map { it.toDomain() }
 
@@ -155,55 +169,42 @@ class ExploreRepositoryImpl @Inject constructor(
         thumbnail: String?,
         isFavorite: Boolean,
     ): Result<Unit> = suspendRunCatching {
-        val uid = firebaseAuth.currentUser?.uid
-            ?: throw IllegalStateException("Not signed in")
-        val favRef = firestore.collection("users").document(uid)
-            .collection("favorites")
-
         if (isFavorite) {
-            // Remove favorite
-            val snapshot = favRef
-                .whereEqualTo("item_type", "landmark")
-                .whereEqualTo("item_id", slug)
-                .get().await()
-            for (doc in snapshot.documents) {
-                doc.reference.delete().await()
+            val response = userApi.removeFavorite("landmark", slug)
+            if (!response.isSuccessful) {
+                throw ApiException("Failed to remove favorite: ${response.code()}")
             }
+            _favorites.update { it - slug }
         } else {
-            // Add favorite
-            val data = hashMapOf(
-                "item_type" to "landmark",
-                "item_id" to slug,
-                "display_name" to name,
-                "thumbnail" to (thumbnail ?: ""),
-                "created_at" to com.google.firebase.Timestamp.now(),
-            )
-            favRef.add(data).await()
+            val response = userApi.addFavorite(AddFavoriteRequest("landmark", slug))
+            if (!response.isSuccessful) {
+                throw ApiException("Failed to add favorite: ${response.code()}")
+            }
+            _favorites.update { it + slug }
         }
     }
 
-    override fun getFavorites(): Flow<Set<String>> = callbackFlow {
-        val uid = firebaseAuth.currentUser?.uid
-        if (uid == null) {
-            trySend(emptySet())
-            awaitClose()
-            return@callbackFlow
-        }
-        val listener = firestore.collection("users").document(uid)
-            .collection("favorites")
-            .whereEqualTo("item_type", "landmark")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    Timber.e(error, "Favorites listen failed")
-                    trySend(emptySet())
-                    return@addSnapshotListener
-                }
-                val slugs = snapshot?.documents
-                    ?.mapNotNull { it.getString("item_id") }
-                    ?.toSet() ?: emptySet()
-                trySend(slugs)
+    override fun getFavorites(): Flow<Set<String>> = _favorites
+        .onStart {
+            if (!favoritesLoaded) {
+                loadFavoritesFromApi()
             }
-        awaitClose { listener.remove() }
+        }
+
+    private suspend fun loadFavoritesFromApi() {
+        try {
+            val response = userApi.getFavorites()
+            if (response.isSuccessful) {
+                val slugs = response.body()
+                    ?.filter { it.itemType == "landmark" }
+                    ?.map { it.itemId }
+                    ?.toSet() ?: emptySet()
+                _favorites.value = slugs
+                favoritesLoaded = true
+            }
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to load favorites from API")
+        }
     }
 
     // --- Mappers ---
