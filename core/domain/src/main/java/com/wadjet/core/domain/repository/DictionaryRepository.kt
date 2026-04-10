@@ -24,6 +24,8 @@ interface DictionaryRepository {
 
     suspend fun getLesson(level: Int, lang: String = "en"): Result<Lesson>
 
+    suspend fun getAlphabet(lang: String = "en"): Result<List<Sign>>
+
     suspend fun write(text: String, mode: String): Result<WriteResult>
 
     suspend fun getPalette(): Result<List<PaletteSign>>

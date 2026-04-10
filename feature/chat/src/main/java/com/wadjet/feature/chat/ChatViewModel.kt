@@ -32,11 +32,14 @@ data class ChatUiState(
     val speakingMessageId: String? = null,
     val error: String? = null,
     val landmarkSlug: String? = null,
+    val chatHistory: List<ConversationSummary> = emptyList(),
+    val showHistory: Boolean = false,
 )
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
+    private val chatHistoryStore: ChatHistoryStore,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -67,6 +70,7 @@ class ChatViewModel @Inject constructor(
             )
             _state.update { it.copy(messages = listOf(greeting)) }
         }
+        loadChatHistory()
     }
 
     fun updateInput(text: String) {
@@ -273,6 +277,8 @@ class ChatViewModel @Inject constructor(
     fun clearChat() {
         streamJob?.cancel()
         stopSpeaking()
+        // Save current conversation to history before clearing
+        chatHistoryStore.saveConversation(sessionId, _state.value.messages)
         viewModelScope.launch {
             chatRepository.clearSession(sessionId)
         }
@@ -285,8 +291,29 @@ class ChatViewModel @Inject constructor(
             ChatUiState(
                 messages = listOf(greeting),
                 landmarkSlug = it.landmarkSlug,
+                chatHistory = chatHistoryStore.listConversations(),
             )
         }
+    }
+
+    fun toggleHistory() {
+        _state.update { it.copy(showHistory = !it.showHistory) }
+    }
+
+    fun loadConversation(conversationId: String) {
+        val messages = chatHistoryStore.loadConversation(conversationId) ?: return
+        _state.update {
+            it.copy(messages = messages, showHistory = false)
+        }
+    }
+
+    fun clearHistory() {
+        chatHistoryStore.clearAll()
+        _state.update { it.copy(chatHistory = emptyList()) }
+    }
+
+    private fun loadChatHistory() {
+        _state.update { it.copy(chatHistory = chatHistoryStore.listConversations()) }
     }
 
     fun dismissError() {

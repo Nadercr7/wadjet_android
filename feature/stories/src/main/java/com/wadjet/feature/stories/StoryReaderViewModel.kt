@@ -81,8 +81,25 @@ class StoryReaderViewModel @Inject constructor(
     fun nextChapter() = goToChapter(_state.value.currentChapter + 1)
     fun prevChapter() = goToChapter(_state.value.currentChapter - 1)
 
+    fun restartStory() {
+        _state.update {
+            it.copy(
+                score = 0,
+                glyphsLearned = mutableSetOf(),
+            )
+        }
+        goToChapter(0)
+    }
+
     fun submitAnswer(interactionIndex: Int, answer: String) {
-        if (_state.value.interactionResults.containsKey(interactionIndex)) return
+        val existing = _state.value.interactionResults[interactionIndex]
+        val interaction = _state.value.chapter?.interactions?.getOrNull(interactionIndex)
+        // Allow retry for WriteWord when previous answer was incorrect
+        if (existing != null) {
+            if (existing.correct) return
+            if (interaction !is Interaction.WriteWord) return
+            _state.update { it.copy(interactionResults = it.interactionResults - interactionIndex) }
+        }
 
         _state.update {
             it.copy(interactionAnswers = it.interactionAnswers + (interactionIndex to answer))

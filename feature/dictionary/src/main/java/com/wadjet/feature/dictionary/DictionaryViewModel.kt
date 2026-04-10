@@ -19,6 +19,11 @@ import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
 
+data class AlphabetUiState(
+    val signs: List<Sign> = emptyList(),
+    val isLoading: Boolean = false,
+)
+
 data class BrowseUiState(
     val signs: List<Sign> = emptyList(),
     val categories: List<Category> = emptyList(),
@@ -42,6 +47,9 @@ class DictionaryViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(BrowseUiState())
     val state: StateFlow<BrowseUiState> = _state.asStateFlow()
+
+    private val _alphabetState = MutableStateFlow(AlphabetUiState())
+    val alphabetState: StateFlow<AlphabetUiState> = _alphabetState.asStateFlow()
 
     private var searchJob: Job? = null
     private val lang: String get() = if (java.util.Locale.getDefault().language == "ar") "ar" else "en"
@@ -139,6 +147,18 @@ class DictionaryViewModel @Inject constructor(
                     Timber.e(e, "Dictionary TTS playback failed")
                 }
             }.onFailure { Timber.e(it, "Dictionary TTS failed") }
+        }
+    }
+
+    fun loadAlphabet() {
+        viewModelScope.launch {
+            _alphabetState.update { it.copy(isLoading = true) }
+            repository.getAlphabet(lang = lang)
+                .onSuccess { signs -> _alphabetState.update { AlphabetUiState(signs = signs) } }
+                .onFailure { e ->
+                    Timber.e(e, "Failed to load alphabet")
+                    _alphabetState.update { it.copy(isLoading = false) }
+                }
         }
     }
 

@@ -122,6 +122,15 @@ class DictionaryRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getAlphabet(lang: String): Result<List<Sign>> = suspendRunCatching {
+        val response = dictionaryApi.getAlphabet(lang = lang)
+        if (response.isSuccessful) {
+            response.body()!!.alphabet.map { it.toDomain() }
+        } else {
+            throw ApiException("Failed to load alphabet: ${response.code()}")
+        }
+    }
+
     override suspend fun write(text: String, mode: String): Result<WriteResult> = suspendRunCatching {
         val response = writeApi.write(WriteRequest(text = text, mode = mode))
         if (response.isSuccessful) {

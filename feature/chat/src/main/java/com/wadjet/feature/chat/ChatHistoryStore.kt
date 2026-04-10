@@ -1,0 +1,91 @@
+package com.wadjet.feature.chat
+
+import android.content.Context
+import com.wadjet.core.domain.model.ChatMessage
+import dagger.hilt.android.qualifiers.ApplicationContext
+import org.json.JSONArray
+import org.json.JSONObject
+import timber.log.Timber
+import java.io.File
+import javax.inject.Inject
+import javax.inject.Singleton
+
+data class ConversationSummary(
+    val id: String,
+    val title: String,
+    val createdAt: Long,
+    val messageCount: Int,
+)
+
+@Singleton
+class ChatHistoryStore @Inject constructor(
+    @ApplicationContext private val context: Context,
+) {
+    private val dir get() = File(context.filesDir, "chat_history").also { it.mkdirs() }
+
+    fun listConversations(): List<ConversationSummary> =
+        dir.listFiles { f -> f.extension == "json" }
+            ?.mapNotNull { file ->
+                try {
+                    val obj = JSONObject(file.readText())
+                    ConversationSummary(
+                        id = obj.getString("id"),
+                        title = obj.getString("title"),
+                        createdAt = obj.getLong("createdAt"),
+                        messageCount = obj.getJSONArray("messages").length(),
+                    )
+                } catch (e: Exception) {
+                    Timber.w(e, "Failed to parse chat history file: ${file.name}")
+                    null
+                }
+            }
+            ?.sortedByDescending { it.createdAt }
+            ?: emptyList()
+
+    fun saveConversation(id: String, messages: List<ChatMessage>) {
+        if (messages.size < 2) return
+        val userMessages = messages.filter { it.role == ChatMessage.Role.USER }
+        if (userMessages.isEmpty()) return
+        val title = userMessages.first().content.take(50)
+        val obj = JSONObject().apply {
+            put("id", id)
+            put("title", title)
+            put("createdAt", System.currentTimeMillis())
+            put("messages", JSONArray().apply {
+                messages.filter { !it.isStreaming }.forEach { msg ->
+                    put(JSONObject().apply {
+                        put("role", msg.role.name)
+                        put("content", msg.content)
+                        put("timestamp", msg.timestamp)
+                    })
+                }
+            })
+        }
+        File(dir, "$id.json").writeText(obj.toString())
+    }
+
+    fun loadConversation(id: String): List<ChatMessage>? {
+        val file = File(dir, "$id.json")
+        if (!file.exists()) return null
+        return try {
+            val obj = JSONObject(file.readText())
+            val arr = obj.getJSONArray("messages")
+            (0 until arr.length()).map { i ->
+                val msg = arr.getJSONObject(i)
+                ChatMessage(
+                    id = "${id}_${msg.getLong("timestamp")}",
+                    role = ChatMessage.Role.valueOf(msg.getString("role")),
+                    content = msg.getString("content"),
+                    timestamp = msg.getLong("timestamp"),
+                )
+            }
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to load conversation: $id")
+            null
+        }
+    }
+
+    fun clearAll() {
+        dir.listFiles()?.forEach { it.delete() }
+    }
+}

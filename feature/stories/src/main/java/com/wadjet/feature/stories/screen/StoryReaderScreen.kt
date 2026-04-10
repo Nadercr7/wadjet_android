@@ -7,6 +7,9 @@ import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
@@ -38,6 +41,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -91,6 +95,7 @@ fun StoryReaderScreen(
     state: ReaderUiState,
     onPrevChapter: () -> Unit,
     onNextChapter: () -> Unit,
+    onReadAgain: () -> Unit,
     onSubmitAnswer: (Int, String) -> Unit,
     onUpdateWriteInput: (Int, String) -> Unit,
     onSpeak: () -> Unit,
@@ -265,6 +270,25 @@ fun StoryReaderScreen(
                 item {
                     Spacer(modifier = Modifier.height(24.dp))
                     FadeUp(visible = true) {
+                        // Build glyph code→unicode lookup from story interactions
+                        val glyphUnicodes = remember(story, state.glyphsLearned) {
+                            val map = mutableMapOf<String, String>()
+                            story.chapters.forEach { ch ->
+                                ch.interactions.forEach { inter ->
+                                    when (inter) {
+                                        is Interaction.GlyphDiscovery ->
+                                            if (inter.glyphCode in state.glyphsLearned) map[inter.glyphCode] = inter.unicode
+                                        is Interaction.ChooseGlyph -> inter.options.forEach { opt ->
+                                            if (opt.code in state.glyphsLearned) map[opt.code] = opt.glyph
+                                        }
+                                        is Interaction.WriteWord ->
+                                            if (inter.gardinerCode in state.glyphsLearned) map[inter.gardinerCode] = inter.targetGlyph
+                                        else -> {}
+                                    }
+                                }
+                            }
+                            map
+                        }
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -306,35 +330,52 @@ fun StoryReaderScreen(
                                     Text("Glyphs", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
                                 }
                             }
+
+                            // Individual glyph badges
+                            if (glyphUnicodes.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    glyphUnicodes.forEach { (code, unicode) ->
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(WadjetColors.Gold.copy(alpha = 0.1f))
+                                                .border(1.dp, WadjetColors.Gold.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                                        ) {
+                                            Text(
+                                                text = unicode,
+                                                fontSize = 28.sp,
+                                                fontFamily = com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs,
+                                            )
+                                            Text(
+                                                text = code,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = WadjetColors.Sand,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
                             Spacer(modifier = Modifier.height(20.dp))
-                            ChapterNavButton(text = "Back to Stories", onClick = onBack)
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                ChapterNavButton(text = "Read Again", onClick = onReadAgain)
+                                ChapterNavButton(text = "Back to Stories", onClick = onBack)
+                            }
                         }
                     }
                 }
             }
 
-            // Score + glyphs
-            item {
-                FadeUp(visible = true) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(WadjetColors.Surface)
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Score", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
-                            Text("${state.score}", color = WadjetColors.Gold, style = MaterialTheme.typography.titleMedium)
-                        }
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Glyphs", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
-                            Text("${state.glyphsLearned.size}", color = WadjetColors.Gold, style = MaterialTheme.typography.titleMedium)
-                        }
-                    }
-                }
-            }
+
         }
     }
 }
@@ -525,14 +566,21 @@ private fun InteractionBlock(
                         }
                         Box(
                             modifier = Modifier
-                                .size(72.dp)
+                                .size(width = 80.dp, height = 88.dp)
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(WadjetColors.Surface)
                                 .border(2.dp, borderColor, RoundedCornerShape(8.dp))
                                 .clickable(enabled = result == null) { onSubmit(option.code) },
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(text = option.glyph, fontSize = 36.sp)
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(text = option.glyph, fontSize = 32.sp)
+                                Text(
+                                    text = option.code,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = WadjetColors.TextMuted,
+                                )
+                            }
                         }
                     }
                 }
@@ -550,6 +598,7 @@ private fun InteractionBlock(
                     style = MaterialTheme.typography.bodySmall,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                val writeEnabled = result?.correct != true
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = interaction.targetGlyph,
@@ -560,7 +609,7 @@ private fun InteractionBlock(
                         value = writeInput,
                         onValueChange = onWriteInputChanged,
                         modifier = Modifier.weight(1f),
-                        enabled = result == null,
+                        enabled = writeEnabled,
                         placeholder = { Text("e.g. ${interaction.gardinerCode}", color = WadjetColors.TextMuted) },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = WadjetColors.Surface,
@@ -580,7 +629,7 @@ private fun InteractionBlock(
                     Spacer(modifier = Modifier.width(8.dp))
                     IconButton(
                         onClick = { if (writeInput.isNotBlank()) onSubmit(writeInput.trim()) },
-                        enabled = result == null && writeInput.isNotBlank(),
+                        enabled = writeEnabled && writeInput.isNotBlank(),
                     ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowForward,
@@ -598,23 +647,66 @@ private fun InteractionBlock(
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 Spacer(modifier = Modifier.height(12.dp))
+                val revealed = result != null
+                val scale = animateFloatAsState(
+                    targetValue = if (revealed) 1f else 0.8f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow,
+                    ),
+                    label = "glyphScale",
+                )
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(WadjetColors.Surface)
-                        .clickable(enabled = result == null) { onSubmit("reveal") }
+                        .background(
+                            if (revealed) WadjetColors.Gold.copy(alpha = 0.05f)
+                            else WadjetColors.Surface,
+                        )
+                        .then(
+                            if (revealed) Modifier.border(
+                                1.dp,
+                                WadjetColors.Gold.copy(alpha = 0.3f),
+                                RoundedCornerShape(8.dp),
+                            ) else Modifier,
+                        )
+                        .clickable(enabled = !revealed) { onSubmit("reveal") }
                         .padding(16.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (result != null) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(text = interaction.unicode, fontSize = 48.sp)
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Column {
-                                Text(interaction.glyphCode, color = WadjetColors.Sand, style = MaterialTheme.typography.labelMedium)
-                                Text(interaction.meaningEn, color = WadjetColors.Text, style = MaterialTheme.typography.bodyMedium)
-                                Text(interaction.transliteration, color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                    if (revealed) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.graphicsLayer(
+                                    scaleX = scale.value,
+                                    scaleY = scale.value,
+                                ),
+                            ) {
+                                Text(text = interaction.unicode, fontSize = 48.sp)
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column {
+                                    Text(interaction.glyphCode, color = WadjetColors.Sand, style = MaterialTheme.typography.labelMedium)
+                                    Text(interaction.meaningEn, color = WadjetColors.Text, style = MaterialTheme.typography.bodyMedium)
+                                    Text(interaction.transliteration, color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = WadjetColors.Gold,
+                                    modifier = Modifier.size(16.dp),
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Glyph Learned",
+                                    color = WadjetColors.Gold,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                )
                             }
                         }
                     } else {
@@ -671,41 +763,68 @@ private fun FeedbackBanner(
     interaction: Interaction,
     modifier: Modifier = Modifier,
 ) {
-    val bgColor = if (result.correct) WadjetColors.Success.copy(alpha = 0.12f) else WadjetColors.Error.copy(alpha = 0.12f)
-    val iconColor = if (result.correct) WadjetColors.Success else WadjetColors.Error
-    val icon = if (result.correct) Icons.Default.Check else Icons.Default.Close
+    val isDecision = interaction is Interaction.StoryDecision
+    val bgColor = when {
+        isDecision -> WadjetColors.Gold.copy(alpha = 0.1f)
+        result.correct -> WadjetColors.Success.copy(alpha = 0.12f)
+        else -> WadjetColors.Error.copy(alpha = 0.12f)
+    }
+    val iconColor = when {
+        isDecision -> WadjetColors.Gold
+        result.correct -> WadjetColors.Success
+        else -> WadjetColors.Error
+    }
+    val icon = when {
+        isDecision -> Icons.AutoMirrored.Filled.ArrowForward
+        result.correct -> Icons.Default.Check
+        else -> Icons.Default.Close
+    }
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(bgColor)
-            .padding(12.dp),
-        verticalAlignment = Alignment.Top,
+    AnimatedVisibility(
+        visible = true,
+        enter = fadeIn(),
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = iconColor,
-            modifier = Modifier.size(20.dp),
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Column {
-            Text(
-                text = if (result.correct) "Correct!" else "Not quite",
-                color = iconColor,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-            )
-            val explanation = result.explanation
-                ?: result.outcomeEn
-                ?: (interaction as? Interaction.ChooseGlyph)?.explanationEn
-            if (!explanation.isNullOrBlank()) {
-                Text(
-                    text = explanation,
-                    color = WadjetColors.Text,
-                    style = MaterialTheme.typography.bodySmall,
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(bgColor)
+                .then(
+                    if (isDecision) Modifier.border(
+                        1.dp,
+                        WadjetColors.Gold.copy(alpha = 0.2f),
+                        RoundedCornerShape(8.dp),
+                    ) else Modifier,
                 )
+                .padding(12.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconColor,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column {
+                if (!isDecision) {
+                    Text(
+                        text = if (result.correct) "Correct!" else "Not quite — try again",
+                        color = iconColor,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                val explanation = result.explanation
+                    ?: result.outcomeEn
+                    ?: (interaction as? Interaction.ChooseGlyph)?.explanationEn
+                if (!explanation.isNullOrBlank()) {
+                    Text(
+                        text = explanation,
+                        color = if (isDecision) WadjetColors.Gold else WadjetColors.Text,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
             }
         }
     }

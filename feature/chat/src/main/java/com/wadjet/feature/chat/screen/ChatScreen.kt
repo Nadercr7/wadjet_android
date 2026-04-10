@@ -2,6 +2,8 @@ package com.wadjet.feature.chat.screen
 
 import android.Manifest
 import android.content.Intent
+import android.media.MediaRecorder
+import android.os.Build
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
@@ -18,6 +20,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,6 +48,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -62,7 +66,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -79,7 +86,9 @@ import com.wadjet.core.designsystem.component.StreamingDots
 import com.wadjet.core.domain.model.ChatMessage
 import com.wadjet.core.domain.model.ChatMessage.Role
 import com.wadjet.feature.chat.ChatUiState
+import com.wadjet.feature.chat.ConversationSummary
 import dev.jeziellago.compose.markdowntext.MarkdownText
+import java.io.File
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,8 +100,12 @@ fun ChatScreen(
     onSpeak: (ChatMessage) -> Unit,
     onSttResult: (String) -> Unit,
     onSetRecording: (Boolean) -> Unit,
+    onTranscribeAudio: (File) -> Unit,
     onStopStreaming: () -> Unit,
     onClearChat: () -> Unit,
+    onToggleHistory: () -> Unit,
+    onLoadConversation: (String) -> Unit,
+    onClearHistory: () -> Unit,
     onDismissError: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -133,25 +146,59 @@ fun ChatScreen(
         }
     }
 
-    // STT setup
+    // STT setup — prefer Android SpeechRecognizer, fall back to server (Groq Whisper)
+    val hasLocalStt = remember { SpeechRecognizer.isRecognitionAvailable(context) }
     val speechRecognizer = remember {
-        if (SpeechRecognizer.isRecognitionAvailable(context)) {
+        if (hasLocalStt) {
             SpeechRecognizer.createSpeechRecognizer(context)
         } else {
             null
         }
     }
 
+    // Server STT (MediaRecorder → Groq Whisper) for devices without SpeechRecognizer
+    var mediaRecorder by remember { mutableStateOf<MediaRecorder?>(null) }
+    var recordingFile by remember { mutableStateOf<File?>(null) }
+
     val micPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
     ) { granted ->
-        if (granted && speechRecognizer != null) {
-            startListening(speechRecognizer, onSttResult, onSetRecording)
+        if (granted) {
+            if (hasLocalStt && speechRecognizer != null) {
+                startListening(speechRecognizer, onSttResult, onSetRecording)
+            } else {
+                // Server STT: record with MediaRecorder
+                try {
+                    val file = File(context.cacheDir, "stt_${System.currentTimeMillis()}.ogg")
+                    @Suppress("DEPRECATION")
+                    val recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        MediaRecorder(context)
+                    } else {
+                        MediaRecorder()
+                    }
+                    recorder.apply {
+                        setAudioSource(MediaRecorder.AudioSource.MIC)
+                        setOutputFormat(MediaRecorder.OutputFormat.OGG)
+                        setAudioEncoder(MediaRecorder.AudioEncoder.OPUS)
+                        setOutputFile(file.absolutePath)
+                        prepare()
+                        start()
+                    }
+                    mediaRecorder = recorder
+                    recordingFile = file
+                    onSetRecording(true)
+                } catch (_: Exception) {
+                    onSetRecording(false)
+                }
+            }
         }
     }
 
     DisposableEffect(Unit) {
-        onDispose { speechRecognizer?.destroy() }
+        onDispose {
+            speechRecognizer?.destroy()
+            mediaRecorder?.apply { try { stop(); release() } catch (_: Exception) {} }
+        }
     }
 
     Scaffold(
@@ -188,6 +235,15 @@ fun ChatScreen(
                     }
                 },
                 actions = {
+                    if (state.chatHistory.isNotEmpty()) {
+                        IconButton(onClick = onToggleHistory) {
+                            Icon(
+                                imageVector = Icons.Default.History,
+                                contentDescription = "Past conversations",
+                                tint = if (state.showHistory) WadjetColors.Gold else WadjetColors.TextMuted,
+                            )
+                        }
+                    }
                     IconButton(onClick = onClearChat) {
                         Icon(
                             imageVector = Icons.Default.Delete,
@@ -208,6 +264,70 @@ fun ChatScreen(
                 .fillMaxSize()
                 .padding(padding),
         ) {
+            // Past conversations panel
+            if (state.showHistory && state.chatHistory.isNotEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(WadjetColors.Surface)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "Past conversations (${state.chatHistory.size})",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = WadjetColors.TextMuted,
+                        )
+                        Text(
+                            text = "Clear all",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = WadjetColors.Sand,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .clickable { onClearHistory() }
+                                .padding(4.dp),
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    state.chatHistory.take(10).forEach { convo ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable { onLoadConversation(convo.id) }
+                                .padding(vertical = 8.dp, horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.History,
+                                contentDescription = null,
+                                tint = WadjetColors.Sand,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = convo.title,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = WadjetColors.Text,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Text(
+                                    text = "${convo.messageCount} messages",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = WadjetColors.TextMuted,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // Message list
             LazyColumn(
                 state = listState,
@@ -266,20 +386,32 @@ fun ChatScreen(
             }
 
             // Input bar with BorderBeam when streaming
+            val micTapAction: () -> Unit = {
+                if (state.isRecording) {
+                    if (hasLocalStt) {
+                        speechRecognizer?.stopListening()
+                        onSetRecording(false)
+                    } else {
+                        // Stop server recording and transcribe
+                        try { mediaRecorder?.apply { stop(); release() } } catch (_: Exception) {}
+                        mediaRecorder = null
+                        val file = recordingFile
+                        if (file != null && file.exists() && file.length() > 0) {
+                            onTranscribeAudio(file)
+                        }
+                        onSetRecording(false)
+                    }
+                } else {
+                    micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                }
+            }
             if (state.isStreaming) {
                 com.wadjet.core.designsystem.animation.BorderBeam(durationMs = 2000) {
                     ChatInputBar(
                         text = state.inputText,
                         onTextChanged = onInputChanged,
                         onSend = onSend,
-                        onMicTap = {
-                            if (state.isRecording) {
-                                speechRecognizer?.stopListening()
-                                onSetRecording(false)
-                            } else {
-                                micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                            }
-                        },
+                        onMicTap = micTapAction,
                         onStopStreaming = onStopStreaming,
                         isStreaming = state.isStreaming,
                         isRecording = state.isRecording,
@@ -290,14 +422,7 @@ fun ChatScreen(
                     text = state.inputText,
                     onTextChanged = onInputChanged,
                     onSend = onSend,
-                    onMicTap = {
-                        if (state.isRecording) {
-                            speechRecognizer?.stopListening()
-                            onSetRecording(false)
-                        } else {
-                            micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                        }
-                    },
+                    onMicTap = micTapAction,
                     onStopStreaming = onStopStreaming,
                     isStreaming = state.isStreaming,
                     isRecording = state.isRecording,

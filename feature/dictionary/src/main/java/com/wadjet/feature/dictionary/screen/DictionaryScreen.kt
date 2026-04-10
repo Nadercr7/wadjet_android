@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.feature.dictionary.AlphabetUiState
 import com.wadjet.feature.dictionary.DictionaryViewModel
 import com.wadjet.feature.dictionary.WriteViewModel
 import com.wadjet.feature.dictionary.sheet.SignDetailSheet
@@ -36,6 +37,7 @@ fun DictionaryScreen(
     writeViewModel: WriteViewModel = hiltViewModel(),
 ) {
     val browseState by dictionaryViewModel.state.collectAsStateWithLifecycle()
+    val alphabetState by dictionaryViewModel.alphabetState.collectAsStateWithLifecycle()
     val writeState by writeViewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(pageCount = { TABS.size })
@@ -84,7 +86,12 @@ fun DictionaryScreen(
                     onSignClick = dictionaryViewModel::selectSign,
                     onLoadMore = dictionaryViewModel::loadMore,
                 )
-                1 -> LearnTab(onLessonClick = onNavigateToLesson)
+                1 -> LearnTab(
+                    alphabetState = alphabetState,
+                    onLoadAlphabet = dictionaryViewModel::loadAlphabet,
+                    onSignClick = dictionaryViewModel::selectSign,
+                    onLessonClick = onNavigateToLesson,
+                )
                 2 -> WriteTab(
                     state = writeState,
                     onInputChange = writeViewModel::onInputChange,

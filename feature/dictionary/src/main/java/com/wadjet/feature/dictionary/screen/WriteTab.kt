@@ -221,7 +221,7 @@ fun WriteTab(
                                 Text(t, style = MaterialTheme.typography.bodySmall, color = WadjetColors.Sand)
                             }
                             g.phoneticValue?.let { p ->
-                                Text("/$p/", style = MaterialTheme.typography.bodySmall, color = WadjetColors.TextMuted)
+                                Text("/$p/", style = MaterialTheme.typography.bodySmall, color = WadjetColors.Sand)
                             }
                             g.meaning?.let { m ->
                                 Text(m, style = MaterialTheme.typography.bodySmall, color = WadjetColors.TextMuted)
