@@ -103,7 +103,7 @@ class ChatHistoryStore @Inject constructor(
             (0 until arr.length()).map { i ->
                 val msg = arr.getJSONObject(i)
                 ChatMessage(
-                    id = "${id}_${msg.getLong("timestamp")}",
+                    id = "${id}_${i}_${msg.getLong("timestamp")}",
                     role = ChatMessage.Role.valueOf(msg.getString("role")),
                     content = msg.getString("content"),
                     timestamp = msg.getLong("timestamp"),
