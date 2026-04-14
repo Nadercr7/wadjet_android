@@ -155,7 +155,7 @@ private fun SwipeToDeleteHistoryItem(
         backgroundContent = {
             val color by animateColorAsState(
                 when (dismissState.targetValue) {
-                    SwipeToDismissBoxValue.EndToStart -> Color(0xFFFF4444)
+                    SwipeToDismissBoxValue.EndToStart -> WadjetColors.Error
                     else -> Color.Transparent
                 },
                 label = "deleteColor",
@@ -163,12 +163,12 @@ private fun SwipeToDeleteHistoryItem(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(MaterialTheme.shapes.medium)
                     .background(color)
                     .padding(end = 20.dp),
                 contentAlignment = Alignment.CenterEnd,
             ) {
-                Icon(Icons.Default.Delete, "Delete", tint = Color.White)
+                Icon(Icons.Default.Delete, "Delete", tint = WadjetColors.Text)
             }
         },
         enableDismissFromStartToEnd = false,
@@ -185,7 +185,7 @@ private fun HistoryCard(
     Card(
         onClick = onClick,
         colors = CardDefaults.cardColors(containerColor = WadjetColors.Surface),
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
@@ -202,7 +202,7 @@ private fun HistoryCard(
                 fallback = painterResource(DesignR.drawable.ic_placeholder_glyph),
                 modifier = Modifier
                     .size(64.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(MaterialTheme.shapes.small)
                     .background(WadjetColors.Night),
             )
 

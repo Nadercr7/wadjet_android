@@ -120,7 +120,7 @@ fun TranslateTab(
         if (state.error != null) {
             Spacer(modifier = Modifier.height(12.dp))
             Surface(
-                shape = RoundedCornerShape(8.dp),
+                shape = MaterialTheme.shapes.small,
                 color = WadjetColors.Error.copy(alpha = 0.12f),
                 modifier = Modifier.fillMaxWidth(),
             ) {
@@ -143,7 +143,7 @@ fun TranslateTab(
 @Composable
 private fun TranslationResultCard(result: TranslationResult) {
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         color = WadjetColors.Surface,
         modifier = Modifier.fillMaxWidth(),
     ) {

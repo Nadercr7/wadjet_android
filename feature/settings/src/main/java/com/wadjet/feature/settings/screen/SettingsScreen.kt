@@ -190,9 +190,9 @@ fun SettingsScreen(
                         }
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(MaterialTheme.shapes.small)
                                 .background(WadjetColors.Surface)
-                                .border(1.dp, WadjetColors.Gold, RoundedCornerShape(8.dp))
+                                .border(1.dp, WadjetColors.Gold, MaterialTheme.shapes.small)
                                 .clickable(onClick = onClearCache)
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                         ) {
@@ -225,9 +225,9 @@ fun SettingsScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(MaterialTheme.shapes.medium)
                         .background(WadjetColors.Error.copy(alpha = 0.08f))
-                        .border(1.dp, WadjetColors.Error.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                        .border(1.dp, WadjetColors.Error.copy(alpha = 0.3f), MaterialTheme.shapes.medium)
                         .clickable { showSignOutDialog = true }
                         .padding(16.dp),
                     contentAlignment = Alignment.Center,
@@ -344,7 +344,7 @@ private fun PasswordSection(
         Spacer(modifier = Modifier.height(12.dp))
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
+                .clip(MaterialTheme.shapes.small)
                 .background(WadjetColors.Gold)
                 .clickable(enabled = !isChanging, onClick = onChange)
                 .padding(horizontal = 20.dp, vertical = 10.dp),
@@ -449,9 +449,9 @@ private fun SettingsCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(MaterialTheme.shapes.medium)
             .background(WadjetColors.SurfaceAlt)
-            .border(1.dp, WadjetColors.Border, RoundedCornerShape(12.dp))
+            .border(1.dp, WadjetColors.Border, MaterialTheme.shapes.medium)
             .padding(16.dp),
         content = content,
     )

@@ -14,8 +14,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs
+import com.wadjet.core.designsystem.HieroglyphStyle
 import com.wadjet.core.designsystem.WadjetColors
 
 @Composable
@@ -33,8 +32,7 @@ fun EmptyState(
     ) {
         Text(
             text = glyph,
-            fontSize = 56.sp,
-            fontFamily = NotoSansEgyptianHieroglyphs,
+            style = HieroglyphStyle.copy(fontSize = HieroglyphStyle.fontSize * 1.75f),
             color = WadjetColors.Gold.copy(alpha = 0.5f),
             modifier = Modifier.semantics { contentDescription = title },
         )

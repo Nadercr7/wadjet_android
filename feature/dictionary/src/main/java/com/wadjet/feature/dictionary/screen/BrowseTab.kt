@@ -185,7 +185,7 @@ fun BrowseTab(
 private fun SignGridItem(sign: Sign, onClick: () -> Unit) {
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(MaterialTheme.shapes.medium)
             .background(WadjetColors.Surface)
             .clickable(onClick = onClick)
             .padding(12.dp),

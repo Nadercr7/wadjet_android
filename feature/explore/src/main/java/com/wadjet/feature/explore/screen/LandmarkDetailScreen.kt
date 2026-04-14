@@ -250,7 +250,7 @@ private fun DetailContent(
             detail.parent?.let { parent ->
                 Spacer(Modifier.height(8.dp))
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
+                    shape = MaterialTheme.shapes.small,
                     color = WadjetColors.Surface,
                     onClick = { onChildTap(parent.slug) },
                 ) {
@@ -289,7 +289,7 @@ private fun DetailContent(
                     icon = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     label = if (isFavorite) "Saved" else "Save",
                     onClick = onToggleFavorite,
-                    color = if (isFavorite) Color(0xFFFF4444) else WadjetColors.Gold,
+                    color = if (isFavorite) WadjetColors.Error else WadjetColors.Gold,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -370,7 +370,7 @@ private fun DetailContent(
                 val context = LocalContext.current
                 Spacer(Modifier.height(24.dp))
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = MaterialTheme.shapes.medium,
                     color = WadjetColors.Surface,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -384,7 +384,7 @@ private fun DetailContent(
                             Spacer(Modifier.height(8.dp))
                             Surface(
                                 onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) },
-                                shape = RoundedCornerShape(8.dp),
+                                shape = MaterialTheme.shapes.small,
                                 color = WadjetColors.Gold.copy(alpha = 0.15f),
                             ) {
                                 Text("Read on Wikipedia →", color = WadjetColors.Gold, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
@@ -454,7 +454,7 @@ private fun ActionButton(
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         color = WadjetColors.Surface,
         modifier = modifier.clickable(onClick = onClick),
     ) {
@@ -554,7 +554,7 @@ private fun GalleryTab(images: List<LandmarkImage>) {
                 fallback = painterResource(DesignR.drawable.ic_placeholder_landmark),
                 modifier = Modifier
                     .aspectRatio(1f)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .clip(MaterialTheme.shapes.small),
             )
         }
     }
@@ -570,7 +570,7 @@ private fun RecommendationsRow(
     ) {
         items(recommendations) { rec ->
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = MaterialTheme.shapes.medium,
                 color = WadjetColors.Surface,
                 modifier = Modifier
                     .width(140.dp)
@@ -628,7 +628,7 @@ private fun ChildrenRow(
     LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         items(children) { child ->
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = MaterialTheme.shapes.medium,
                 color = WadjetColors.Surface,
                 modifier = Modifier
                     .width(140.dp)

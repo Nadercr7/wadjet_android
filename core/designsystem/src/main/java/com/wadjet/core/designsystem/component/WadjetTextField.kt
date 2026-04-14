@@ -1,14 +1,14 @@
 package com.wadjet.core.designsystem.component
 
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.unit.dp
 import com.wadjet.core.designsystem.WadjetColors
 
 @Composable
@@ -23,11 +23,13 @@ fun WadjetTextField(
     isError: Boolean = false,
     singleLine: Boolean = true,
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         label = label?.let { { Text(it) } },
         placeholder = placeholder?.let { { Text(it, color = WadjetColors.TextMuted) } },
         leadingIcon = leadingIcon,
@@ -35,6 +37,8 @@ fun WadjetTextField(
         isError = isError,
         singleLine = singleLine,
         visualTransformation = visualTransformation,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = WadjetColors.Gold,
             unfocusedBorderColor = WadjetColors.Border,
@@ -44,6 +48,6 @@ fun WadjetTextField(
             unfocusedTextColor = WadjetColors.Text,
             errorBorderColor = WadjetColors.Error,
         ),
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
     )
 }

@@ -282,7 +282,7 @@ private fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
             focusedIndicatorColor = WadjetColors.Gold,
             unfocusedIndicatorColor = Color.Transparent,
         ),
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -365,7 +365,7 @@ private fun LandmarkCard(
 ) {
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
     Surface(
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.large,
         color = WadjetColors.Surface,
         modifier = Modifier
             .fillMaxWidth()
@@ -403,7 +403,7 @@ private fun LandmarkCard(
                         .background(WadjetColors.Night.copy(alpha = 0.6f), CircleShape),
                 ) {
                     val heartColor by animateColorAsState(
-                        targetValue = if (isFavorite) Color(0xFFFF4444) else WadjetColors.Text,
+                        targetValue = if (isFavorite) WadjetColors.Error else WadjetColors.Text,
                         label = "heartColor",
                     )
                     Icon(
@@ -470,7 +470,7 @@ private fun FeaturedCard(
     onClick: () -> Unit,
 ) {
     Surface(
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.large,
         color = WadjetColors.Surface,
         modifier = Modifier
             .width(220.dp)

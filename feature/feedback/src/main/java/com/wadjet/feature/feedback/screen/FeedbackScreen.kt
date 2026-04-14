@@ -174,7 +174,7 @@ fun FeedbackScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(MaterialTheme.shapes.medium)
                         .background(WadjetColors.Gold)
                         .clickable(enabled = !state.isSubmitting, onClick = onSubmit)
                         .padding(16.dp),

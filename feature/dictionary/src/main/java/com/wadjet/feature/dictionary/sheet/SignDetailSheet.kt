@@ -132,7 +132,7 @@ fun SignDetailSheet(
         if (!funFact.isNullOrBlank()) {
             Spacer(modifier = Modifier.height(12.dp))
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = MaterialTheme.shapes.medium,
                 color = WadjetColors.Gold.copy(alpha = 0.08f),
                 modifier = Modifier.fillMaxWidth(),
             ) {

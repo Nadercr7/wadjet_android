@@ -260,7 +260,7 @@ private fun PathCardRich(
             Column(modifier = Modifier.padding(20.dp)) {
                 // Icon in a gold/10 rounded box
                 Surface(
-                    shape = RoundedCornerShape(16.dp),
+                    shape = MaterialTheme.shapes.large,
                     color = WadjetColors.Gold.copy(alpha = 0.1f),
                     modifier = Modifier.size(56.dp),
                 ) {
@@ -328,7 +328,7 @@ private fun QuickAction(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = MaterialTheme.shapes.medium,
                 color = WadjetColors.Gold.copy(alpha = 0.1f),
                 modifier = Modifier.size(44.dp),
             ) {
@@ -436,7 +436,7 @@ private fun ThothChatEntry(onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = MaterialTheme.shapes.medium,
                 color = WadjetColors.Gold.copy(alpha = 0.1f),
                 modifier = Modifier.size(44.dp),
             ) {

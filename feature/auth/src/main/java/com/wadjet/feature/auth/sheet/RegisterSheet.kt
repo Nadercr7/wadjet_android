@@ -102,7 +102,7 @@ fun RegisterSheet(
                     color = when {
                         strength < 0.4f -> MaterialTheme.colorScheme.error
                         strength < 0.7f -> WadjetColors.Sand
-                        else -> Color(0xFF4CAF50)
+                        else -> WadjetColors.Success
                     },
                     trackColor = WadjetColors.Border,
                 )
@@ -177,7 +177,7 @@ private fun PasswordRule(text: String, met: Boolean) {
     ) {
         Text(
             text = if (met) "✓" else "✗",
-            color = if (met) Color(0xFF4CAF50) else WadjetColors.TextMuted,
+            color = if (met) WadjetColors.Success else WadjetColors.TextMuted,
             style = MaterialTheme.typography.bodySmall,
         )
         Text(

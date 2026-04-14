@@ -186,7 +186,7 @@ fun DashboardScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(MaterialTheme.shapes.small)
                                 .background(WadjetColors.Surface)
                                 .padding(24.dp),
                             contentAlignment = Alignment.Center,
@@ -300,9 +300,9 @@ private fun StatCard(
 
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(MaterialTheme.shapes.medium)
             .background(WadjetColors.Surface)
-            .border(1.dp, WadjetColors.Border, RoundedCornerShape(12.dp))
+            .border(1.dp, WadjetColors.Border, MaterialTheme.shapes.medium)
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -328,7 +328,7 @@ private fun ScanCard(
     Column(
         modifier = modifier
             .width(100.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(MaterialTheme.shapes.small)
             .background(WadjetColors.Surface)
             .shineSweep()
             .padding(12.dp),
@@ -375,7 +375,7 @@ private fun FavoriteRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(MaterialTheme.shapes.small)
             .background(WadjetColors.Surface)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -418,7 +418,7 @@ private fun StoryProgressRow(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(MaterialTheme.shapes.small)
             .background(WadjetColors.Surface)
             .padding(12.dp),
     ) {

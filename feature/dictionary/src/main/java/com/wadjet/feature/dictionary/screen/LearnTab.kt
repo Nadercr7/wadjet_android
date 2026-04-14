@@ -102,9 +102,9 @@ fun LearnTab(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier
                                 .width(64.dp)
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(MaterialTheme.shapes.small)
                                 .background(WadjetColors.Surface)
-                                .border(1.dp, WadjetColors.Border, RoundedCornerShape(8.dp))
+                                .border(1.dp, WadjetColors.Border, MaterialTheme.shapes.small)
                                 .clickable { onSignClick(sign) }
                                 .padding(vertical = 8.dp, horizontal = 4.dp),
                         ) {

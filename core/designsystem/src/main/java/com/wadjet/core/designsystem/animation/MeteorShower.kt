@@ -2,6 +2,8 @@ package com.wadjet.core.designsystem.animation
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.StartOffset
+import androidx.compose.animation.core.StartOffsetType
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -44,10 +46,13 @@ fun MeteorShower(
             animationSpec = infiniteRepeatable(
                 animation = tween(
                     durationMillis = durationMs + index * 400,
-                    delayMillis = index * (durationMs / meteorCount),
                     easing = LinearEasing,
                 ),
                 repeatMode = RepeatMode.Restart,
+                initialStartOffset = StartOffset(
+                    index * (durationMs / meteorCount),
+                    StartOffsetType.Delay,
+                ),
             ),
             label = "meteor_$index",
         )

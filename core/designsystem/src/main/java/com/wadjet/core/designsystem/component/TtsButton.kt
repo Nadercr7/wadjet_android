@@ -21,7 +21,7 @@ fun TtsButton(
     modifier: Modifier = Modifier,
     contentDescription: String = "Speak",
 ) {
-    IconButton(onClick = onClick, modifier = modifier.size(32.dp)) {
+    IconButton(onClick = onClick, modifier = modifier.size(48.dp)) {
         when (state) {
             TtsState.IDLE -> Icon(
                 imageVector = Icons.AutoMirrored.Filled.VolumeUp,
@@ -36,7 +36,7 @@ fun TtsButton(
             )
             TtsState.PLAYING -> Icon(
                 imageVector = Icons.Default.Stop,
-                contentDescription = "Stop",
+                contentDescription = contentDescription,
                 tint = WadjetColors.Gold,
                 modifier = Modifier.size(18.dp),
             )

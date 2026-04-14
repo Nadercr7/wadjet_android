@@ -131,7 +131,7 @@ fun ScanResultScreen(
             if (result.aiUnverified) {
                 FadeUp(visible = visibleSections >= 1) {
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
+                        shape = MaterialTheme.shapes.small,
                         color = WadjetColors.Warning.copy(alpha = 0.12f),
                         modifier = Modifier.fillMaxWidth(),
                     ) {
@@ -161,7 +161,7 @@ fun ScanResultScreen(
             if (result.qualityHints.isNotEmpty()) {
                 FadeUp(visible = visibleSections >= 1) {
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
+                        shape = MaterialTheme.shapes.small,
                         color = WadjetColors.Surface,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
@@ -221,7 +221,7 @@ fun ScanResultScreen(
             result.confidenceSummary?.let { cs ->
                 FadeUp(visible = visibleSections >= 2) {
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
+                        shape = MaterialTheme.shapes.medium,
                         color = WadjetColors.Surface,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
@@ -338,7 +338,7 @@ fun ScanResultScreen(
                             if (!translationAr.isNullOrBlank() && !translationEn.isNullOrBlank()) {
                                 Surface(
                                     onClick = { showArabic = !showArabic },
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = MaterialTheme.shapes.small,
                                     color = WadjetColors.Gold.copy(alpha = 0.15f),
                                 ) {
                                     Text(
@@ -388,7 +388,7 @@ fun ScanResultScreen(
                 FadeUp(visible = visibleSections >= 6) {
                     var aiNotesExpanded by remember { mutableStateOf(false) }
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
+                        shape = MaterialTheme.shapes.medium,
                         color = WadjetColors.Gold.copy(alpha = 0.08f),
                         modifier = Modifier.fillMaxWidth(),
                     ) {
@@ -582,7 +582,7 @@ private fun GlyphChip(glyph: DetectedGlyph, onClick: () -> Unit) {
     val confidence = (glyph.classConfidence * 100).toInt()
 
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         color = WadjetColors.Surface,
         onClick = onClick,
     ) {
@@ -646,7 +646,7 @@ private fun SectionLabel(text: String) {
 @Composable
 private fun TimingStats(result: ScanResult) {
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         color = WadjetColors.Surface,
         modifier = Modifier.fillMaxWidth(),
     ) {

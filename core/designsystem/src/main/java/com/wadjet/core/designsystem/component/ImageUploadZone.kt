@@ -14,10 +14,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,8 +52,7 @@ fun ImageUploadZone(
     onAnalyze: (() -> Unit)? = null,
 ) {
     var localUri by remember { mutableStateOf(selectedImageUri) }
-    // Sync external changes
-    if (selectedImageUri != localUri) {
+    LaunchedEffect(selectedImageUri) {
         localUri = selectedImageUri
     }
 
@@ -81,7 +80,7 @@ fun ImageUploadZone(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(280.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(MaterialTheme.shapes.large)
                     .clickable {
                         photoPicker.launch(
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
@@ -104,7 +103,7 @@ fun ImageUploadZone(
                         .padding(12.dp)
                         .background(
                             WadjetColors.Night.copy(alpha = 0.7f),
-                            RoundedCornerShape(8.dp),
+                            MaterialTheme.shapes.small,
                         )
                         .padding(horizontal = 12.dp, vertical = 6.dp),
                 ) {
@@ -143,7 +142,7 @@ fun ImageUploadZone(
                         ),
                     )
                 }
-                .clip(RoundedCornerShape(16.dp))
+                .clip(MaterialTheme.shapes.large)
                 .clickable {
                     photoPicker.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),

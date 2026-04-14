@@ -11,7 +11,6 @@ val WadjetTypography = Typography(
         fontWeight = FontWeight.Bold,
         fontSize = 36.sp,
         lineHeight = 44.sp,
-        color = WadjetColors.Ivory,
     ),
     displayMedium = TextStyle(
         fontFamily = PlayfairDisplay,
@@ -36,6 +35,12 @@ val WadjetTypography = Typography(
         fontWeight = FontWeight.SemiBold,
         fontSize = 20.sp,
         lineHeight = 26.sp,
+    ),
+    headlineSmall = TextStyle(
+        fontFamily = PlayfairDisplay,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 22.sp,
+        lineHeight = 28.sp,
     ),
     titleLarge = TextStyle(
         fontFamily = Inter,
@@ -111,6 +116,12 @@ val GardinerCodeStyle = TextStyle(
 fun wadjetTypographyForLang(lang: String): Typography {
     if (lang != "ar") return WadjetTypography
     return WadjetTypography.copy(
+        displayLarge = WadjetTypography.displayLarge.copy(fontFamily = Cairo, fontWeight = FontWeight.Bold),
+        displayMedium = WadjetTypography.displayMedium.copy(fontFamily = Cairo, fontWeight = FontWeight.Bold),
+        displaySmall = WadjetTypography.displaySmall.copy(fontFamily = Cairo, fontWeight = FontWeight.SemiBold),
+        headlineLarge = WadjetTypography.headlineLarge.copy(fontFamily = Cairo, fontWeight = FontWeight.SemiBold),
+        headlineMedium = WadjetTypography.headlineMedium.copy(fontFamily = Cairo, fontWeight = FontWeight.SemiBold),
+        headlineSmall = WadjetTypography.headlineSmall.copy(fontFamily = Cairo, fontWeight = FontWeight.SemiBold),
         bodyLarge = WadjetTypography.bodyLarge.copy(fontFamily = Cairo),
         bodyMedium = WadjetTypography.bodyMedium.copy(fontFamily = Cairo),
         bodySmall = WadjetTypography.bodySmall.copy(fontFamily = Cairo),

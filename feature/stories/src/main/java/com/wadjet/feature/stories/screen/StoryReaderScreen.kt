@@ -315,7 +315,7 @@ fun StoryReaderScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
+                                .clip(MaterialTheme.shapes.large)
                                 .background(
                                     Brush.verticalGradient(
                                         listOf(
@@ -366,9 +366,9 @@ fun StoryReaderScreen(
                                         Column(
                                             horizontalAlignment = Alignment.CenterHorizontally,
                                             modifier = Modifier
-                                                .clip(RoundedCornerShape(8.dp))
+                                                .clip(MaterialTheme.shapes.small)
                                                 .background(WadjetColors.Gold.copy(alpha = 0.1f))
-                                                .border(1.dp, WadjetColors.Gold.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                                                .border(1.dp, WadjetColors.Gold.copy(alpha = 0.3f), MaterialTheme.shapes.small)
                                                 .padding(horizontal = 12.dp, vertical = 8.dp),
                                         ) {
                                             Text(
@@ -415,7 +415,7 @@ private fun SceneImage(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(16f / 9f)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(MaterialTheme.shapes.medium)
             .background(WadjetColors.SurfaceAlt),
         contentAlignment = Alignment.Center,
     ) {
@@ -466,7 +466,7 @@ private fun SceneImage(
                 Spacer(modifier = Modifier.height(8.dp))
                 Surface(
                     onClick = onRetry,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = MaterialTheme.shapes.small,
                     color = WadjetColors.Gold.copy(alpha = 0.15f),
                 ) {
                     Text(
@@ -506,12 +506,12 @@ private fun ParagraphBlock(
         modifier = modifier.then(
             if (borderAlpha.value > 0f) {
                 Modifier
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(MaterialTheme.shapes.small)
                     .background(WadjetColors.Gold.copy(alpha = 0.06f * borderAlpha.value))
                     .border(
                         width = 1.dp,
                         color = WadjetColors.Gold.copy(alpha = 0.4f * borderAlpha.value),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = MaterialTheme.shapes.small,
                     )
                     .padding(8.dp)
             } else {
@@ -579,9 +579,9 @@ private fun ParagraphBlock(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(MaterialTheme.shapes.small)
                         .background(WadjetColors.Surface)
-                        .border(1.dp, WadjetColors.Gold.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                        .border(1.dp, WadjetColors.Gold.copy(alpha = 0.3f), MaterialTheme.shapes.small)
                         .clickable { selectedAnnotation = null }
                         .padding(12.dp),
                 ) {
@@ -618,9 +618,9 @@ private fun InteractionBlock(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(MaterialTheme.shapes.medium)
             .background(WadjetColors.SurfaceAlt)
-            .border(1.dp, WadjetColors.Border, RoundedCornerShape(12.dp))
+            .border(1.dp, WadjetColors.Border, MaterialTheme.shapes.medium)
             .padding(16.dp),
     ) {
         when (interaction) {
@@ -648,9 +648,9 @@ private fun InteractionBlock(
                         Box(
                             modifier = Modifier
                                 .size(width = 80.dp, height = 88.dp)
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(MaterialTheme.shapes.small)
                                 .background(WadjetColors.Surface)
-                                .border(2.dp, borderColor, RoundedCornerShape(8.dp))
+                                .border(2.dp, borderColor, MaterialTheme.shapes.small)
                                 .clickable(enabled = result == null) { onSubmit(option.code) },
                             contentAlignment = Alignment.Center,
                         ) {
@@ -740,7 +740,7 @@ private fun InteractionBlock(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(MaterialTheme.shapes.small)
                         .background(
                             if (revealed) WadjetColors.Gold.copy(alpha = 0.05f)
                             else WadjetColors.Surface,
@@ -749,7 +749,7 @@ private fun InteractionBlock(
                             if (revealed) Modifier.border(
                                 1.dp,
                                 WadjetColors.Gold.copy(alpha = 0.3f),
-                                RoundedCornerShape(8.dp),
+                                MaterialTheme.shapes.small,
                             ) else Modifier,
                         )
                         .clickable(enabled = !revealed) { onSubmit("reveal") }
@@ -810,12 +810,12 @@ private fun InteractionBlock(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(MaterialTheme.shapes.small)
                             .background(if (isSelected) WadjetColors.Gold.copy(alpha = 0.15f) else WadjetColors.Surface)
                             .border(
                                 1.dp,
                                 if (isSelected) WadjetColors.Gold else WadjetColors.Border,
-                                RoundedCornerShape(8.dp),
+                                MaterialTheme.shapes.small,
                             )
                             .clickable(enabled = result == null) { onSubmit(choice.id) }
                             .padding(12.dp),
@@ -876,13 +876,13 @@ private fun FeedbackBanner(
         Row(
             modifier = modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
+                .clip(MaterialTheme.shapes.small)
                 .background(bgColor)
                 .then(
                     if (isDecision) Modifier.border(
                         1.dp,
                         WadjetColors.Gold.copy(alpha = 0.2f),
-                        RoundedCornerShape(8.dp),
+                        MaterialTheme.shapes.small,
                     ) else Modifier,
                 )
                 .padding(12.dp),
@@ -927,9 +927,9 @@ private fun ChapterNavButton(
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(MaterialTheme.shapes.small)
             .background(WadjetColors.Surface)
-            .border(1.dp, WadjetColors.Gold, RoundedCornerShape(8.dp))
+            .border(1.dp, WadjetColors.Gold, MaterialTheme.shapes.small)
             .clickable(onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 10.dp),
     ) {

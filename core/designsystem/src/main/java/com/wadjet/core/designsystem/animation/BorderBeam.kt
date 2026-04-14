@@ -7,13 +7,10 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -23,33 +20,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.wadjet.core.designsystem.WadjetColors
-
-/**
- * Animated arc stroke orbiting around the border of its parent.
- * Based on CSS `@keyframes border-beam { offset-distance: 0% → 100% }`.
- */
-fun Modifier.borderBeam(
-    beamLength: Float = 0.15f,
-    strokeWidth: Dp = 2.dp,
-    durationMs: Int = 4000,
-    beamColor: Color = WadjetColors.Gold,
-    beamColorEnd: Color = WadjetColors.GoldLight,
-): Modifier = this.then(
-    Modifier.drawWithContent {
-        drawContent()
-
-        val w = size.width
-        val h = size.height
-        val path = Path().apply {
-            addRect(Rect(0f, 0f, w, h))
-        }
-        val pathMeasure = PathMeasure().apply { setPath(path, true) }
-        val totalLength = pathMeasure.length
-
-        // Not using composed — will use drawWithContent only.
-        // We need the animated value. Use a trick: store nothing, rely on recomposition.
-    }
-)
 
 /**
  * Composable wrapper approach — better for Compose infinite transitions.

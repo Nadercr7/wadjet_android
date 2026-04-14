@@ -95,7 +95,7 @@ fun LessonScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(MaterialTheme.shapes.medium)
                                 .background(WadjetColors.Gold.copy(alpha = 0.08f))
                                 .padding(12.dp),
                         ) {
@@ -182,7 +182,7 @@ fun LessonScreen(
 private fun TeachingSignItem(sign: Sign) {
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(MaterialTheme.shapes.small)
             .background(WadjetColors.Surface)
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -197,7 +197,7 @@ private fun ExampleWordItem(word: ExampleWord) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(MaterialTheme.shapes.small)
             .background(WadjetColors.Surface)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -216,7 +216,7 @@ private fun PracticeWordItem(word: PracticeWord) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(MaterialTheme.shapes.small)
             .background(WadjetColors.Surface)
             .padding(12.dp),
     ) {

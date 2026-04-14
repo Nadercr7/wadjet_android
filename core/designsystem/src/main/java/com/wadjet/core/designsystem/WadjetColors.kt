@@ -23,7 +23,6 @@ object WadjetColors {
     // Text
     val Text = Color(0xFFF0F0F0)
     val TextMuted = Color(0xFF8A8A8A)
-    val TextDim = Color(0xFF7E7E7E)
     val Ivory = Color(0xFFF5F0E8)
     val Sand = Color(0xFFC4A265)
     val Dust = Color(0xFF8B7355)
@@ -32,4 +31,12 @@ object WadjetColors {
     val Success = Color(0xFF4CAF50)
     val Error = Color(0xFFEF4444)
     val Warning = Color(0xFFF59E0B)
+
+    // Difficulty
+    val DifficultyBeginner = Color(0xFFD4AF37)
+    val DifficultyBeginnerDark = Color(0xFF8B6914)
+    val DifficultyIntermediate = Color(0xFF4A90D9)
+    val DifficultyIntermediateDark = Color(0xFF1A3A6B)
+    val DifficultyAdvanced = Color(0xFF9B59B6)
+    val DifficultyAdvancedDark = Color(0xFF4A1A6B)
 }

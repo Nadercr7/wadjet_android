@@ -253,7 +253,7 @@ private fun IdentifyResults(
             if (!descriptionText.isNullOrBlank()) {
                 Spacer(Modifier.height(12.dp))
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = MaterialTheme.shapes.medium,
                     color = WadjetColors.Night,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -298,7 +298,7 @@ private fun IdentifyResults(
                 )
                 Spacer(Modifier.height(8.dp))
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = MaterialTheme.shapes.medium,
                     color = WadjetColors.Gold.copy(alpha = 0.1f),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -345,7 +345,7 @@ private fun ConfidenceBadge(confidence: Float) {
         else -> WadjetColors.Error.copy(alpha = 0.15f) to WadjetColors.Error
     }
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         color = bg,
     ) {
         Text(
@@ -403,7 +403,7 @@ private fun WarningBanner(
     color: Color,
 ) {
     Surface(
-        shape = RoundedCornerShape(8.dp),
+        shape = MaterialTheme.shapes.small,
         color = color.copy(alpha = 0.1f),
         modifier = Modifier.fillMaxWidth(),
     ) {

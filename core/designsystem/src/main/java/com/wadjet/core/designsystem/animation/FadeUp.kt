@@ -16,7 +16,7 @@ fun FadeUp(
     AnimatedVisibility(
         visible = visible,
         enter = fadeIn(tween(600)) + slideInVertically(
-            initialOffsetY = { 40 },
+            initialOffsetY = { it / 8 },
             animationSpec = tween(600, easing = EaseOut),
         ),
         content = content,

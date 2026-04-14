@@ -46,7 +46,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -233,7 +232,7 @@ private fun StoryCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(MaterialTheme.shapes.medium)
             .background(WadjetColors.Surface)
             .clickable(enabled = !isLocked, onClick = onClick)
             .padding(16.dp),
@@ -243,14 +242,14 @@ private fun StoryCard(
             Box(
                 modifier = Modifier
                     .size(64.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(MaterialTheme.shapes.small)
                     .background(
                         Brush.verticalGradient(
                             colors = when (story.difficulty.lowercase()) {
-                                "beginner" -> listOf(WadjetColors.Gold, Color(0xFF8B6914))
-                                "intermediate" -> listOf(Color(0xFF4A90D9), Color(0xFF1A3A6B))
-                                "advanced" -> listOf(Color(0xFF9B59B6), Color(0xFF4A1A6B))
-                                else -> listOf(WadjetColors.Gold, Color(0xFF8B6914))
+                                "beginner" -> listOf(WadjetColors.DifficultyBeginner, WadjetColors.DifficultyBeginnerDark)
+                                "intermediate" -> listOf(WadjetColors.DifficultyIntermediate, WadjetColors.DifficultyIntermediateDark)
+                                "advanced" -> listOf(WadjetColors.DifficultyAdvanced, WadjetColors.DifficultyAdvancedDark)
+                                else -> listOf(WadjetColors.DifficultyBeginner, WadjetColors.DifficultyBeginnerDark)
                             },
                         ),
                     )

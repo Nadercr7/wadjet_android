@@ -3,7 +3,6 @@ package com.wadjet.core.designsystem.component
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -13,8 +12,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import com.wadjet.core.designsystem.WadjetColors
 
@@ -26,12 +23,8 @@ fun WadjetButton(
     enabled: Boolean = true,
     isLoading: Boolean = false,
 ) {
-    val haptic = LocalHapticFeedback.current
     Button(
-        onClick = {
-            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-            onClick()
-        },
+        onClick = onClick,
         modifier = modifier.height(48.dp),
         enabled = enabled && !isLoading,
         colors = ButtonDefaults.buttonColors(
@@ -40,7 +33,7 @@ fun WadjetButton(
             disabledContainerColor = WadjetColors.GoldMuted.copy(alpha = 0.5f),
             disabledContentColor = WadjetColors.Night.copy(alpha = 0.5f),
         ),
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
     ) {
         if (isLoading) {
             CircularProgressIndicator(
@@ -70,7 +63,7 @@ fun WadjetGhostButton(
             contentColor = WadjetColors.Gold,
         ),
         border = BorderStroke(1.dp, WadjetColors.Gold),
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
     ) {
         if (isLoading) {
             CircularProgressIndicator(
@@ -89,17 +82,30 @@ fun WadjetDarkButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    isLoading: Boolean = false,
 ) {
     Button(
         onClick = onClick,
         modifier = modifier.height(48.dp),
+        enabled = enabled && !isLoading,
         colors = ButtonDefaults.buttonColors(
             containerColor = WadjetColors.SurfaceAlt,
             contentColor = WadjetColors.Text,
+            disabledContainerColor = WadjetColors.SurfaceAlt.copy(alpha = 0.5f),
+            disabledContentColor = WadjetColors.Text.copy(alpha = 0.5f),
         ),
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
     ) {
-        Text(text, style = MaterialTheme.typography.labelLarge)
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                color = WadjetColors.Text,
+                strokeWidth = 2.dp,
+            )
+        } else {
+            Text(text, style = MaterialTheme.typography.labelLarge)
+        }
     }
 }
 
@@ -108,14 +114,25 @@ fun WadjetTextButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    isLoading: Boolean = false,
 ) {
     TextButton(
         onClick = onClick,
         modifier = modifier,
+        enabled = enabled && !isLoading,
         colors = ButtonDefaults.textButtonColors(
             contentColor = WadjetColors.Gold,
         ),
     ) {
-        Text(text, style = MaterialTheme.typography.labelLarge)
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                color = WadjetColors.Gold,
+                strokeWidth = 2.dp,
+            )
+        } else {
+            Text(text, style = MaterialTheme.typography.labelLarge)
+        }
     }
 }

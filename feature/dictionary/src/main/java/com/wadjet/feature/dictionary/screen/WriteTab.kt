@@ -104,7 +104,7 @@ fun WriteTab(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(MaterialTheme.shapes.medium)
                     .background(WadjetColors.Surface)
                     .animateContentSize()
                     .padding(20.dp),
@@ -202,7 +202,7 @@ private fun transliterationToSpeech(text: String): String {
 private fun PaletteItem(sign: PaletteSign, onClick: () -> Unit) {
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(MaterialTheme.shapes.small)
             .background(WadjetColors.Surface)
             .clickable(onClick = onClick)
             .padding(6.dp),
