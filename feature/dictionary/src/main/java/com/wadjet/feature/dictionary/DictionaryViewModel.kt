@@ -46,6 +46,7 @@ val SIGN_TYPES = listOf("All", "uniliteral", "biliteral", "triliteral", "logogra
 class DictionaryViewModel @Inject constructor(
     private val repository: DictionaryRepository,
     private val userRepository: UserRepository,
+    private val toastController: com.wadjet.core.common.ToastController,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(BrowseUiState())
@@ -160,7 +161,12 @@ class DictionaryViewModel @Inject constructor(
         _state.update { it.copy(error = null) }
     }
 
+    fun showToast(message: String) {
+        toastController.success(message)
+    }
+
     fun speakSign(text: String) {
+        toastController.info("Generating pronunciation\u2026")
         viewModelScope.launch {
             repository.speakPhonetic(text).onSuccess { bytes ->
                 if (bytes != null) {

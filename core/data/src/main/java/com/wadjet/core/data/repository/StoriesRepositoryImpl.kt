@@ -79,6 +79,7 @@ class StoriesRepositoryImpl @Inject constructor(
                         index = ch.index,
                         titleEn = ch.title.en,
                         titleAr = ch.title.ar,
+                        sceneImageUrl = ch.sceneImageUrl,
                         ttsVoice = ch.ttsVoice,
                         ttsStyle = ch.ttsStyle,
                         paragraphs = ch.paragraphs.map { p ->

@@ -56,6 +56,8 @@ import com.wadjet.feature.stories.screen.StoryReaderScreen
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wadjet.core.common.ToastController
+import com.wadjet.feature.scan.ScanEvent
 import kotlinx.coroutines.launch
 
 @Composable
@@ -63,6 +65,7 @@ fun WadjetNavGraph(
     navController: NavHostController,
     startDestination: Route,
     webClientId: String,
+    toastController: ToastController,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
@@ -146,6 +149,16 @@ fun WadjetNavGraph(
         ) {
             val viewModel: ScanViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
+
+            // Collect scan events (toast + navigation)
+            androidx.compose.runtime.LaunchedEffect(Unit) {
+                viewModel.events.collect { event ->
+                    when (event) {
+                        is ScanEvent.ShowToast -> toastController.info(event.message)
+                        is ScanEvent.NavigateToResult -> { /* handled via state */ }
+                    }
+                }
+            }
 
             val result = state.result
             if (result != null) {
@@ -312,6 +325,7 @@ fun WadjetNavGraph(
                 onInputChanged = viewModel::updateInput,
                 onSend = { viewModel.sendMessage() },
                 onSpeak = viewModel::speakMessage,
+                onRetry = viewModel::retryLastMessage,
                 onSttResult = viewModel::onSttResult,
                 onSetRecording = viewModel::setRecording,
                 onTranscribeAudio = viewModel::transcribeAudio,
@@ -332,6 +346,7 @@ fun WadjetNavGraph(
                 onInputChanged = viewModel::updateInput,
                 onSend = { viewModel.sendMessage() },
                 onSpeak = viewModel::speakMessage,
+                onRetry = viewModel::retryLastMessage,
                 onSttResult = viewModel::onSttResult,
                 onSetRecording = viewModel::setRecording,
                 onTranscribeAudio = viewModel::transcribeAudio,
@@ -373,6 +388,7 @@ fun WadjetNavGraph(
                 onSubmitAnswer = viewModel::submitAnswer,
                 onUpdateWriteInput = viewModel::updateWriteInput,
                 onSpeak = viewModel::speakChapter,
+                onRetryImage = viewModel::retryChapterImage,
                 onDismissError = viewModel::dismissError,
                 onBack = { navController.popBackStack() },
             )

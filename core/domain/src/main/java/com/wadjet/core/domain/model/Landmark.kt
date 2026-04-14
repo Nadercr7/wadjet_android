@@ -26,6 +26,7 @@ data class LandmarkDetail(
     val coordinates: Pair<Double, Double>?,
     val mapsUrl: String?,
     val thumbnail: String?,
+    val originalImage: String?,
     val tags: List<String>,
     val relatedSites: List<String>,
     val featured: Boolean,

@@ -4,7 +4,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -48,6 +47,7 @@ fun SignDetailSheet(
     isFavorite: Boolean,
     onSpeak: (String) -> Unit,
     onToggleFavorite: () -> Unit,
+    onShowToast: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -171,8 +171,10 @@ fun SignDetailSheet(
                 )
             }
 
-            // TTS — prefer speechText, fall back to reading
-            val ttsText = sign.speechText?.takeIf { it.isNotBlank() } ?: sign.reading
+            // TTS — prefer speechText, fall back to reading (only for pronounceable signs)
+            val canPronounce = sign.isPhonetic || sign.type !in listOf("determinative")
+            val ttsText = sign.speechText?.takeIf { it.isNotBlank() }
+                ?: sign.reading?.takeIf { it.isNotBlank() && canPronounce }
             if (!ttsText.isNullOrBlank()) {
                 IconButton(onClick = { onSpeak(ttsText) }) {
                     Icon(
@@ -188,7 +190,7 @@ fun SignDetailSheet(
             IconButton(onClick = {
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 clipboard.setPrimaryClip(ClipData.newPlainText("glyph", "${sign.glyph} ${sign.code} — ${sign.description}"))
-                Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
+                onShowToast("Copied!")
             }) {
                 Icon(
                     Icons.Default.ContentCopy,

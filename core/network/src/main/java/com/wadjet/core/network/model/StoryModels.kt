@@ -48,6 +48,7 @@ data class ChapterDto(
     val index: Int = 0,
     val title: BilingualText = BilingualText(),
     @SerialName("scene_image_prompt") val sceneImagePrompt: String? = null,
+    @SerialName("scene_image_url") val sceneImageUrl: String? = null,
     @SerialName("tts_voice") val ttsVoice: String? = null,
     @SerialName("tts_style") val ttsStyle: String? = null,
     val paragraphs: List<ParagraphDto> = emptyList(),

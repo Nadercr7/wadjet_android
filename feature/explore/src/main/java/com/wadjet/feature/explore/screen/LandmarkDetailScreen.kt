@@ -190,6 +190,29 @@ private fun DetailContent(
                     .fillMaxWidth()
                     .height(240.dp),
             )
+        } else if (detail.originalImage != null) {
+            KenBurnsImage(
+                url = detail.originalImage!!,
+                contentDescription = detail.name,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(240.dp),
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(240.dp)
+                    .background(WadjetColors.SurfaceAlt),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(DesignR.drawable.ic_placeholder_landmark),
+                    contentDescription = detail.name,
+                    tint = WadjetColors.Gold.copy(alpha = 0.5f),
+                    modifier = Modifier.size(80.dp),
+                )
+            }
         }
 
         Column(modifier = Modifier.padding(16.dp)) {
@@ -612,20 +635,18 @@ private fun ChildrenRow(
                     .clickable { onTap(child.slug) },
             ) {
                 Column {
-                    child.thumbnail?.let { thumb ->
-                        AsyncImage(
-                            model = thumb,
-                            contentDescription = child.name,
-                            contentScale = ContentScale.Crop,
-                            placeholder = painterResource(DesignR.drawable.ic_placeholder_landmark),
-                            error = painterResource(DesignR.drawable.ic_placeholder_error),
-                            fallback = painterResource(DesignR.drawable.ic_placeholder_landmark),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(80.dp)
-                                .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
-                        )
-                    }
+                    AsyncImage(
+                        model = child.thumbnail,
+                        contentDescription = child.name,
+                        contentScale = ContentScale.Crop,
+                        placeholder = painterResource(DesignR.drawable.ic_placeholder_landmark),
+                        error = painterResource(DesignR.drawable.ic_placeholder_error),
+                        fallback = painterResource(DesignR.drawable.ic_placeholder_landmark),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp)
+                            .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
+                    )
                     Text(
                         text = child.name,
                         style = MaterialTheme.typography.bodySmall,

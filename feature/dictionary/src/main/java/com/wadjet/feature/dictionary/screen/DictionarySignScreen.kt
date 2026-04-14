@@ -72,6 +72,7 @@ fun DictionarySignScreen(
                     isFavorite = state.isFavorite,
                     onSpeak = viewModel::speakSign,
                     onToggleFavorite = viewModel::toggleFavorite,
+                    onShowToast = { viewModel.showToast(it) },
                     modifier = Modifier.padding(),
                 )
             }

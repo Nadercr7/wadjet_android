@@ -1,6 +1,7 @@
 package com.wadjet.app.di
 
 import android.content.Context
+import android.content.SharedPreferences
 import com.wadjet.app.BuildConfig
 import com.wadjet.app.R
 import dagger.Module
@@ -27,4 +28,9 @@ object AppModule {
     @Named("webClientId")
     fun provideWebClientId(@ApplicationContext context: Context): String =
         context.getString(R.string.default_web_client_id)
+
+    @Provides
+    @Singleton
+    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences =
+        context.getSharedPreferences("wadjet_prefs", Context.MODE_PRIVATE)
 }

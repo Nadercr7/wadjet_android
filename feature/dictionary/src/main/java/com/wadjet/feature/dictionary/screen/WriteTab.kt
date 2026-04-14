@@ -192,7 +192,17 @@ fun WriteTab(
             // Copy + Share
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
-                IconButton(onClick = { onSpeak(result.hieroglyphs) }) {
+                IconButton(onClick = {
+                    // Build TTS text from glyph transliterations, not raw Unicode hieroglyphs
+                    val transliterationText = result.glyphs
+                        .mapNotNull { it.transliteration?.takeIf(String::isNotBlank) }
+                        .joinToString(" ")
+                    val ttsText = transliterationText.ifBlank {
+                        // Fallback to descriptions if no transliterations available
+                        result.glyphs.mapNotNull { it.description }.joinToString(", ")
+                    }
+                    if (ttsText.isNotBlank()) onSpeak(ttsText)
+                }) {
                     Icon(Icons.Default.VolumeUp, "Read aloud", tint = WadjetColors.Gold, modifier = Modifier.size(28.dp))
                 }
                 IconButton(onClick = {

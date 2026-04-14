@@ -264,6 +264,7 @@ class ExploreRepositoryImpl @Inject constructor(
         coordinates = coordinates?.let { if (it.size >= 2) Pair(it[0], it[1]) else null },
         mapsUrl = mapsUrl,
         thumbnail = thumbnail,
+        originalImage = originalImage,
         tags = tags ?: emptyList(),
         relatedSites = relatedSites ?: emptyList(),
         featured = featured ?: false,

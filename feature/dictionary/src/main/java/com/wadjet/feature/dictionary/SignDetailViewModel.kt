@@ -28,6 +28,7 @@ class SignDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: DictionaryRepository,
     private val userRepository: UserRepository,
+    private val toastController: com.wadjet.core.common.ToastController,
 ) : ViewModel() {
 
     private val code: String = savedStateHandle.get<String>("code") ?: ""
@@ -76,8 +77,13 @@ class SignDetailViewModel @Inject constructor(
         }
     }
 
+    fun showToast(message: String) {
+        toastController.success(message)
+    }
+
     fun speakSign(text: String) {
         viewModelScope.launch {
+            toastController.info("Generating pronunciation…")
             repository.speakPhonetic(text).onSuccess { bytes ->
                 if (bytes != null) {
                     try {

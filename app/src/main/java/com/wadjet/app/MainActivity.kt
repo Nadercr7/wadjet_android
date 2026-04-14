@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -45,6 +46,11 @@ import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.WadjetTheme
 import com.wadjet.core.designsystem.component.OfflineIndicator
 import com.wadjet.core.domain.repository.AuthRepository
+import com.wadjet.core.common.ToastController
+import com.wadjet.core.common.ToastType
+import com.wadjet.core.designsystem.component.ToastState
+import com.wadjet.core.designsystem.component.ToastVariant
+import com.wadjet.core.designsystem.component.WadjetToast
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import javax.inject.Named
@@ -55,6 +61,7 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var authRepository: AuthRepository
     @Inject @Named("webClientId") lateinit var webClientId: String
     @Inject lateinit var networkMonitor: NetworkMonitor
+    @Inject lateinit var toastController: ToastController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,6 +72,7 @@ class MainActivity : ComponentActivity() {
                     isLoggedIn = authRepository.isLoggedIn,
                     webClientId = webClientId,
                     networkMonitor = networkMonitor,
+                    toastController = toastController,
                 )
             }
         }
@@ -76,7 +84,22 @@ private fun WadjetApp(
     isLoggedIn: Boolean,
     webClientId: String,
     networkMonitor: NetworkMonitor,
+    toastController: ToastController,
 ) {
+    var currentToast by remember { mutableStateOf<ToastState?>(null) }
+    LaunchedEffect(Unit) {
+        toastController.events.collect { event ->
+            currentToast = ToastState(
+                message = event.message,
+                variant = when (event.type) {
+                    ToastType.Success -> ToastVariant.Success
+                    ToastType.Error -> ToastVariant.Error
+                    ToastType.Info -> ToastVariant.Info
+                },
+                durationMs = event.durationMs,
+            )
+        }
+    }
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -122,9 +145,17 @@ private fun WadjetApp(
                     navController = navController,
                     startDestination = startDestination,
                     webClientId = webClientId,
+                    toastController = toastController,
                     modifier = Modifier.weight(1f),
                 )
             }
+
+            // Global toast overlay
+            WadjetToast(
+                toast = currentToast,
+                onDismiss = { currentToast = null },
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
 
             // Floating avatar for Dashboard access on bottom-nav screens
             if (showBottomBar) {

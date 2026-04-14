@@ -21,14 +21,12 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wadjet.core.designsystem.WadjetColors
-import com.wadjet.feature.dictionary.AlphabetUiState
 import com.wadjet.feature.dictionary.DictionaryViewModel
-import com.wadjet.feature.dictionary.TranslateViewModel
 import com.wadjet.feature.dictionary.WriteViewModel
 import com.wadjet.feature.dictionary.sheet.SignDetailSheet
 import kotlinx.coroutines.launch
 
-private val TABS = listOf("Browse", "Learn", "Write", "Translate")
+private val TABS = listOf("Browse", "Learn", "Write")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,12 +36,10 @@ fun DictionaryScreen(
     modifier: Modifier = Modifier,
     dictionaryViewModel: DictionaryViewModel = hiltViewModel(),
     writeViewModel: WriteViewModel = hiltViewModel(),
-    translateViewModel: TranslateViewModel = hiltViewModel(),
 ) {
     val browseState by dictionaryViewModel.state.collectAsStateWithLifecycle()
     val alphabetState by dictionaryViewModel.alphabetState.collectAsStateWithLifecycle()
     val writeState by writeViewModel.state.collectAsStateWithLifecycle()
-    val translateState by translateViewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(
         initialPage = initialTab.coerceIn(0, TABS.size - 1),
@@ -114,13 +110,6 @@ fun DictionaryScreen(
                     onAppendGlyph = writeViewModel::appendGlyph,
                     onSpeak = dictionaryViewModel::speakSign,
                 )
-                3 -> TranslateTab(
-                    state = translateState,
-                    onInputChange = translateViewModel::onInputChange,
-                    onGardinerChange = translateViewModel::onGardinerChange,
-                    onTranslate = translateViewModel::translate,
-                    onClear = translateViewModel::clear,
-                )
             }
         }
     }
@@ -139,6 +128,7 @@ fun DictionaryScreen(
                 isFavorite = browseState.selectedSign!!.code in browseState.favorites,
                 onSpeak = { text -> dictionaryViewModel.speakSign(text) },
                 onToggleFavorite = { dictionaryViewModel.toggleGlyphFavorite(browseState.selectedSign!!.code) },
+                onShowToast = { dictionaryViewModel.showToast(it) },
             )
         }
     }

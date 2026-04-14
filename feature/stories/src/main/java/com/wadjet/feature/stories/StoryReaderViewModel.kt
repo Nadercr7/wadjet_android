@@ -1,5 +1,6 @@
 package com.wadjet.feature.stories
 
+import android.content.SharedPreferences
 import android.media.MediaPlayer
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -30,6 +31,7 @@ data class ReaderUiState(
     val error: String? = null,
     val sceneImageUrl: String? = null,
     val isLoadingImage: Boolean = false,
+    val imageLoadFailed: Boolean = false,
     val interactionResults: Map<Int, InteractionResult> = emptyMap(),
     val interactionAnswers: Map<Int, String> = emptyMap(),
     val writeInputs: Map<Int, String> = emptyMap(),
@@ -51,6 +53,8 @@ data class ReaderUiState(
 @HiltViewModel
 class StoryReaderViewModel @Inject constructor(
     private val storiesRepository: StoriesRepository,
+    private val toastController: com.wadjet.core.common.ToastController,
+    private val sharedPreferences: SharedPreferences,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -75,6 +79,7 @@ class StoryReaderViewModel @Inject constructor(
             it.copy(
                 currentChapter = index,
                 sceneImageUrl = null,
+                imageLoadFailed = false,
                 interactionResults = emptyMap(),
                 interactionAnswers = emptyMap(),
                 writeInputs = emptyMap(),
@@ -160,6 +165,7 @@ class StoryReaderViewModel @Inject constructor(
         if (paragraphs.isEmpty()) return
 
         _state.update { it.copy(isNarrating = true, isSpeaking = true, narratingParagraphIndex = 0) }
+        toastController.info("Generating narration\u2026")
         narrationJob = viewModelScope.launch {
             for ((idx, paragraph) in paragraphs.withIndex()) {
                 if (!_state.value.isNarrating) break
@@ -228,17 +234,42 @@ class StoryReaderViewModel @Inject constructor(
     }
 
     private fun loadChapterImage() {
-        _state.update { it.copy(isLoadingImage = true) }
+        val chapter = _state.value.chapter ?: return
+        val chapterIdx = _state.value.currentChapter
+
+        // 1. Pre-generated URL from API
+        chapter.sceneImageUrl?.let { url ->
+            _state.update { it.copy(sceneImageUrl = url, isLoadingImage = false, imageLoadFailed = false) }
+            return
+        }
+
+        // 2. Check SharedPreferences cache
+        val cacheKey = "scene_img_${storyId}_$chapterIdx"
+        sharedPreferences.getString(cacheKey, null)?.let { cached ->
+            _state.update { it.copy(sceneImageUrl = cached, isLoadingImage = false, imageLoadFailed = false) }
+            return
+        }
+
+        // 3. Generate on-demand via POST
+        _state.update { it.copy(isLoadingImage = true, imageLoadFailed = false) }
+        toastController.info("Generating scene image\u2026")
         viewModelScope.launch {
-            storiesRepository.generateChapterImage(storyId, _state.value.currentChapter)
+            storiesRepository.generateChapterImage(storyId, chapterIdx)
                 .onSuccess { url ->
-                    _state.update { it.copy(sceneImageUrl = url, isLoadingImage = false) }
+                    if (url != null) {
+                        sharedPreferences.edit().putString(cacheKey, url).apply()
+                    }
+                    _state.update { it.copy(sceneImageUrl = url, isLoadingImage = false, imageLoadFailed = url == null) }
                 }
                 .onFailure {
                     Timber.w(it, "Chapter image generation failed")
-                    _state.update { it.copy(isLoadingImage = false) }
+                    _state.update { it.copy(isLoadingImage = false, imageLoadFailed = true) }
                 }
         }
+    }
+
+    fun retryChapterImage() {
+        loadChapterImage()
     }
 
     private fun restoreProgress() {

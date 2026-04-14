@@ -31,6 +31,7 @@ data class ChatUiState(
     val isStreaming: Boolean = false,
     val isRecording: Boolean = false,
     val isSpeaking: Boolean = false,
+    val isLoadingTts: Boolean = false,
     val speakingMessageId: String? = null,
     val error: String? = null,
     val landmarkSlug: String? = null,
@@ -43,6 +44,7 @@ class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
     private val userRepository: UserRepository,
     private val chatHistoryStore: ChatHistoryStore,
+    private val toastController: com.wadjet.core.common.ToastController,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -113,6 +115,7 @@ class ChatViewModel @Inject constructor(
             // Check free-tier limits
             userRepository.getLimits().onSuccess { limits ->
                 if (limits.chatMessagesToday >= limits.chatMessagesPerDay) {
+                    toastController.error("Daily message limit reached (${limits.chatMessagesPerDay}). Try again tomorrow.")
                     _state.update {
                         it.copy(error = "Daily message limit reached (${limits.chatMessagesPerDay}). Try again tomorrow.")
                     }
@@ -161,6 +164,7 @@ class ChatViewModel @Inject constructor(
                 )
                     .catch { error ->
                         Timber.e(error, "Chat stream error")
+                        toastController.error("Failed to send message")
                         _state.update { state ->
                             state.copy(
                                 messages = state.messages.map { msg ->
@@ -257,17 +261,21 @@ class ChatViewModel @Inject constructor(
         }
         stopSpeaking()
 
-        _state.update { it.copy(isSpeaking = true, speakingMessageId = message.id) }
+        _state.update { it.copy(isSpeaking = true, isLoadingTts = true, speakingMessageId = message.id) }
+
+        toastController.info("Generating audio\u2026")
 
         viewModelScope.launch {
             chatRepository.speak(message.content).onSuccess { bytes ->
                 if (bytes != null) {
+                    _state.update { it.copy(isLoadingTts = false) }
                     playWavBytes(bytes, message.id)
                 } else {
                     // 204 → signal UI to use local TTS
                     _state.update {
                         it.copy(
                             isSpeaking = false,
+                            isLoadingTts = false,
                             speakingMessageId = null,
                             error = "LOCAL_TTS:${message.content}",
                         )
@@ -278,6 +286,7 @@ class ChatViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         isSpeaking = false,
+                        isLoadingTts = false,
                         speakingMessageId = null,
                         error = "LOCAL_TTS:${message.content}",
                     )
@@ -325,7 +334,7 @@ class ChatViewModel @Inject constructor(
         } catch (_: Exception) {
         }
         mediaPlayer = null
-        _state.update { it.copy(isSpeaking = false, speakingMessageId = null) }
+        _state.update { it.copy(isSpeaking = false, isLoadingTts = false, speakingMessageId = null) }
     }
 
     fun onSttResult(text: String) {
@@ -375,6 +384,7 @@ class ChatViewModel @Inject constructor(
         }
         // Clear stored session so next init creates fresh
         chatHistoryStore.clearSessionId()
+        toastController.success("Chat cleared")
         val greeting = ChatMessage(
             id = UUID.randomUUID().toString(),
             role = Role.ASSISTANT,

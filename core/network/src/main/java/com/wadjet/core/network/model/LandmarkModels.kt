@@ -54,6 +54,7 @@ data class LandmarkDetailDto(
     @SerialName("notable_features") val notableFeatures: List<String>? = null,
     @SerialName("key_artifacts") val keyArtifacts: List<String>? = null,
     @SerialName("architectural_features") val architecturalFeatures: List<String>? = null,
+    @SerialName("original_image") val originalImage: String? = null,
     @SerialName("wikipedia_extract") val wikipediaExtract: String? = null,
     @SerialName("wikipedia_url") val wikipediaUrl: String? = null,
     val children: List<LandmarkChildDto>? = null,

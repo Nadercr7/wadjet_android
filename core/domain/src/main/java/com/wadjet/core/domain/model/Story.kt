@@ -30,6 +30,7 @@ data class Chapter(
     val index: Int,
     val titleEn: String,
     val titleAr: String,
+    val sceneImageUrl: String?,
     val ttsVoice: String?,
     val ttsStyle: String?,
     val paragraphs: List<Paragraph>,

@@ -43,6 +43,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,10 +52,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wadjet.core.designsystem.HieroglyphStyle
@@ -347,15 +351,32 @@ fun ScanResultScreen(
                             }
                         }
 
-                        Text(
-                            text = if (showArabic) translationAr.orEmpty() else translationEn.orEmpty(),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = WadjetColors.Text,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                                .animateContentSize(),
-                        )
+                        if (showArabic) {
+                            CompositionLocalProvider(
+                                LocalLayoutDirection provides LayoutDirection.Rtl,
+                            ) {
+                                Text(
+                                    text = translationAr.orEmpty(),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = WadjetColors.Text,
+                                    textAlign = TextAlign.Start,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                        .animateContentSize(),
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = translationEn.orEmpty(),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = WadjetColors.Text,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    .animateContentSize(),
+                            )
+                        }
                     }
                 }
             }

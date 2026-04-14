@@ -49,6 +49,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -101,6 +102,7 @@ fun StoryReaderScreen(
     onSubmitAnswer: (Int, String) -> Unit,
     onUpdateWriteInput: (Int, String) -> Unit,
     onSpeak: () -> Unit,
+    onRetryImage: () -> Unit,
     onDismissError: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -215,6 +217,8 @@ fun StoryReaderScreen(
                 SceneImage(
                     imageUrl = state.sceneImageUrl,
                     isLoading = state.isLoadingImage,
+                    loadFailed = state.imageLoadFailed,
+                    onRetry = onRetryImage,
                 )
             }
 
@@ -403,6 +407,8 @@ fun StoryReaderScreen(
 private fun SceneImage(
     imageUrl: String?,
     isLoading: Boolean,
+    loadFailed: Boolean = false,
+    onRetry: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -443,6 +449,34 @@ private fun SceneImage(
             com.wadjet.core.designsystem.component.ShimmerEffect(
                 modifier = Modifier.fillMaxSize(),
             )
+        } else if (loadFailed && onRetry != null) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "𓁟",
+                    fontSize = 36.sp,
+                    fontFamily = com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs,
+                    color = WadjetColors.Gold.copy(alpha = 0.5f),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Image failed to load",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = WadjetColors.TextMuted,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    onClick = onRetry,
+                    shape = RoundedCornerShape(8.dp),
+                    color = WadjetColors.Gold.copy(alpha = 0.15f),
+                ) {
+                    Text(
+                        text = "Retry",
+                        color = WadjetColors.Gold,
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    )
+                }
+            }
         } else {
             Text(
                 text = "𓁟",

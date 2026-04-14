@@ -180,7 +180,7 @@ class DictionaryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun speakPhonetic(text: String): Result<ByteArray?> = suspendRunCatching {
-        val response = audioApi.speak(SpeakRequest(text = text, lang = "en", context = "pronunciation"))
+        val response = audioApi.speak(SpeakRequest(text = text, lang = "en", context = "dictionary_speak"))
         when (response.code()) {
             200 -> response.body()?.bytes()
             204 -> null

@@ -19,8 +19,10 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,8 +51,13 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -66,9 +73,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -90,16 +99,18 @@ import com.wadjet.core.domain.model.ChatMessage.Role
 import com.wadjet.feature.chat.ChatUiState
 import com.wadjet.feature.chat.ConversationSummary
 import dev.jeziellago.compose.markdowntext.MarkdownText
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ChatScreen(
     state: ChatUiState,
     onInputChanged: (String) -> Unit,
     onSend: () -> Unit,
     onSpeak: (ChatMessage) -> Unit,
+    onRetry: () -> Unit,
     onSttResult: (String) -> Unit,
     onSetRecording: (Boolean) -> Unit,
     onTranscribeAudio: (File) -> Unit,
@@ -114,6 +125,7 @@ fun ChatScreen(
 ) {
     val context = LocalContext.current
     val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
     // Local TTS fallback
     val localTts = remember { mutableMapOf<String, TextToSpeech?>() }
@@ -139,6 +151,15 @@ fun ChatScreen(
             val isArabic = text.any { it in '\u0600'..'\u06FF' || it in '\u0750'..'\u077F' }
             ttsInstance?.language = if (isArabic) Locale("ar") else Locale.US
             ttsInstance?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+            onDismissError()
+        }
+    }
+
+    // Show non-TTS errors via toast
+    LaunchedEffect(state.error) {
+        val error = state.error ?: return@LaunchedEffect
+        if (!error.startsWith("LOCAL_TTS:")) {
+            // Error is displayed via toast from ViewModel already; just dismiss state
             onDismissError()
         }
     }
@@ -332,37 +353,88 @@ fun ChatScreen(
                 }
             }
 
-            // Message list
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                if (state.messages.isEmpty()) {
-                    item {
-                        com.wadjet.core.designsystem.component.EmptyState(
-                            glyph = "\uD80C\uDD5D",
-                            title = "Ask Thoth anything",
-                            subtitle = "Questions about ancient Egypt, hieroglyphs, pharaohs, and more",
-                            modifier = Modifier.fillParentMaxHeight(0.6f),
-                        )
+            // Message list + scroll-to-bottom FAB
+            val isAtBottom = remember {
+                derivedStateOf {
+                    val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+                    lastVisible >= state.messages.size - 1
+                }
+            }
+            val clipboard = LocalContext.current.getSystemService(android.content.ClipboardManager::class.java)
+
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    if (state.messages.isEmpty()) {
+                        item {
+                            com.wadjet.core.designsystem.component.EmptyState(
+                                glyph = "\uD80C\uDD5D",
+                                title = "Ask Thoth anything",
+                                subtitle = "Questions about ancient Egypt, hieroglyphs, pharaohs, and more",
+                                modifier = Modifier.fillParentMaxHeight(0.6f),
+                            )
+                        }
+                    }
+                    items(
+                        items = state.messages,
+                        key = { it.id },
+                    ) { message ->
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = true,
+                            enter = fadeIn() + slideInVertically { it / 2 },
+                        ) {
+                            ChatBubble(
+                                message = message,
+                                isSpeaking = state.speakingMessageId == message.id,
+                                isLoadingTts = state.isLoadingTts && state.speakingMessageId == message.id,
+                                isLastBotMessage = message.role == Role.ASSISTANT &&
+                                    state.messages.lastOrNull { it.role == Role.ASSISTANT } == message,
+                                hasError = state.error != null && !state.error.orEmpty().startsWith("LOCAL_TTS:"),
+                                onSpeak = { onSpeak(message) },
+                                onCopy = {
+                                    clipboard?.setPrimaryClip(
+                                        android.content.ClipData.newPlainText("message", message.content),
+                                    )
+                                },
+                                onRetry = onRetry,
+                            )
+                        }
+                    }
+                    // Typing indicator
+                    if (state.isStreaming && state.messages.lastOrNull()?.content?.isEmpty() == true) {
+                        item(key = "typing") {
+                            TypingIndicator()
+                        }
                     }
                 }
-                items(
-                    items = state.messages,
-                    key = { it.id },
-                ) { message ->
-                    AnimatedVisibility(
-                        visible = true,
-                        enter = fadeIn() + slideInVertically { it / 2 },
+
+                // Scroll-to-bottom FAB
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = !isAtBottom.value && state.messages.size > 3,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 12.dp, bottom = 8.dp),
+                    enter = fadeIn(),
+                    exit = androidx.compose.animation.fadeOut(),
+                ) {
+                    androidx.compose.material3.SmallFloatingActionButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                listState.animateScrollToItem(state.messages.size - 1)
+                            }
+                        },
+                        containerColor = WadjetColors.Gold,
+                        contentColor = WadjetColors.Night,
+                        modifier = Modifier.size(40.dp),
                     ) {
-                        ChatBubble(
-                            message = message,
-                            isSpeaking = state.speakingMessageId == message.id,
-                            onSpeak = { onSpeak(message) },
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Scroll to bottom",
+                            modifier = Modifier.size(24.dp),
                         )
                     }
                 }
@@ -446,14 +518,21 @@ fun ChatScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun ChatBubble(
     message: ChatMessage,
     isSpeaking: Boolean,
+    isLoadingTts: Boolean = false,
+    isLastBotMessage: Boolean = false,
+    hasError: Boolean = false,
     onSpeak: () -> Unit,
+    onCopy: () -> Unit = {},
+    onRetry: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val isUser = message.role == Role.USER
+    var showMenu by remember { mutableStateOf(false) }
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -471,7 +550,9 @@ private fun ChatBubble(
                 Text(
                     text = "𓅝",
                     fontSize = 18.sp,
-                    color = WadjetColors.Night,                    modifier = Modifier.semantics { contentDescription = "Thoth" },                )
+                    color = WadjetColors.Night,
+                    modifier = Modifier.semantics { contentDescription = "Thoth" },
+                )
             }
             Spacer(modifier = Modifier.width(8.dp))
         }
@@ -479,38 +560,91 @@ private fun ChatBubble(
         Column(
             modifier = Modifier.widthIn(max = 300.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = 16.dp,
-                            topEnd = 16.dp,
-                            bottomStart = if (isUser) 16.dp else 4.dp,
-                            bottomEnd = if (isUser) 4.dp else 16.dp,
-                        ),
-                    )
-                    .background(if (isUser) WadjetColors.Gold else WadjetColors.Surface)
-                    .padding(12.dp),
-            ) {
-                if (isUser) {
-                    Text(
-                        text = message.content,
-                        color = WadjetColors.Night,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                } else {
-                    Column {
-                        if (message.content.isNotEmpty()) {
-                            MarkdownText(
-                                markdown = message.content,
-                                color = WadjetColors.Text,
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
-                        }
-                        if (message.isStreaming) {
-                            StreamingDots(modifier = Modifier.padding(top = 4.dp))
+            Box {
+                Box(
+                    modifier = Modifier
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = 16.dp,
+                                topEnd = 16.dp,
+                                bottomStart = if (isUser) 16.dp else 4.dp,
+                                bottomEnd = if (isUser) 4.dp else 16.dp,
+                            ),
+                        )
+                        .background(if (isUser) WadjetColors.Gold else WadjetColors.Surface)
+                        .combinedClickable(
+                            onClick = {},
+                            onLongClick = { showMenu = true },
+                        )
+                        .padding(12.dp),
+                ) {
+                    if (isUser) {
+                        Text(
+                            text = message.content,
+                            color = WadjetColors.Night,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    } else {
+                        Column {
+                            if (message.content.isNotEmpty()) {
+                                MarkdownText(
+                                    markdown = message.content,
+                                    color = WadjetColors.Text,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }
+                            if (message.isStreaming) {
+                                StreamingDots(modifier = Modifier.padding(top = 4.dp))
+                            }
                         }
                     }
+                }
+
+                // Copy popup
+                DropdownMenu(
+                    expanded = showMenu,
+                    onDismissRequest = { showMenu = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Copy") },
+                        onClick = {
+                            onCopy()
+                            showMenu = false
+                        },
+                    )
+                }
+            }
+
+            // Timestamp
+            Text(
+                text = formatRelativeTime(message.timestamp),
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                color = WadjetColors.TextMuted,
+                modifier = Modifier.padding(top = 2.dp, start = 4.dp),
+            )
+
+            // Error + retry (last bot message with error, content is error text)
+            if (!isUser && isLastBotMessage && hasError && !message.isStreaming) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 4.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = "Error",
+                        tint = WadjetColors.Error,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Retry",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = WadjetColors.Gold,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .clickable { onRetry() }
+                            .padding(horizontal = 4.dp, vertical = 2.dp),
+                    )
                 }
             }
 
@@ -520,18 +654,80 @@ private fun ChatBubble(
                     onClick = onSpeak,
                     modifier = Modifier.size(48.dp),
                 ) {
-                    Icon(
-                        imageVector = if (isSpeaking) {
-                            Icons.Default.Stop
-                        } else {
-                            Icons.AutoMirrored.Filled.VolumeUp
-                        },
-                        contentDescription = if (isSpeaking) "Stop" else "Listen",
-                        tint = WadjetColors.Sand,
-                        modifier = Modifier.size(16.dp),
-                    )
+                    if (isLoadingTts) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = WadjetColors.Sand,
+                        )
+                    } else {
+                        Icon(
+                            imageVector = if (isSpeaking) {
+                                Icons.Default.Stop
+                            } else {
+                                Icons.AutoMirrored.Filled.VolumeUp
+                            },
+                            contentDescription = if (isSpeaking) "Stop" else "Listen",
+                            tint = WadjetColors.Sand,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun TypingIndicator(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Start,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(WadjetColors.Gold),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "𓅝",
+                fontSize = 18.sp,
+                color = WadjetColors.Night,
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomEnd = 16.dp, bottomStart = 4.dp))
+                .background(WadjetColors.Surface)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Thoth is thinking",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = WadjetColors.TextMuted,
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                StreamingDots()
+            }
+        }
+    }
+}
+
+private fun formatRelativeTime(timestamp: Long): String {
+    val now = System.currentTimeMillis()
+    val diff = now - timestamp
+    return when {
+        diff < 60_000 -> "Just now"
+        diff < 3_600_000 -> "${diff / 60_000}m ago"
+        diff < 86_400_000 -> "${diff / 3_600_000}h ago"
+        diff < 172_800_000 -> "Yesterday"
+        else -> {
+            val sdf = java.text.SimpleDateFormat("MMM d", Locale.getDefault())
+            sdf.format(java.util.Date(timestamp))
         }
     }
 }

@@ -260,6 +260,7 @@ private fun StoryCard(
                 Text(
                     text = story.coverGlyph,
                     fontSize = 36.sp,
+                    fontFamily = com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs,
                 )
             }
 
