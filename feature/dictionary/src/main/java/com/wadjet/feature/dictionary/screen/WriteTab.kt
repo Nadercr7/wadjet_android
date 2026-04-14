@@ -11,7 +11,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,9 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -30,16 +26,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.VolumeUp
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,7 +41,6 @@ import androidx.compose.ui.unit.sp
 import com.wadjet.core.designsystem.GardinerCodeStyle
 import com.wadjet.core.designsystem.HieroglyphStyle
 import com.wadjet.core.designsystem.WadjetColors
-import com.wadjet.core.designsystem.component.StreamingDots
 import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.designsystem.component.WadjetTextField
 import com.wadjet.core.domain.model.PaletteSign
@@ -67,7 +57,6 @@ fun WriteTab(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    var showPalette by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -87,21 +76,14 @@ fun WriteTab(
 
         Spacer(Modifier.height(12.dp))
 
-        // Convert button
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            WadjetButton(
-                text = "Convert",
-                onClick = onConvert,
-                modifier = Modifier.weight(1f),
-                isLoading = state.isLoading,
-                enabled = state.inputText.isNotBlank(),
-            )
-            WadjetButton(
-                text = if (showPalette) "Hide Palette" else "Palette",
-                onClick = { showPalette = !showPalette },
-                modifier = Modifier.weight(1f),
-            )
-        }
+        // Convert button (full width, no palette)
+        WadjetButton(
+            text = "Convert",
+            onClick = onConvert,
+            modifier = Modifier.fillMaxWidth(),
+            isLoading = state.isLoading,
+            enabled = state.inputText.isNotBlank(),
+        )
 
         // Error
         if (state.error != null) {
@@ -113,36 +95,7 @@ fun WriteTab(
             )
         }
 
-        // Realtime preview
-        if (state.result == null && state.inputText.isNotBlank()) {
-            Spacer(Modifier.height(12.dp))
-            if (state.isPreviewLoading) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    StreamingDots()
-                }
-            } else if (state.preview != null) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(WadjetColors.Surface.copy(alpha = 0.5f))
-                        .padding(12.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = state.preview.hieroglyphs,
-                        style = HieroglyphStyle.copy(fontSize = 36.sp),
-                        textAlign = TextAlign.Center,
-                        color = WadjetColors.Gold.copy(alpha = 0.6f),
-                    )
-                }
-            }
-        }
-
-        // Result
+        // Result — only shown after Convert tap
         val result = state.result
         if (result != null) {
             Spacer(Modifier.height(20.dp))
@@ -193,12 +146,12 @@ fun WriteTab(
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
                 IconButton(onClick = {
-                    // Build TTS text from glyph transliterations, not raw Unicode hieroglyphs
+                    // Build TTS text: join transliterations as words, then map
+                    // Egyptological ASCII conventions to pronounceable English
                     val transliterationText = result.glyphs
                         .mapNotNull { it.transliteration?.takeIf(String::isNotBlank) }
                         .joinToString(" ")
-                    val ttsText = transliterationText.ifBlank {
-                        // Fallback to descriptions if no transliterations available
+                    val ttsText = transliterationToSpeech(transliterationText).ifBlank {
                         result.glyphs.mapNotNull { it.description }.joinToString(", ")
                     }
                     if (ttsText.isNotBlank()) onSpeak(ttsText)
@@ -223,26 +176,26 @@ fun WriteTab(
                 }
             }
         }
-
-        // Glyph Palette
-        if (showPalette && state.palette.isNotEmpty()) {
-            Spacer(Modifier.height(16.dp))
-            Text("Glyph Palette", style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
-            Spacer(Modifier.height(8.dp))
-            // Using a fixed-height grid inside a scroll view
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(6),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.height(240.dp),
-                contentPadding = PaddingValues(0.dp),
-            ) {
-                items(state.palette) { sign ->
-                    PaletteItem(sign = sign, onClick = { onAppendGlyph(sign) })
-                }
-            }
-        }
     }
+}
+
+/**
+ * Maps Egyptological transliteration ASCII conventions to pronounceable English.
+ * e.g. "anx" → "ankh", "nTr" → "netcher", "Htp" → "hetep"
+ */
+private fun transliterationToSpeech(text: String): String {
+    // Order matters: replace multi-char sequences before single-char
+    return text
+        .replace("nTr", "netcher")
+        .replace("Htp", "hetep")
+        .replace("x", "kh")
+        .replace("X", "kh")
+        .replace("S", "sh")
+        .replace("D", "dj")
+        .replace("T", "ch")
+        .replace("H", "h")
+        .replace("A", "ah")
+        .replace("aA", "ah")
 }
 
 @Composable

@@ -7,8 +7,6 @@ import com.wadjet.core.domain.model.WriteGlyph
 import com.wadjet.core.domain.model.WriteResult
 import com.wadjet.core.domain.repository.DictionaryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,7 +31,6 @@ class WriteViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(WriteUiState())
     val state: StateFlow<WriteUiState> = _state.asStateFlow()
-    private var previewJob: Job? = null
 
     init {
         loadPalette()
@@ -47,19 +44,7 @@ class WriteViewModel @Inject constructor(
     }
 
     fun onInputChange(text: String) {
-        _state.update { it.copy(inputText = text) }
-        previewJob?.cancel()
-        if (text.isBlank()) {
-            _state.update { it.copy(preview = null, isPreviewLoading = false) }
-            return
-        }
-        previewJob = viewModelScope.launch {
-            delay(500)
-            _state.update { it.copy(isPreviewLoading = true) }
-            repository.write(text, "smart")
-                .onSuccess { r -> _state.update { it.copy(preview = r, isPreviewLoading = false) } }
-                .onFailure { _state.update { it.copy(isPreviewLoading = false) } }
-        }
+        _state.update { it.copy(inputText = text, result = null, error = null) }
     }
 
     fun appendGlyph(sign: PaletteSign) {

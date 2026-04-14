@@ -550,6 +550,9 @@ For each phase:
 - **Edge-to-edge** — all screens must properly handle system bars and window insets.
 - **Minimum API 26** (Android 8.0) — respect API level constraints.
 - **Material 3** — use latest M3 components; no Material 2 or AppCompat UI components.
+- **Egyptian identity in ALL states** — empty, error, and loading states must use Egyptian-themed visuals (pyramid silhouettes, Eye of Horus, papyrus scrolls) and Egyptian-flavored copy ("The ancient scribes couldn't read this image"). Never use generic Material placeholder text or icons.
+- **No emojis in app UI** — no emoji characters in any user-facing text, component, or string resource. Use Egyptian iconography instead.
+- **Brand tone** — mystical, knowledgeable, slightly playful — like an ancient Egyptian guide speaking to a modern explorer. All user-facing text (errors, empty states, tooltips, onboarding) must follow this voice.
 
 ## Professional App Standard
 The end result should match the quality of professional apps like:

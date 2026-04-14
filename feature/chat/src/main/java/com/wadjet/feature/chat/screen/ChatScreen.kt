@@ -50,6 +50,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Mic
@@ -111,6 +112,8 @@ fun ChatScreen(
     onSend: () -> Unit,
     onSpeak: (ChatMessage) -> Unit,
     onRetry: () -> Unit,
+    onStartEdit: (String) -> Unit,
+    onCancelEdit: () -> Unit,
     onSttResult: (String) -> Unit,
     onSetRecording: (Boolean) -> Unit,
     onTranscribeAudio: (File) -> Unit,
@@ -394,11 +397,17 @@ fun ChatScreen(
                                 isLastBotMessage = message.role == Role.ASSISTANT &&
                                     state.messages.lastOrNull { it.role == Role.ASSISTANT } == message,
                                 hasError = state.error != null && !state.error.orEmpty().startsWith("LOCAL_TTS:"),
+                                isEditing = state.editingMessageId == message.id,
                                 onSpeak = { onSpeak(message) },
                                 onCopy = {
                                     clipboard?.setPrimaryClip(
                                         android.content.ClipData.newPlainText("message", message.content),
                                     )
+                                },
+                                onEdit = if (message.role == Role.USER) {
+                                    { onStartEdit(message.id) }
+                                } else {
+                                    null
                                 },
                                 onRetry = onRetry,
                             )
@@ -501,6 +510,8 @@ fun ChatScreen(
                         onStopStreaming = onStopStreaming,
                         isStreaming = state.isStreaming,
                         isRecording = state.isRecording,
+                        isEditing = false,
+                        onCancelEdit = onCancelEdit,
                     )
                 }
             } else {
@@ -512,6 +523,8 @@ fun ChatScreen(
                     onStopStreaming = onStopStreaming,
                     isStreaming = state.isStreaming,
                     isRecording = state.isRecording,
+                    isEditing = state.editingMessageId != null,
+                    onCancelEdit = onCancelEdit,
                 )
             }
         }
@@ -526,8 +539,10 @@ private fun ChatBubble(
     isLoadingTts: Boolean = false,
     isLastBotMessage: Boolean = false,
     hasError: Boolean = false,
+    isEditing: Boolean = false,
     onSpeak: () -> Unit,
     onCopy: () -> Unit = {},
+    onEdit: (() -> Unit)? = null,
     onRetry: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -571,7 +586,11 @@ private fun ChatBubble(
                                 bottomEnd = if (isUser) 4.dp else 16.dp,
                             ),
                         )
-                        .background(if (isUser) WadjetColors.Gold else WadjetColors.Surface)
+                        .background(
+                            if (isEditing) WadjetColors.Gold.copy(alpha = 0.7f)
+                            else if (isUser) WadjetColors.Gold
+                            else WadjetColors.Surface,
+                        )
                         .combinedClickable(
                             onClick = {},
                             onLongClick = { showMenu = true },
@@ -612,16 +631,41 @@ private fun ChatBubble(
                             showMenu = false
                         },
                     )
+                    if (onEdit != null) {
+                        DropdownMenuItem(
+                            text = { Text("Edit") },
+                            onClick = {
+                                onEdit()
+                                showMenu = false
+                            },
+                        )
+                    }
                 }
             }
 
-            // Timestamp
-            Text(
-                text = formatRelativeTime(message.timestamp),
-                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                color = WadjetColors.TextMuted,
+            // Timestamp + edit icon for user messages
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(top = 2.dp, start = 4.dp),
-            )
+            ) {
+                Text(
+                    text = formatRelativeTime(message.timestamp),
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                    color = WadjetColors.TextMuted,
+                )
+                if (isUser && onEdit != null && !message.isStreaming) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit message",
+                        tint = WadjetColors.TextMuted,
+                        modifier = Modifier
+                            .size(14.dp)
+                            .clip(CircleShape)
+                            .clickable { onEdit() },
+                    )
+                }
+            }
 
             // Error + retry (last bot message with error, content is error text)
             if (!isUser && isLastBotMessage && hasError && !message.isStreaming) {
@@ -741,10 +785,38 @@ private fun ChatInputBar(
     onStopStreaming: () -> Unit,
     isStreaming: Boolean,
     isRecording: Boolean,
+    isEditing: Boolean = false,
+    onCancelEdit: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
     Column(modifier = modifier.fillMaxWidth()) {
+        // Edit mode banner
+        if (isEditing) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(WadjetColors.Gold.copy(alpha = 0.15f))
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Editing message",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = WadjetColors.Gold,
+                )
+                Text(
+                    text = "Cancel",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = WadjetColors.Sand,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .clickable { onCancelEdit() }
+                        .padding(4.dp),
+                )
+            }
+        }
         // Character counter
         if (text.isNotEmpty()) {
             Text(

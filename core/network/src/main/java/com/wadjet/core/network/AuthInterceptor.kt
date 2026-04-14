@@ -24,6 +24,12 @@ class AuthInterceptor @Inject constructor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
 
+        // Only apply auth to our own API — skip external URLs (e.g. Wikipedia images via Coil)
+        val requestUrl = original.url.toString()
+        if (!requestUrl.startsWith(baseUrl)) {
+            return chain.proceed(original)
+        }
+
         // Skip auth for auth endpoints (except refresh/logout)
         if (original.isAuthEndpoint()) {
             return handleAuthRequest(chain, original)

@@ -33,6 +33,7 @@ data class ChatUiState(
     val isSpeaking: Boolean = false,
     val isLoadingTts: Boolean = false,
     val speakingMessageId: String? = null,
+    val editingMessageId: String? = null,
     val error: String? = null,
     val landmarkSlug: String? = null,
     val chatHistory: List<ConversationSummary> = emptyList(),
@@ -107,9 +108,37 @@ class ChatViewModel @Inject constructor(
         _state.update { it.copy(inputText = text) }
     }
 
+    /** Begin editing a previously sent user message (ChatGPT-style). */
+    fun startEditMessage(messageId: String) {
+        val message = _state.value.messages.find { it.id == messageId } ?: return
+        if (message.role != Role.USER) return
+        _state.update { it.copy(inputText = message.content, editingMessageId = messageId) }
+    }
+
+    /** Cancel editing and restore the input bar. */
+    fun cancelEdit() {
+        _state.update { it.copy(inputText = "", editingMessageId = null) }
+    }
+
     fun sendMessage(text: String = _state.value.inputText) {
         val trimmed = text.trim()
         if (trimmed.isEmpty() || _state.value.isStreaming) return
+
+        // If we're editing, truncate conversation at the edited message
+        val editId = _state.value.editingMessageId
+        if (editId != null) {
+            val idx = _state.value.messages.indexOfFirst { it.id == editId }
+            if (idx >= 0) {
+                _state.update {
+                    it.copy(
+                        messages = it.messages.subList(0, idx),
+                        editingMessageId = null,
+                    )
+                }
+            } else {
+                _state.update { it.copy(editingMessageId = null) }
+            }
+        }
 
         viewModelScope.launch {
             // Check free-tier limits
