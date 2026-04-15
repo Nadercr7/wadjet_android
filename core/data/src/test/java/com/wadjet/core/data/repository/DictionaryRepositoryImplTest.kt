@@ -25,6 +25,7 @@ class DictionaryRepositoryImplTest {
     private val writeApi: WriteApiService = mockk()
     private val audioApi: AudioApiService = mockk()
     private val signDao: SignDao = mockk(relaxed = true)
+    private val categoryDao: com.wadjet.core.database.dao.CategoryDao = mockk(relaxed = true)
 
     private lateinit var repository: DictionaryRepositoryImpl
 
@@ -40,7 +41,7 @@ class DictionaryRepositoryImplTest {
 
     @Before
     fun setup() {
-        repository = DictionaryRepositoryImpl(dictionaryApi, writeApi, audioApi, signDao)
+        repository = DictionaryRepositoryImpl(dictionaryApi, writeApi, audioApi, signDao, categoryDao)
     }
 
     @Test
