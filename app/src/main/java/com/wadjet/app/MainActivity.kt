@@ -74,9 +74,9 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
-        val isLoggedIn = authRepository.isLoggedIn
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        val isLoggedIn = authRepository.isLoggedIn
         enableEdgeToEdge()
         setContent {
             val windowSizeClass = calculateWindowSizeClass(this)

@@ -25,7 +25,7 @@ retrofitSerializationConverter = "1.0.0"
 firebaseBom = "33.7.0"
 
 # Room
-room = "2.8.4"
+room = "2.7.1"
 
 # DataStore
 datastore = "1.1.1"
