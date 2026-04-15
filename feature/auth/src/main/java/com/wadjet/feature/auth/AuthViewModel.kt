@@ -2,6 +2,7 @@ package com.wadjet.feature.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.util.Patterns
 import com.wadjet.core.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -30,12 +31,12 @@ class AuthViewModel @Inject constructor(
 
     fun showSheet(sheet: AuthSheet) {
         _activeSheet.value = sheet
-        _state.update { it.copy(error = null) }
+        _state.update { it.copy(error = null, forgotPasswordSent = false) }
     }
 
     fun dismissSheet() {
         _activeSheet.value = AuthSheet.NONE
-        _state.update { it.copy(error = null) }
+        _state.update { it.copy(error = null, forgotPasswordSent = false) }
     }
 
     fun signInWithGoogle(idToken: String) {
@@ -133,7 +134,7 @@ class AuthViewModel @Inject constructor(
 
     companion object {
         fun validateEmail(email: String): Boolean {
-            return email.trim().matches(Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"))
+            return Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
         }
 
         fun validatePassword(password: String): String? {

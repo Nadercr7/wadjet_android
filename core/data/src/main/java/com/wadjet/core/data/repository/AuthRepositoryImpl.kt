@@ -13,6 +13,9 @@ import com.wadjet.core.network.model.RegisterRequest
 import com.wadjet.core.network.model.UserResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,6 +25,7 @@ class AuthRepositoryImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuthManager,
     private val authApi: AuthApiService,
     private val tokenManager: TokenManager,
+    private val json: Json,
 ) : AuthRepository {
 
     override val currentUser: Flow<User?> = firebaseAuth.authStateFlow.map { firebaseUser ->
@@ -51,9 +55,10 @@ class AuthRepositoryImpl @Inject constructor(
             tokenManager.accessToken = body.accessToken
             body.user?.toDomain() ?: firebaseUser.toDomain()
         } else {
-            Timber.w("Backend google auth failed: ${response.code()}")
-            // Still signed into Firebase, just no backend token
-            firebaseUser.toDomain()
+            // Backend failed — sign out Firebase to prevent split-brain state
+            firebaseAuth.signOut()
+            val errorBody = response.errorBody()?.string()
+            throw AuthException(parseError(errorBody) ?: "Google sign-in backend sync failed")
         }
     }
 
@@ -68,6 +73,12 @@ class AuthRepositoryImpl @Inject constructor(
             tokenManager.accessToken = body.accessToken
             body.user?.toDomain() ?: firebaseUser.toDomain()
         } else {
+            // Backend failed — sign out Firebase to prevent split-brain
+            firebaseAuth.signOut()
+            if (response.code() == 429) {
+                val retryAfter = response.headers()["Retry-After"]?.toLongOrNull() ?: 60L
+                throw AuthException("Too many attempts. Try again in ${retryAfter}s")
+            }
             val errorBody = response.errorBody()?.string()
             throw AuthException(parseError(errorBody) ?: "Login failed")
         }
@@ -90,8 +101,10 @@ class AuthRepositoryImpl @Inject constructor(
             tokenManager.accessToken = body.accessToken
             body.user?.toDomain() ?: firebaseUser.toDomain()
         } else {
-            Timber.w("Backend register failed: ${response.code()}")
-            firebaseUser.toDomain()
+            // Backend failed — sign out Firebase to prevent split-brain state
+            firebaseAuth.signOut()
+            val errorBody = response.errorBody()?.string()
+            throw AuthException(parseError(errorBody) ?: "Registration backend sync failed")
         }
     }
 
@@ -113,8 +126,11 @@ class AuthRepositoryImpl @Inject constructor(
 
     private fun parseError(body: String?): String? {
         if (body == null) return null
-        val regex = """"detail"\s*:\s*"([^"]+)"""".toRegex()
-        return regex.find(body)?.groupValues?.get(1)
+        return try {
+            json.parseToJsonElement(body).jsonObject["detail"]?.jsonPrimitive?.content
+        } catch (_: Exception) {
+            null
+        }
     }
 }
 

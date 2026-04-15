@@ -2,12 +2,12 @@ package com.wadjet.core.network
 
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
@@ -23,7 +23,7 @@ class AuthInterceptorTest {
         server.start()
 
         tokenManager = mockk(relaxed = true)
-        every { tokenManager.accessToken } returns "old-token"
+        every { tokenManager.accessToken } returns "test-token"
         every { tokenManager.refreshToken } returns "refresh-token"
 
         val interceptor = AuthInterceptor(
@@ -42,7 +42,7 @@ class AuthInterceptorTest {
     }
 
     @Test
-    fun `adds bearer token to request`() {
+    fun `adds bearer token to API request`() {
         server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
 
         val request = okhttp3.Request.Builder()
@@ -51,12 +51,25 @@ class AuthInterceptorTest {
         client.newCall(request).execute()
 
         val recorded = server.takeRequest()
-        assertEquals("Bearer old-token", recorded.getHeader("Authorization"))
+        assertEquals("Bearer test-token", recorded.getHeader("Authorization"))
+    }
+
+    @Test
+    fun `skips auth header when token is null`() {
+        every { tokenManager.accessToken } returns null
+        server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+
+        val request = okhttp3.Request.Builder()
+            .url(server.url("/api/dictionary/signs"))
+            .build()
+        client.newCall(request).execute()
+
+        val recorded = server.takeRequest()
+        assertNull(recorded.getHeader("Authorization"))
     }
 
     @Test
     fun `skips auth for login endpoint`() {
-        every { tokenManager.accessToken } returns null
         server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
 
         val request = okhttp3.Request.Builder()
@@ -66,67 +79,29 @@ class AuthInterceptorTest {
         client.newCall(request).execute()
 
         val recorded = server.takeRequest()
-        assertEquals(null, recorded.getHeader("Authorization"))
+        // Auth endpoints go through handleAuthRequest, no Bearer header
+        assertNull(recorded.getHeader("Authorization"))
     }
 
     @Test
-    fun `401 triggers token refresh and retries`() {
-        // First request returns 401
-        server.enqueue(MockResponse().setResponseCode(401))
-
-        // Refresh request succeeds
-        server.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody("""{"access_token": "new-token"}""")
-                .addHeader("Set-Cookie", "wadjet_refresh=new-refresh; Path=/; HttpOnly"),
-        )
-
-        // Retry with new token succeeds
-        server.enqueue(MockResponse().setResponseCode(200).setBody("""{"data": "ok"}"""))
-
-        every { tokenManager.accessToken } returnsMany listOf("old-token", "old-token", "new-token")
+    fun `skips auth for external URLs`() {
+        val externalServer = MockWebServer()
+        externalServer.start()
+        externalServer.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
 
         val request = okhttp3.Request.Builder()
-            .url(server.url("/api/dictionary/signs"))
-            .build()
-        val response = client.newCall(request).execute()
-
-        assertEquals(200, response.code)
-
-        // 3 requests: original 401, refresh, retry
-        assertEquals(3, server.requestCount)
-
-        // Verify new token was saved
-        verify { tokenManager.accessToken = "new-token" }
-    }
-
-    @Test
-    fun `failed refresh clears tokens`() {
-        // First request returns 401
-        server.enqueue(MockResponse().setResponseCode(401))
-
-        // Refresh request also fails
-        server.enqueue(MockResponse().setResponseCode(401).setBody("{}"))
-
-        // Retry (with no token) returns 401
-        server.enqueue(MockResponse().setResponseCode(401))
-
-        val request = okhttp3.Request.Builder()
-            .url(server.url("/api/dictionary/signs"))
+            .url(externalServer.url("/some/image.png"))
             .build()
         client.newCall(request).execute()
 
-        verify { tokenManager.clearAll() }
+        val recorded = externalServer.takeRequest()
+        assertNull(recorded.getHeader("Authorization"))
+        externalServer.shutdown()
     }
 
     @Test
     fun `refresh endpoint sends cookie`() {
-        server.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody("""{"access_token": "refreshed"}"""),
-        )
+        server.enqueue(MockResponse().setResponseCode(200).setBody("""{"access_token": "new"}"""))
 
         val request = okhttp3.Request.Builder()
             .url(server.url("/api/auth/refresh"))
@@ -136,5 +111,37 @@ class AuthInterceptorTest {
 
         val recorded = server.takeRequest()
         assertEquals("wadjet_refresh=refresh-token", recorded.getHeader("Cookie"))
+    }
+
+    @Test
+    fun `401 is passed through without retry`() {
+        // AuthInterceptor no longer handles 401 — TokenAuthenticator does
+        server.enqueue(MockResponse().setResponseCode(401))
+
+        val request = okhttp3.Request.Builder()
+            .url(server.url("/api/dictionary/signs"))
+            .build()
+        val response = client.newCall(request).execute()
+
+        assertEquals(401, response.code)
+        assertEquals(1, server.requestCount)
+    }
+
+    @Test
+    fun `extracts refresh token from Set-Cookie on auth success`() {
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setBody("""{"access_token": "new"}""")
+                .addHeader("Set-Cookie", "wadjet_refresh=new-refresh; Path=/; HttpOnly"),
+        )
+
+        val request = okhttp3.Request.Builder()
+            .url(server.url("/api/auth/login"))
+            .post(okhttp3.RequestBody.create(null, "{}".toByteArray()))
+            .build()
+        client.newCall(request).execute()
+
+        io.mockk.verify { tokenManager.refreshToken = "new-refresh" }
     }
 }

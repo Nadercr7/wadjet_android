@@ -74,6 +74,7 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        val isLoggedIn = authRepository.isLoggedIn
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -81,7 +82,8 @@ class MainActivity : ComponentActivity() {
             val windowSizeClass = calculateWindowSizeClass(this)
             WadjetTheme {
                 WadjetApp(
-                    isLoggedIn = authRepository.isLoggedIn,
+                    initialLoggedIn = isLoggedIn,
+                    authRepository = authRepository,
                     webClientId = webClientId,
                     networkMonitor = networkMonitor,
                     toastController = toastController,
@@ -95,7 +97,8 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WadjetApp(
-    isLoggedIn: Boolean,
+    initialLoggedIn: Boolean,
+    authRepository: AuthRepository,
     webClientId: String,
     networkMonitor: NetworkMonitor,
     toastController: ToastController,
@@ -121,8 +124,20 @@ private fun WadjetApp(
     val isOffline by networkMonitor.isOnline.collectAsStateWithLifecycle(initialValue = true)
     var showQuickSettings by remember { mutableStateOf(false) }
 
+    // Reactive auth state observation — navigate to Welcome on sign-out/token clear
+    val currentUser by authRepository.currentUser.collectAsStateWithLifecycle(initialValue = null)
+    val isAuthenticated = currentUser != null
+    LaunchedEffect(isAuthenticated) {
+        if (!isAuthenticated && navController.currentDestination?.hasRoute(Route.Welcome::class) != true) {
+            // User signed out or token expired — reset to Welcome
+            navController.navigate(Route.Welcome) {
+                popUpTo(navController.graph.id) { inclusive = true }
+            }
+        }
+    }
+
     // Determine start destination based on auth state
-    val startDestination: Route = if (isLoggedIn) Route.Landing else Route.Welcome
+    val startDestination: Route = if (initialLoggedIn) Route.Landing else Route.Welcome
 
     // Show navigation only on top-level destinations
     val showNav = TopLevelDestination.entries.any { dest ->

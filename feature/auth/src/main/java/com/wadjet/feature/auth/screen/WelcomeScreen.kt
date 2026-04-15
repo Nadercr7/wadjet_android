@@ -305,9 +305,11 @@ private suspend fun performGoogleSignIn(
     onError: (String) -> Unit,
 ) {
     try {
+        val nonce = java.util.UUID.randomUUID().toString()
         val googleIdOption = GetGoogleIdOption.Builder()
             .setServerClientId(webClientId)
             .setFilterByAuthorizedAccounts(false)
+            .setNonce(nonce)
             .build()
         val request = GetCredentialRequest.Builder()
             .addCredentialOption(googleIdOption)
