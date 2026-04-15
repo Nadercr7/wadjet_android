@@ -53,7 +53,7 @@ class ChatRepositoryImpl @Inject constructor(
         }
 
         val request = Request.Builder()
-            .url("${baseUrl}api/chat/stream")
+            .url("${baseUrl.trimEnd('/')}/" + "api/chat/stream")
             .post(requestBody.toRequestBody("application/json".toMediaType()))
             .header("Accept", "text/event-stream")
             .build()

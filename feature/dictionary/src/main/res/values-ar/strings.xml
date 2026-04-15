@@ -4,6 +4,7 @@
     <string name="dictionary_tab_browse">Browse</string>
     <string name="dictionary_tab_learn">Learn</string>
     <string name="dictionary_tab_write">Write</string>
+    <string name="dictionary_tab_translate">Translate</string>
 
     <!-- Browse tab -->
     <string name="browse_search_placeholder">Search signsâ€¦</string>

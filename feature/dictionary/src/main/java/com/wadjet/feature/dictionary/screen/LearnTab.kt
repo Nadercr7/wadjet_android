@@ -65,13 +65,14 @@ fun LearnTab(
         }
     }
 
-    val lessons = listOf(
+    val allLessons = listOf(
         LessonInfo(1, stringResource(R.string.lesson_1_title), stringResource(R.string.lesson_1_desc)),
         LessonInfo(2, stringResource(R.string.lesson_2_title), stringResource(R.string.lesson_2_desc)),
         LessonInfo(3, stringResource(R.string.lesson_3_title), stringResource(R.string.lesson_3_desc)),
         LessonInfo(4, stringResource(R.string.lesson_4_title), stringResource(R.string.lesson_4_desc)),
         LessonInfo(5, stringResource(R.string.lesson_5_title), stringResource(R.string.lesson_5_desc)),
     )
+    val lessons = allLessons.take(alphabetState.lessonCount)
 
     var visibleCount by remember { mutableStateOf(0) }
     LaunchedEffect(Unit) {

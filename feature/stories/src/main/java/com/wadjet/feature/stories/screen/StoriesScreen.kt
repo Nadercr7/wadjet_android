@@ -196,9 +196,8 @@ fun StoriesScreen(
                         items = filtered,
                         key = { it.id },
                     ) { story ->
-                        val index = state.stories.indexOf(story)
                         val itemIndex = filtered.indexOf(story)
-                        val isLocked = index >= FREE_STORY_LIMIT
+                        val isLocked = itemIndex >= FREE_STORY_LIMIT
                         val progress = state.progress[story.id]
                         FadeUp(visible = itemIndex < visibleCount) {
                             StoryCard(

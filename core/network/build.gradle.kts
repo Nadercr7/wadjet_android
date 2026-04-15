@@ -13,6 +13,7 @@ android {
     defaultConfig {
         minSdk = 26
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "APP_VERSION", "\"${findProperty("appVersionName") ?: "1.0.0"}\"")
     }
 
     compileOptions {

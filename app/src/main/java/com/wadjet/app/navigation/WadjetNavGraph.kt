@@ -354,6 +354,7 @@ fun WadjetNavGraph(
                 state = state,
                 onInputChanged = viewModel::updateInput,
                 onSend = { viewModel.sendMessage() },
+                onSendMessage = viewModel::sendMessage,
                 onSpeak = viewModel::speakMessage,
                 onRetry = viewModel::retryLastMessage,
                 onStartEdit = viewModel::startEditMessage,
@@ -378,6 +379,7 @@ fun WadjetNavGraph(
                 state = state,
                 onInputChanged = viewModel::updateInput,
                 onSend = { viewModel.sendMessage() },
+                onSendMessage = viewModel::sendMessage,
                 onSpeak = viewModel::speakMessage,
                 onRetry = viewModel::retryLastMessage,
                 onStartEdit = viewModel::startEditMessage,
@@ -436,6 +438,7 @@ fun WadjetNavGraph(
                 onRetryImage = viewModel::retryChapterImage,
                 onDismissError = viewModel::dismissError,
                 onDismissLocalTts = viewModel::dismissLocalTts,
+                onLocalTtsDone = viewModel::onLocalTtsDone,
                 onBack = { navController.popBackStack() },
             )
             }

@@ -10,6 +10,7 @@ import com.wadjet.core.domain.model.IdentifyMatch
 import com.wadjet.core.domain.model.IdentifyResult
 import com.wadjet.core.domain.model.LandmarkDetail
 import com.wadjet.core.domain.repository.ExploreRepository
+import com.wadjet.core.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,6 +35,7 @@ data class IdentifyUiState(
 @HiltViewModel
 class IdentifyViewModel @Inject constructor(
     private val exploreRepository: ExploreRepository,
+    private val userRepository: UserRepository,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -42,6 +44,14 @@ class IdentifyViewModel @Inject constructor(
 
     fun onImageCaptured(file: File) {
         viewModelScope.launch {
+            // Check free-tier limits
+            userRepository.getLimits().onSuccess { limits ->
+                if (limits.scansToday >= limits.scansPerDay) {
+                    _state.update { it.copy(error = "Daily scan limit reached (${limits.scansPerDay}). Try again tomorrow.") }
+                    return@launch
+                }
+            }
+
             _state.update { it.copy(cameraActive = false, isLoading = true, error = null) }
             val compressed = compressImage(file)
             exploreRepository.identifyLandmark(compressed)

@@ -181,6 +181,7 @@ private fun SwipeToDeleteHistoryItem(
     LaunchedEffect(dismissState.currentValue) {
         if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
             onDelete()
+            dismissState.reset()
         }
     }
 

@@ -12,11 +12,13 @@ import com.wadjet.core.domain.model.StoryFull
 import com.wadjet.core.domain.model.StoryProgress
 import com.wadjet.core.domain.repository.StoriesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -66,6 +68,7 @@ class StoryReaderViewModel @Inject constructor(
     val state: StateFlow<ReaderUiState> = _state.asStateFlow()
 
     private var mediaPlayer: MediaPlayer? = null
+    private var localTtsDeferred: CompletableDeferred<Unit>? = null
 
     init {
         loadStory()
@@ -201,11 +204,11 @@ class StoryReaderViewModel @Inject constructor(
                         if (bytes != null) {
                             playWavBytesAndWait(bytes) { if (cont.isActive) cont.resume(true) }
                         } else {
-                            // LOCAL_TTS fallback
+                            // LOCAL_TTS fallback — wait for Screen callback
+                            localTtsDeferred = CompletableDeferred()
                             _state.update { it.copy(localTtsText = text) }
-                            // Give local TTS time to speak — roughly 80ms per word
-                            val estimatedMs = text.split(" ").size * 80L + 500L
-                            kotlinx.coroutines.delay(estimatedMs)
+                            localTtsDeferred?.await()
+                            localTtsDeferred = null
                             if (cont.isActive) cont.resume(true)
                         }
                     }
@@ -223,6 +226,10 @@ class StoryReaderViewModel @Inject constructor(
 
     fun dismissLocalTts() {
         _state.update { it.copy(localTtsText = null) }
+    }
+
+    fun onLocalTtsDone() {
+        localTtsDeferred?.complete(Unit)
     }
 
     private fun loadStory() {
@@ -284,17 +291,17 @@ class StoryReaderViewModel @Inject constructor(
         viewModelScope.launch {
             // Wait for story to be loaded before applying progress
             _state.first { it.story != null }
-            storiesRepository.getStoryProgress(storyId).collect { progress ->
-                if (progress != null && _state.value.currentChapter == 0) {
-                    _state.update {
-                        it.copy(
-                            currentChapter = progress.chapterIndex,
-                            score = progress.score,
-                            glyphsLearned = progress.glyphsLearned.toSet(),
-                        )
-                    }
-                    loadChapterImage()
+            val progress = storiesRepository.getStoryProgress(storyId)
+                .firstOrNull { it != null }
+            if (progress != null && _state.value.currentChapter == 0) {
+                _state.update {
+                    it.copy(
+                        currentChapter = progress.chapterIndex,
+                        score = progress.score,
+                        glyphsLearned = progress.glyphsLearned.toSet(),
+                    )
                 }
+                loadChapterImage()
             }
         }
     }

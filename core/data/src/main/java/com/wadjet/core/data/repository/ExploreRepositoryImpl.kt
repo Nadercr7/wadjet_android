@@ -1,6 +1,7 @@
 package com.wadjet.core.data.repository
 
 import com.wadjet.core.common.suspendRunCatching
+import com.wadjet.core.data.ApiException
 import com.wadjet.core.database.dao.FavoriteDao
 import com.wadjet.core.database.dao.LandmarkDao
 import com.wadjet.core.database.entity.FavoriteEntity

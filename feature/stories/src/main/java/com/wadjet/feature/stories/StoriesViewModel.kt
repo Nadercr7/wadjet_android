@@ -103,10 +103,14 @@ class StoriesViewModel @Inject constructor(
 
     private fun loadFavorites() {
         viewModelScope.launch {
-            userRepository.getFavorites().onSuccess { items ->
-                val storyIds = items.filter { it.itemType == "story" }.map { it.itemId }.toSet()
-                _state.update { it.copy(favorites = storyIds) }
-            }
+            userRepository.getFavorites()
+                .onSuccess { items ->
+                    val storyIds = items.filter { it.itemType == "story" }.map { it.itemId }.toSet()
+                    _state.update { it.copy(favorites = storyIds) }
+                }
+                .onFailure { e ->
+                    Timber.w(e, "Failed to load favorites")
+                }
         }
     }
 }

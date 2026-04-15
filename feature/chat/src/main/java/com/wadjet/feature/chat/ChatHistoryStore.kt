@@ -1,6 +1,8 @@
 package com.wadjet.feature.chat
 
 import android.content.Context
+import androidx.security.crypto.EncryptedFile
+import androidx.security.crypto.MasterKeys
 import com.wadjet.core.domain.model.ChatMessage
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +26,7 @@ class ChatHistoryStore @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
     private val dir get() = File(context.filesDir, "chat_history").also { it.mkdirs() }
+    private val masterKeyAlias by lazy { MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC) }
     private val prefs by lazy {
         context.getSharedPreferences("chat_session", Context.MODE_PRIVATE)
     }
@@ -59,7 +62,8 @@ class ChatHistoryStore @Inject constructor(
         dir.listFiles { f -> f.extension == "json" }
             ?.mapNotNull { file ->
                 try {
-                    val obj = JSONObject(file.readText())
+                    val text = encryptedFile(file).openFileInput().bufferedReader().use { it.readText() }
+                    val obj = JSONObject(text)
                     ConversationSummary(
                         id = obj.getString("id"),
                         title = obj.getString("title"),
@@ -94,14 +98,17 @@ class ChatHistoryStore @Inject constructor(
                 }
             })
         }
-        File(dir, "$id.json").writeText(obj.toString())
+        val target = File(dir, "$id.json")
+        if (target.exists()) target.delete()
+        encryptedFile(target).openFileOutput().use { it.write(obj.toString().toByteArray()) }
     }
 
     suspend fun loadConversation(id: String): List<ChatMessage>? = withContext(Dispatchers.IO) {
         val file = File(dir, "$id.json")
         if (!file.exists()) return@withContext null
         try {
-            val obj = JSONObject(file.readText())
+            val text = encryptedFile(file).openFileInput().bufferedReader().use { it.readText() }
+            val obj = JSONObject(text)
             val arr = obj.getJSONArray("messages")
             (0 until arr.length()).map { i ->
                 val msg = arr.getJSONObject(i)
@@ -126,7 +133,8 @@ class ChatHistoryStore @Inject constructor(
         val latest = dir.listFiles { f -> f.extension == "json" }
             ?.mapNotNull { file ->
                 try {
-                    val obj = JSONObject(file.readText())
+                    val text = encryptedFile(file).openFileInput().bufferedReader().use { it.readText() }
+                    val obj = JSONObject(text)
                     obj.getString("id") to obj.getLong("createdAt")
                 } catch (_: Exception) {
                     null
@@ -137,4 +145,12 @@ class ChatHistoryStore @Inject constructor(
         val messages = loadConversation(latest.first) ?: return@withContext null
         latest.first to messages
     }
+
+    private fun encryptedFile(file: File): EncryptedFile =
+        EncryptedFile.Builder(
+            file,
+            context,
+            masterKeyAlias,
+            EncryptedFile.FileEncryptionScheme.AES256_GCM_HKDF_4KB,
+        ).build()
 }

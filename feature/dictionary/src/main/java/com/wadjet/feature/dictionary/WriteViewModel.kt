@@ -16,6 +16,7 @@ import javax.inject.Inject
 
 data class WriteUiState(
     val inputText: String = "",
+    val selectedMode: String = "smart",
     val result: WriteResult? = null,
     val preview: WriteResult? = null,
     val isPreviewLoading: Boolean = false,
@@ -47,6 +48,10 @@ class WriteViewModel @Inject constructor(
         _state.update { it.copy(inputText = text, result = null, error = null) }
     }
 
+    fun onModeChanged(mode: String) {
+        _state.update { it.copy(selectedMode = mode, result = null) }
+    }
+
     fun appendGlyph(sign: PaletteSign) {
         val text = sign.glyph
         _state.update { it.copy(inputText = it.inputText + text) }
@@ -58,7 +63,7 @@ class WriteViewModel @Inject constructor(
         if (s.isLoading) return
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
-            repository.write(s.inputText, "smart")
+            repository.write(s.inputText, s.selectedMode)
                 .onSuccess { result -> _state.update { it.copy(result = result, isLoading = false) } }
                 .onFailure { e -> _state.update { it.copy(isLoading = false, error = e.message) } }
         }

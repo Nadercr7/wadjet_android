@@ -57,6 +57,7 @@ fun WriteTab(
     onConvert: () -> Unit,
     onClear: () -> Unit,
     onAppendGlyph: (PaletteSign) -> Unit,
+    onModeChanged: (String) -> Unit,
     onSpeak: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -82,6 +83,29 @@ fun WriteTab(
 
         Spacer(Modifier.height(12.dp))
 
+        // Mode selector
+        val modes = listOf("smart" to stringResource(R.string.write_mode_smart), "phonetic" to stringResource(R.string.write_mode_phonetic), "gardiner" to stringResource(R.string.write_mode_gardiner))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            modes.forEach { (key, label) ->
+                val selected = state.selectedMode == key
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(if (selected) WadjetColors.Gold else WadjetColors.Surface)
+                        .clickable { onModeChanged(key) }
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                ) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (selected) WadjetColors.Night else WadjetColors.TextMuted,
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
         // Convert button (full width, no palette)
         WadjetButton(
             text = stringResource(R.string.write_convert_button),
@@ -99,6 +123,25 @@ fun WriteTab(
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = 8.dp),
             )
+        }
+
+        // Glyph palette — tap to append to input
+        if (state.palette.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            Text(
+                stringResource(R.string.write_palette_label),
+                style = MaterialTheme.typography.labelMedium,
+                color = WadjetColors.Gold,
+            )
+            Spacer(Modifier.height(4.dp))
+            androidx.compose.foundation.layout.FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                state.palette.forEach { sign ->
+                    PaletteItem(sign = sign, onClick = { onAppendGlyph(sign) })
+                }
+            }
         }
 
         // Result — only shown after Convert tap

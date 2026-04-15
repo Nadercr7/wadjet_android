@@ -3,6 +3,7 @@ package com.wadjet.core.data.repository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.wadjet.core.common.suspendRunCatching
+import com.wadjet.core.data.ApiException
 import com.wadjet.core.domain.model.Chapter
 import com.wadjet.core.domain.model.DecisionChoice
 import com.wadjet.core.domain.model.GlyphAnnotation
@@ -59,14 +60,14 @@ class StoriesRepositoryImpl @Inject constructor(
                 )
             } ?: emptyList()
         } else {
-            throw Exception("Failed to load stories: ${response.code()}")
+            throw ApiException("Failed to load stories: ${response.code()}")
         }
     }
 
     override suspend fun getStory(storyId: String): Result<StoryFull> = suspendRunCatching {
         val response = storiesApi.getStory(storyId)
         if (response.isSuccessful) {
-            val dto = response.body() ?: throw Exception("Empty story response")
+            val dto = response.body() ?: throw ApiException("Empty story response")
             StoryFull(
                 id = dto.id,
                 titleEn = dto.title.en,
@@ -107,7 +108,7 @@ class StoriesRepositoryImpl @Inject constructor(
                 },
             )
         } else {
-            throw Exception("Failed to load story: ${response.code()}")
+            throw ApiException("Failed to load story: ${response.code()}")
         }
     }
 
@@ -126,7 +127,7 @@ class StoriesRepositoryImpl @Inject constructor(
             ),
         )
         if (response.isSuccessful) {
-            val r = response.body() ?: throw Exception("Empty interact response")
+            val r = response.body() ?: throw ApiException("Empty interact response")
             InteractionResult(
                 correct = r.correct,
                 type = r.type,
@@ -142,7 +143,7 @@ class StoriesRepositoryImpl @Inject constructor(
                 choiceId = r.choiceId,
             )
         } else {
-            throw Exception("Interaction failed: ${response.code()}")
+            throw ApiException("Interaction failed: ${response.code()}")
         }
     }
 
@@ -154,7 +155,7 @@ class StoriesRepositoryImpl @Inject constructor(
         if (response.isSuccessful) {
             response.body()?.imageUrl
         } else {
-            throw Exception("Image generation failed: ${response.code()}")
+            throw ApiException("Image generation failed: ${response.code()}")
         }
     }
 
@@ -163,7 +164,7 @@ class StoriesRepositoryImpl @Inject constructor(
         when (response.code()) {
             200 -> response.body()?.bytes()
             204 -> null
-            else -> throw Exception("TTS failed: ${response.code()}")
+            else -> throw ApiException("TTS failed: ${response.code()}")
         }
     }
 

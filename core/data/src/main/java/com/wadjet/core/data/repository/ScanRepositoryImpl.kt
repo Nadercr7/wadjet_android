@@ -1,6 +1,7 @@
 package com.wadjet.core.data.repository
 
 import com.wadjet.core.common.suspendRunCatching
+import com.wadjet.core.data.ApiException
 import com.wadjet.core.database.dao.ScanResultDao
 import com.wadjet.core.database.entity.ScanResultEntity
 import com.wadjet.core.domain.model.DetectedGlyph

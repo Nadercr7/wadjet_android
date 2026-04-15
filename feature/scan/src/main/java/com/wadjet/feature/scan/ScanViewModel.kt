@@ -159,6 +159,9 @@ class ScanViewModel @Inject constructor(
                     val saveResult = scanRepository.saveScanResult(result, thumbnailPath)
                     val scanId = saveResult.getOrNull()
 
+                    // Clean up compressed temp file
+                    if (compressed !== file) compressed.delete()
+
                     _state.update {
                         it.copy(
                             result = result,

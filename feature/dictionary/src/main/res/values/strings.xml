@@ -4,6 +4,7 @@
     <string name="dictionary_tab_browse">Browse</string>
     <string name="dictionary_tab_learn">Learn</string>
     <string name="dictionary_tab_write">Write</string>
+    <string name="dictionary_tab_translate">Translate</string>
 
     <!-- Browse tab -->
     <string name="browse_search_placeholder">Search signs…</string>
@@ -56,6 +57,10 @@
     <string name="write_input_label">Enter text</string>
     <string name="write_input_placeholder">Type English text or transliteration…</string>
     <string name="write_convert_button">Convert</string>
+    <string name="write_palette_label">Glyph Palette</string>
+    <string name="write_mode_smart">Smart</string>
+    <string name="write_mode_phonetic">Phonetic</string>
+    <string name="write_mode_gardiner">Gardiner</string>
     <string name="write_breakdown_label">Breakdown:</string>
     <string name="write_read_aloud_desc">Read aloud</string>
 

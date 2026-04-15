@@ -1,6 +1,7 @@
 package com.wadjet.feature.stories.screen
 
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.LinearEasing
@@ -112,6 +113,7 @@ fun StoryReaderScreen(
     onRetryImage: () -> Unit,
     onDismissError: () -> Unit,
     onDismissLocalTts: () -> Unit,
+    onLocalTtsDone: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -130,7 +132,15 @@ fun StoryReaderScreen(
         val text = state.localTtsText ?: return@LaunchedEffect
         val isArabic = text.any { it in '\u0600'..'\u06FF' || it in '\u0750'..'\u077F' }
         ttsInstance?.language = if (isArabic) Locale("ar") else Locale.US
-        ttsInstance?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        val utteranceId = "narration_${System.currentTimeMillis()}"
+        ttsInstance?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onStart(id: String?) {}
+            override fun onDone(id: String?) { onLocalTtsDone() }
+            @Deprecated("Deprecated in Java")
+            override fun onError(id: String?) { onLocalTtsDone() }
+        })
+        val params = android.os.Bundle()
+        ttsInstance?.speak(text, TextToSpeech.QUEUE_FLUSH, params, utteranceId)
         onDismissLocalTts()
     }
 

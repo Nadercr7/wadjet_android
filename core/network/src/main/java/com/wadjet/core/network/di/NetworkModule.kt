@@ -62,7 +62,7 @@ object NetworkModule {
         )
         .addInterceptor { chain ->
             val request = chain.request().newBuilder()
-                .header("User-Agent", "Wadjet-Android/1.0.0")
+                .header("User-Agent", "Wadjet-Android/${com.wadjet.core.network.BuildConfig.APP_VERSION}")
                 .build()
             chain.proceed(request)
         }

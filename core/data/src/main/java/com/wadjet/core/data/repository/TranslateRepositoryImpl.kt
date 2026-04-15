@@ -1,6 +1,7 @@
 package com.wadjet.core.data.repository
 
 import com.wadjet.core.common.suspendRunCatching
+import com.wadjet.core.data.ApiException
 import com.wadjet.core.domain.model.TranslationResult
 import com.wadjet.core.domain.repository.TranslateRepository
 import com.wadjet.core.network.api.TranslateApiService

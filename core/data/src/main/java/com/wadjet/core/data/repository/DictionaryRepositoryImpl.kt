@@ -2,6 +2,7 @@ package com.wadjet.core.data.repository
 
 import com.wadjet.core.common.EgyptianPronunciation
 import com.wadjet.core.common.suspendRunCatching
+import com.wadjet.core.data.ApiException
 import com.wadjet.core.database.dao.SignDao
 import com.wadjet.core.database.entity.SignEntity
 import com.wadjet.core.domain.model.Category
@@ -252,8 +253,6 @@ class DictionaryRepositoryImpl @Inject constructor(
         }
     }
 }
-
-internal class ApiException(message: String) : Exception(message)
 
 /**
  * Sanitize user input into a safe FTS5 query.

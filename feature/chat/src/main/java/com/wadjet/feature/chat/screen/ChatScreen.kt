@@ -119,6 +119,7 @@ fun ChatScreen(
     state: ChatUiState,
     onInputChanged: (String) -> Unit,
     onSend: () -> Unit,
+    onSendMessage: (String) -> Unit,
     onSpeak: (ChatMessage) -> Unit,
     onRetry: () -> Unit,
     onStartEdit: (String) -> Unit,
@@ -471,7 +472,7 @@ fun ChatScreen(
                     items(suggestions) { suggestion ->
                         FilterChip(
                             selected = false,
-                            onClick = { onInputChanged(suggestion); onSend() },
+                            onClick = { onSendMessage(suggestion) },
                             label = { Text(suggestion, style = MaterialTheme.typography.bodySmall) },
                             colors = FilterChipDefaults.filterChipColors(
                                 containerColor = WadjetColors.Surface,

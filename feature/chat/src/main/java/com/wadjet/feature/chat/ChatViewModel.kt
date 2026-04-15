@@ -53,7 +53,7 @@ class ChatViewModel @Inject constructor(
     private val _state = MutableStateFlow(ChatUiState())
     val state: StateFlow<ChatUiState> = _state.asStateFlow()
 
-    private val sessionId: String
+    private var sessionId: String
     private var streamJob: Job? = null
     private var mediaPlayer: MediaPlayer? = null
     private var lastSentMessage: String? = null
@@ -416,8 +416,9 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             saveCurrentConversation()
             chatRepository.clearSession(sessionId)
-            // Clear stored session so next init creates fresh
-            chatHistoryStore.clearSessionId()
+            // Generate fresh session
+            sessionId = UUID.randomUUID().toString()
+            chatHistoryStore.storeSessionId(sessionId)
             toastController.success("Chat cleared")
             val greeting = ChatMessage(
                 id = UUID.randomUUID().toString(),
@@ -440,7 +441,10 @@ class ChatViewModel @Inject constructor(
 
     fun loadConversation(conversationId: String) {
         viewModelScope.launch {
+            saveCurrentConversation()
             val messages = chatHistoryStore.loadConversation(conversationId) ?: return@launch
+            sessionId = conversationId
+            chatHistoryStore.storeSessionId(conversationId)
             _state.update {
                 it.copy(messages = messages, showHistory = false)
             }

@@ -1,6 +1,7 @@
 package com.wadjet.core.data.repository
 
 import com.wadjet.core.common.suspendRunCatching
+import com.wadjet.core.data.ApiException
 import com.wadjet.core.domain.model.FeedbackData
 import com.wadjet.core.domain.repository.FeedbackRepository
 import com.wadjet.core.network.api.FeedbackApiService
@@ -23,9 +24,9 @@ class FeedbackRepositoryImpl @Inject constructor(
             ),
         )
         if (!response.isSuccessful) {
-            throw Exception("Failed to submit feedback: ${response.code()}")
+            throw ApiException(response.code(), "Failed to submit feedback: ${response.code()}")
         }
-        val body = response.body() ?: throw Exception("Failed to submit feedback")
+        val body = response.body() ?: throw ApiException("Failed to submit feedback")
         body.id
     }
 }

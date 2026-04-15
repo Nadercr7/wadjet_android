@@ -23,6 +23,7 @@ import javax.inject.Inject
 data class AlphabetUiState(
     val signs: List<Sign> = emptyList(),
     val isLoading: Boolean = false,
+    val lessonCount: Int = 5,
 )
 
 data class BrowseUiState(
@@ -212,10 +213,15 @@ class DictionaryViewModel @Inject constructor(
         viewModelScope.launch {
             _alphabetState.update { it.copy(isLoading = true) }
             repository.getAlphabet(lang = lang)
-                .onSuccess { signs -> _alphabetState.update { AlphabetUiState(signs = signs) } }
+                .onSuccess { signs -> _alphabetState.update { it.copy(signs = signs, isLoading = false) } }
                 .onFailure { e ->
                     Timber.e(e, "Failed to load alphabet")
                     _alphabetState.update { it.copy(isLoading = false) }
+                }
+            // Fetch lesson count from first lesson metadata
+            repository.getLesson(1, lang)
+                .onSuccess { lesson ->
+                    _alphabetState.update { it.copy(lessonCount = lesson.totalLessons) }
                 }
         }
     }

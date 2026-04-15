@@ -58,6 +58,9 @@ dependencies {
     // Navigation
     implementation(libs.navigation.compose)
 
+    // Encrypted storage
+    implementation(libs.security.crypto)
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
