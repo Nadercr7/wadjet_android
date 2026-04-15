@@ -264,6 +264,7 @@ fun WadjetNavGraph(
                 state = state,
                 onRetry = viewModel::retry,
                 onBack = { navController.popBackStack() },
+                onSpeak = viewModel::speakSign,
             )
         }
 

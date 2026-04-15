@@ -8,15 +8,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wadjet.core.common.EgyptianPronunciation
 import com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs
 import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.animation.FadeUp
@@ -49,6 +56,7 @@ fun LearnTab(
     onLoadAlphabet: () -> Unit,
     onSignClick: (Sign) -> Unit,
     onLessonClick: (Int) -> Unit,
+    onSpeak: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LaunchedEffect(Unit) {
@@ -130,6 +138,26 @@ fun LearnTab(
                                     color = WadjetColors.TextMuted,
                                     textAlign = TextAlign.Center,
                                 )
+                            }
+                            // Inline TTS button
+                            val canPronounce = sign.isPhonetic || sign.type !in listOf("determinative")
+                            val ttsText = sign.speechText?.takeIf { it.isNotBlank() }
+                                ?: sign.reading?.takeIf { it.isNotBlank() && canPronounce }
+                                    ?.let { EgyptianPronunciation.toSpeech(it) }
+                                ?: sign.transliteration?.takeIf { it.isNotBlank() && canPronounce }
+                                    ?.let { EgyptianPronunciation.toSpeech(it) }
+                            if (!ttsText.isNullOrBlank()) {
+                                IconButton(
+                                    onClick = { onSpeak(ttsText) },
+                                    modifier = Modifier.size(24.dp),
+                                ) {
+                                    Icon(
+                                        Icons.Default.VolumeUp,
+                                        contentDescription = null,
+                                        tint = WadjetColors.Gold.copy(alpha = 0.7f),
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                }
                             }
                         }
                     }

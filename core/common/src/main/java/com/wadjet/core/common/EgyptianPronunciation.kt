@@ -108,7 +108,7 @@ object EgyptianPronunciation {
         "t" to "t",
         "T" to "ch",   // tether — "ch" as in "church" (ṯ)
         "d" to "d",
-        "D" to "dj",   // snake — "dj" as in "judge" (ḏ)
+        "D" to "j",    // snake — /dʒ/ as in "judge" (ḏ) — use "j" not "dj" for clear TTS
         "l" to "l",    // not standard 24 but appears in some texts
     )
 

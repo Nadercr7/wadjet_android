@@ -115,6 +115,7 @@ fun DictionaryScreen(
                     onLoadAlphabet = dictionaryViewModel::loadAlphabet,
                     onSignClick = dictionaryViewModel::selectSign,
                     onLessonClick = onNavigateToLesson,
+                    onSpeak = dictionaryViewModel::speakSign,
                 )
                 2 -> WriteTab(
                     state = writeState,

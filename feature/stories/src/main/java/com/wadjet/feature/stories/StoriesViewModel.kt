@@ -26,12 +26,14 @@ data class StoriesUiState(
     val favorites: Set<String> = emptySet(),
 ) {
     val filteredStories: List<StorySummary>
-        get() = if (selectedDifficulty == "All") {
-            stories
-        } else {
-            stories.filter { it.difficulty.equals(selectedDifficulty, ignoreCase = true) }
+        get() {
+            val list = if (selectedDifficulty == "All") stories
+                       else stories.filter { it.difficulty.equals(selectedDifficulty, ignoreCase = true) }
+            return list.sortedBy { DIFFICULTY_ORDER[it.difficulty.lowercase()] ?: 99 }
         }
 }
+
+private val DIFFICULTY_ORDER = mapOf("beginner" to 0, "intermediate" to 1, "advanced" to 2)
 
 @HiltViewModel
 class StoriesViewModel @Inject constructor(

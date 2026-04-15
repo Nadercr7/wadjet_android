@@ -10,12 +10,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wadjet.core.common.EgyptianPronunciation
 import com.wadjet.core.designsystem.GardinerCodeStyle
 import com.wadjet.core.designsystem.HieroglyphStyle
 import com.wadjet.core.designsystem.WadjetColors
@@ -43,6 +49,7 @@ fun LessonScreen(
     state: LessonUiState,
     onRetry: () -> Unit,
     onBack: () -> Unit,
+    onSpeak: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when {
@@ -140,7 +147,7 @@ fun LessonScreen(
                             ),
                         ) {
                             items(lesson.signs) { sign ->
-                                TeachingSignItem(sign)
+                                TeachingSignItem(sign, onSpeak)
                             }
                         }
                     }
@@ -152,7 +159,7 @@ fun LessonScreen(
                         Text(stringResource(R.string.lesson_examples_label), style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
                     }
                     items(lesson.exampleWords.size) { index ->
-                        ExampleWordItem(lesson.exampleWords[index])
+                        ExampleWordItem(lesson.exampleWords[index], onSpeak)
                     }
                 }
 
@@ -162,7 +169,7 @@ fun LessonScreen(
                         Text(stringResource(R.string.lesson_practice_label), style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
                     }
                     items(lesson.practiceWords.size) { index ->
-                        PracticeWordItem(lesson.practiceWords[index])
+                        PracticeWordItem(lesson.practiceWords[index], onSpeak)
                     }
                 }
 
@@ -182,7 +189,7 @@ fun LessonScreen(
 }
 
 @Composable
-private fun TeachingSignItem(sign: Sign) {
+private fun TeachingSignItem(sign: Sign, onSpeak: (String) -> Unit) {
     Column(
         modifier = Modifier
             .clip(MaterialTheme.shapes.small)
@@ -192,11 +199,31 @@ private fun TeachingSignItem(sign: Sign) {
     ) {
         Text(sign.glyph, style = HieroglyphStyle.copy(fontSize = 28.sp))
         Text(sign.code, style = GardinerCodeStyle.copy(fontSize = 10.sp))
+        // TTS button
+        val canPronounce = sign.isPhonetic || sign.type !in listOf("determinative")
+        val ttsText = sign.speechText?.takeIf { it.isNotBlank() }
+            ?: sign.reading?.takeIf { it.isNotBlank() && canPronounce }
+                ?.let { EgyptianPronunciation.toSpeech(it) }
+            ?: sign.transliteration.takeIf { it.isNotBlank() && canPronounce }
+                ?.let { EgyptianPronunciation.toSpeech(it) }
+        if (!ttsText.isNullOrBlank()) {
+            IconButton(
+                onClick = { onSpeak(ttsText) },
+                modifier = Modifier.size(24.dp),
+            ) {
+                Icon(
+                    Icons.Default.VolumeUp,
+                    contentDescription = null,
+                    tint = WadjetColors.Gold.copy(alpha = 0.7f),
+                    modifier = Modifier.size(14.dp),
+                )
+            }
+        }
     }
 }
 
 @Composable
-private fun ExampleWordItem(word: ExampleWord) {
+private fun ExampleWordItem(word: ExampleWord, onSpeak: (String) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -207,15 +234,29 @@ private fun ExampleWordItem(word: ExampleWord) {
     ) {
         Text(word.hieroglyphs, style = HieroglyphStyle.copy(fontSize = 24.sp))
         Spacer(Modifier.width(12.dp))
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(word.transliteration, style = MaterialTheme.typography.bodyMedium, color = WadjetColors.Sand)
             Text(word.translation, style = MaterialTheme.typography.bodySmall, color = WadjetColors.TextMuted)
+        }
+        val ttsText = EgyptianPronunciation.toSpeech(word.transliteration)
+        if (ttsText.isNotBlank()) {
+            IconButton(
+                onClick = { onSpeak(ttsText) },
+                modifier = Modifier.size(32.dp),
+            ) {
+                Icon(
+                    Icons.Default.VolumeUp,
+                    contentDescription = null,
+                    tint = WadjetColors.Gold,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun PracticeWordItem(word: PracticeWord) {
+private fun PracticeWordItem(word: PracticeWord, onSpeak: (String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -223,7 +264,27 @@ private fun PracticeWordItem(word: PracticeWord) {
             .background(WadjetColors.Surface)
             .padding(12.dp),
     ) {
-        Text(word.hieroglyphs, style = HieroglyphStyle.copy(fontSize = 24.sp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                word.hieroglyphs,
+                style = HieroglyphStyle.copy(fontSize = 24.sp),
+                modifier = Modifier.weight(1f),
+            )
+            val ttsText = EgyptianPronunciation.toSpeech(word.transliteration)
+            if (ttsText.isNotBlank()) {
+                IconButton(
+                    onClick = { onSpeak(ttsText) },
+                    modifier = Modifier.size(32.dp),
+                ) {
+                    Icon(
+                        Icons.Default.VolumeUp,
+                        contentDescription = null,
+                        tint = WadjetColors.Gold,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
+        }
         Row(modifier = Modifier.padding(top = 4.dp)) {
             Text(word.transliteration, style = MaterialTheme.typography.bodyMedium, color = WadjetColors.Sand)
             Spacer(Modifier.width(8.dp))
