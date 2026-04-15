@@ -27,15 +27,25 @@ object EgyptianPronunciation {
 
     /**
      * Converts MdC transliteration to TTS-ready pronounceable text.
+     * Safe to call on already-pronounceable text — detects non-MdC vowels
+     * (e, o, u) and returns the input unchanged.
      *
      * @param transliteration MdC ASCII string, e.g. `"anx nfr Htp"`
      * @return Pronounceable English text, e.g. `"ankh nefer hetep"`
      */
     fun toSpeech(transliteration: String): String {
         if (transliteration.isBlank()) return ""
-        return transliteration.trim()
+        val cleaned = transliteration.trim()
+        // If text already contains non-MdC vowels (e, o, u) it is already
+        // pronounceable — return as-is to avoid double-processing.
+        if (cleaned.any { it in "eouEOU" }) return cleaned
+        return cleaned
             .split(Regex("\\s+"))
-            .joinToString(" ") { word -> WORD_MAP[word] ?: convertWord(word) }
+            .joinToString(" ") { word ->
+                WORD_MAP[word.removeSuffix(".")]
+                    ?: WORD_MAP[word]
+                    ?: convertWord(word)
+            }
     }
 
     // ── Phoneme-level fallback for unknown words ──
@@ -56,11 +66,14 @@ object EgyptianPronunciation {
         }
     }
 
-    /** Greedy left-to-right tokenizer — matches each MdC character as a phoneme. */
+    /** Greedy left-to-right tokenizer — strips MdC notation markers, keeps phonemes. */
     private fun tokenize(word: String): List<String> =
-        word.map { it.toString() }
+        word.filter { it !in MdC_STRIP }.map { it.toString() }
 
-    private val VOWEL_SOUNDS = setOf("a", "ee", "oo")
+    /** Characters to strip: dots (word boundary), colons, numbers (plural markers). */
+    private val MdC_STRIP = setOf('.', ':', '=', '*', '(', ')', '<', '>', '!')
+
+    private val VOWEL_SOUNDS = setOf("a", "ee", "oo", "e")
 
     private fun isConsonantSound(sound: String): Boolean = sound !in VOWEL_SOUNDS
 
@@ -85,6 +98,7 @@ object EgyptianPronunciation {
         "H" to "h",    // wick — emphatic ḥ (pharyngeal, like Arabic ح)
         "x" to "kh",   // placenta — velar fricative (like Arabic خ / Scottish "loch")
         "X" to "kh",   // animal belly — palatal fricative
+        "z" to "z",    // bolt — /z~s/ (merged with s in Middle Egyptian)
         "s" to "s",
         "S" to "sh",   // pool — "sh" (š)
         "q" to "q",    // slope — uvular stop (deep back of throat)
@@ -94,6 +108,7 @@ object EgyptianPronunciation {
         "T" to "ch",   // tether — "ch" as in "church" (ṯ)
         "d" to "d",
         "D" to "dj",   // snake — "dj" as in "judge" (ḏ)
+        "l" to "l",    // not standard 24 but appears in some texts
     )
 
     // ── Comprehensive word map: MdC → accepted Egyptological pronunciation ──
@@ -124,6 +139,9 @@ object EgyptianPronunciation {
         "wDAt" to "wadjet",         // Wadjet / Eye of Horus
         "sxmt" to "sekhmet",        // Sekhmet (lioness goddess)
         "Hwt-Hr" to "hat-hor",      // Hathor
+        "Xnmw" to "khnum",          // Khnum (ram-headed god)
+        "mHyt" to "mehit",           // Mehit (lioness goddess)
+        "ra" to "ra",               // Ra (sun god)
 
         // ─── Horus forms ───
         "Hr" to "hor",              // Horus / face
@@ -144,6 +162,9 @@ object EgyptianPronunciation {
         "Sps" to "sheps",           // noble
         "Spst" to "shepset",        // noble woman
         "iry-pat" to "iri-pat",     // hereditary prince
+        "sS" to "sesh",              // scribe
+        "twt" to "tut",              // image / statue
+        "HAty-a" to "hati-a",        // mayor / count
 
         // ─── Life & blessings ───
         "anx" to "ankh",            // life
@@ -207,6 +228,7 @@ object EgyptianPronunciation {
         "Drt" to "djeret",          // hand
         "rd" to "red",              // foot
         "Xrd" to "khered",          // child
+        "DrDr" to "djerjer",         // very much / altogether
 
         // ─── Places ───
         "kmt" to "kemet",           // Black Land (Egypt)
@@ -222,6 +244,12 @@ object EgyptianPronunciation {
         "Hwt" to "hut",             // temple / mansion
         "Hmt" to "hemet",           // wife / copper
         "jmAx" to "eemakh",         // revered / honored
+        "wAD" to "wadj",             // papyrus scepter
+        "HqAt" to "heqat",           // scepter of authority
+        "sxmty" to "sekhemti",       // Double Crown
+        "HDt" to "hedjet",           // White Crown
+        "dSrt" to "deshret",         // Red Crown
+        "xaw" to "khau",             // crown / appearance
 
         // ─── Compound phrases ───
         "di-anx" to "dee-ankh",                  // given life

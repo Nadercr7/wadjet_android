@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wadjet.core.common.EgyptianPronunciation
 import com.wadjet.core.designsystem.GardinerCodeStyle
 import com.wadjet.core.designsystem.HieroglyphStyle
 import com.wadjet.core.designsystem.WadjetColors
@@ -176,10 +177,13 @@ fun SignDetailSheet(
                 )
             }
 
-            // TTS — prefer speechText, fall back to reading (only for pronounceable signs)
+            // TTS — prefer speechText, fall back to reading → transliteration (converted)
             val canPronounce = sign.isPhonetic || sign.type !in listOf("determinative")
             val ttsText = sign.speechText?.takeIf { it.isNotBlank() }
                 ?: sign.reading?.takeIf { it.isNotBlank() && canPronounce }
+                    ?.let { EgyptianPronunciation.toSpeech(it) }
+                ?: sign.transliteration.takeIf { it.isNotBlank() && canPronounce }
+                    ?.let { EgyptianPronunciation.toSpeech(it) }
             if (!ttsText.isNullOrBlank()) {
                 IconButton(onClick = { onSpeak(ttsText) }) {
                     Icon(
