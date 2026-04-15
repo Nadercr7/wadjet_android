@@ -44,7 +44,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -54,6 +58,7 @@ import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.animation.FadeUp
 import com.wadjet.core.designsystem.animation.shineSweep
 import com.wadjet.core.designsystem.component.ErrorState
+import coil3.compose.AsyncImage
 import com.wadjet.core.domain.model.DashboardStoryProgress
 import com.wadjet.core.domain.model.FavoriteItem
 import com.wadjet.core.domain.model.ScanHistoryItem
@@ -245,12 +250,21 @@ private fun UserHeader(
                 .border(2.dp, WadjetColors.Gold, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = name.firstOrNull()?.uppercase() ?: "W",
-                color = WadjetColors.Gold,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-            )
+            if (avatarUrl != null) {
+                AsyncImage(
+                    model = avatarUrl,
+                    contentDescription = name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                Text(
+                    text = name.firstOrNull()?.uppercase() ?: "W",
+                    color = WadjetColors.Gold,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
         }
         Spacer(modifier = Modifier.width(16.dp))
         Column {
@@ -337,6 +351,7 @@ private fun ScanCard(
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // TODO: use scan.topGlyph when available
         Text(
             text = "𓀀",
             fontSize = 28.sp,
@@ -392,7 +407,7 @@ private fun FavoriteRow(
         Spacer(modifier = Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = favorite.itemId,
+                text = favorite.itemId.replace("-", " ").split(" ").joinToString(" ") { it.replaceFirstChar(Char::uppercase) },
                 color = WadjetColors.Text,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
@@ -408,7 +423,9 @@ private fun FavoriteRow(
             text = stringResource(R.string.dashboard_remove),
             color = WadjetColors.Error,
             style = MaterialTheme.typography.labelSmall,
-            modifier = Modifier.clickable(onClick = onRemove),
+            modifier = Modifier
+                .clickable(onClick = onRemove)
+                .semantics { role = Role.Button },
         )
     }
 }
@@ -446,6 +463,7 @@ private fun StoryProgressRow(
         }
         Spacer(modifier = Modifier.height(6.dp))
         LinearProgressIndicator(
+            // TODO: replace 5f with progress.totalChapters when field is added to DashboardStoryProgress
             progress = { if (progress.completed) 1f else (progress.chapterIndex + 1).toFloat() / 5f },
             modifier = Modifier
                 .fillMaxWidth()

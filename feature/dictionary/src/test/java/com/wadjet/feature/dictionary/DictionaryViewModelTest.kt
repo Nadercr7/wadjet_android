@@ -5,6 +5,8 @@ import com.wadjet.core.domain.model.Category
 import com.wadjet.core.domain.model.Sign
 import com.wadjet.core.domain.model.SignPage
 import com.wadjet.core.domain.repository.DictionaryRepository
+import com.wadjet.core.domain.repository.UserRepository
+import com.wadjet.core.common.ToastController
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -26,6 +28,8 @@ import org.junit.Test
 class DictionaryViewModelTest {
 
     private val repository: DictionaryRepository = mockk(relaxed = true)
+    private val userRepository: UserRepository = mockk(relaxed = true)
+    private val toastController: ToastController = mockk(relaxed = true)
     private lateinit var viewModel: DictionaryViewModel
     private val testDispatcher = UnconfinedTestDispatcher()
 
@@ -49,12 +53,13 @@ class DictionaryViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        coEvery { repository.getCategories() } returns Result.success(
+        coEvery { repository.getCategories(any()) } returns Result.success(
             listOf(Category(code = "A", name = "Man and his activities", count = 55)),
         )
         coEvery { repository.getSigns(any(), any(), any(), any(), any()) } returns Result.success(
             SignPage(signs = listOf(testSign), total = 1, page = 1, totalPages = 1),
         )
+        coEvery { userRepository.getFavorites() } returns Result.success(emptyList())
     }
 
     @After
@@ -62,7 +67,7 @@ class DictionaryViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel() = DictionaryViewModel(repository).also { viewModel = it }
+    private fun createViewModel() = DictionaryViewModel(repository, userRepository, toastController).also { viewModel = it }
 
     @Test
     fun `init loads categories and signs`() = runTest {

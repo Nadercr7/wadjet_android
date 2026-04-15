@@ -20,9 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -542,16 +539,15 @@ private fun TipsTab(detail: LandmarkDetail) {
 
 @Composable
 private fun GalleryTab(images: List<LandmarkImage>) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(4.dp),
+    FlowRow(
+        maxItemsInEachRow = 2,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(400.dp),
+            .padding(4.dp),
     ) {
-        items(images) { image ->
+        images.forEach { image ->
             AsyncImage(
                 model = image.url,
                 contentDescription = image.caption,
@@ -560,6 +556,7 @@ private fun GalleryTab(images: List<LandmarkImage>) {
                 error = painterResource(DesignR.drawable.ic_placeholder_error),
                 fallback = painterResource(DesignR.drawable.ic_placeholder_landmark),
                 modifier = Modifier
+                    .weight(1f)
                     .aspectRatio(1f)
                     .clip(MaterialTheme.shapes.small),
             )

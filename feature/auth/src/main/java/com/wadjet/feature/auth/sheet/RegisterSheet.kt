@@ -23,8 +23,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -50,6 +53,7 @@ fun RegisterSheet(
     var password by rememberSaveable { mutableStateOf("") }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
+    var confirmPasswordVisible by rememberSaveable { mutableStateOf(false) }
     val strength = AuthViewModel.passwordStrength(password)
 
     Column(
@@ -70,6 +74,7 @@ fun RegisterSheet(
             onValueChange = { displayName = it },
             label = stringResource(R.string.register_display_name),
             modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
         )
 
         WadjetTextField(
@@ -77,6 +82,7 @@ fun RegisterSheet(
             onValueChange = { email = it },
             label = stringResource(R.string.register_email_label),
             modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
         )
 
         WadjetTextField(
@@ -123,8 +129,27 @@ fun RegisterSheet(
             onValueChange = { confirmPassword = it },
             label = stringResource(R.string.register_confirm_password),
             modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(),
+            visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                    Icon(
+                        imageVector = if (confirmPasswordVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
+                        contentDescription = if (confirmPasswordVisible) stringResource(DesignR.string.action_hide_password) else stringResource(DesignR.string.action_show_password),
+                        tint = WadjetColors.TextMuted,
+                    )
+                }
+            },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { onRegister(email, password, confirmPassword, displayName.ifBlank { null }) }),
         )
+
+        if (confirmPassword.isNotEmpty() && password != confirmPassword) {
+            Text(
+                text = stringResource(R.string.register_password_mismatch),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
 
         if (state.error != null) {
             Text(

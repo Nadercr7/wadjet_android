@@ -11,4 +11,6 @@ import androidx.compose.ui.tooling.preview.Preview
 @Preview(name = "Phone Landscape", widthDp = 891, heightDp = 411, showBackground = true)
 @Preview(name = "Tablet", device = "spec:width=1280dp,height=800dp,dpi=240", showBackground = true)
 @Preview(name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
+@Preview(name = "RTL", locale = "ar", device = "spec:width=411dp,height=891dp")
+@Preview(name = "Large Text", fontScale = 1.5f, device = "spec:width=411dp,height=891dp")
 annotation class WadjetPreviews

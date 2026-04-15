@@ -85,6 +85,8 @@ import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.core.designsystem.WadjetColors
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.wadjet.core.designsystem.animation.FadeUp
 import com.wadjet.core.domain.model.GlyphAnnotation
 import com.wadjet.core.domain.model.Interaction
@@ -653,7 +655,8 @@ private fun InteractionBlock(
                                 .clip(MaterialTheme.shapes.small)
                                 .background(WadjetColors.Surface)
                                 .border(2.dp, borderColor, MaterialTheme.shapes.small)
-                                .clickable(enabled = result == null) { onSubmit(option.code) },
+                                .clickable(enabled = result == null) { onSubmit(option.code) }
+                                .semantics { contentDescription = "${option.glyph} ${option.code}" },
                             contentAlignment = Alignment.Center,
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {

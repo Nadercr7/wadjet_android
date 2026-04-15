@@ -339,10 +339,12 @@ fun ScanResultScreen(
                             )
                             Spacer(modifier = Modifier.weight(1f))
                             if (!translationAr.isNullOrBlank() && !translationEn.isNullOrBlank()) {
+                                val langToggleDesc = if (showArabic) stringResource(R.string.scan_lang_toggle_en_ar) else stringResource(R.string.scan_lang_toggle_ar_en)
                                 Surface(
                                     onClick = { showArabic = !showArabic },
                                     shape = MaterialTheme.shapes.small,
                                     color = WadjetColors.Gold.copy(alpha = 0.15f),
+                                    modifier = Modifier.semantics { contentDescription = langToggleDesc },
                                 ) {
                                     Text(
                                         text = if (showArabic) stringResource(R.string.scan_lang_toggle_en_ar) else stringResource(R.string.scan_lang_toggle_ar_en),

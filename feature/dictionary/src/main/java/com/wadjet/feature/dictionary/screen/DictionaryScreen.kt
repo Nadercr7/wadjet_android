@@ -39,6 +39,7 @@ private val TAB_TITLE_RES = listOf(
 fun DictionaryScreen(
     onNavigateToLesson: (Int) -> Unit,
     initialTab: Int = 0,
+    prefillGlyph: String? = null,
     modifier: Modifier = Modifier,
     dictionaryViewModel: DictionaryViewModel = hiltViewModel(),
     writeViewModel: WriteViewModel = hiltViewModel(),
@@ -55,6 +56,13 @@ fun DictionaryScreen(
     LaunchedEffect(initialTab) {
         if (initialTab in TAB_TITLE_RES.indices && pagerState.currentPage != initialTab) {
             pagerState.animateScrollToPage(initialTab)
+        }
+    }
+
+    // Prefill the Write tab input if a glyph code was passed
+    LaunchedEffect(prefillGlyph) {
+        if (!prefillGlyph.isNullOrBlank()) {
+            writeViewModel.onInputChange(prefillGlyph)
         }
     }
 

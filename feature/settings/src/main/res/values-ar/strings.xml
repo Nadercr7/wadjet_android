@@ -13,7 +13,7 @@
     <string name="settings_cache_size">%1$d MB</string>
     <string name="settings_clear_cache">Clear Cache</string>
     <string name="settings_section_about">About</string>
-    <string name="settings_app_version">Wadjet v1.0.0-beta</string>
+    <string name="settings_app_version">Wadjet v%1$s</string>
     <string name="settings_send_feedback">Send Feedback</string>
     <string name="settings_section_account">Account</string>
     <string name="settings_display_name_placeholder">Display name</string>
@@ -28,5 +28,12 @@
     <string name="settings_enable_tts">Enable TTS</string>
     <string name="settings_tts_speed">Speed</string>
     <string name="settings_tts_speed_value">%1$sx</string>
+
+    <!-- Quick settings dialog -->
+    <string name="quick_settings_title">Quick Settings</string>
+    <string name="quick_settings_language">Language</string>
+    <string name="quick_settings_english">English</string>
+    <string name="quick_settings_arabic">العربية</string>
+    <string name="quick_settings_full_settings">Full Settings</string>
 </resources>
 

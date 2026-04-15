@@ -40,6 +40,7 @@
     <string name="register_sign_up_google">Sign up with Google</string>
     <string name="register_have_account">Already have an account?</string>
     <string name="register_sign_in">Sign in</string>
+    <string name="register_password_mismatch">كلمتا المرور غير متطابقتين</string>
 
     <!-- Forgot password sheet -->
     <string name="forgot_title">Reset Password</string>

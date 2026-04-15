@@ -52,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -209,7 +210,11 @@ fun SettingsScreen(
             item { SectionHeader(stringResource(R.string.settings_section_about)) }
             item {
                 SettingsCard {
-                    Text(stringResource(R.string.settings_app_version), color = WadjetColors.Text, style = MaterialTheme.typography.bodyMedium)
+                    val context = LocalContext.current
+                    val versionName = remember {
+                        context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
+                    }
+                    Text(stringResource(R.string.settings_app_version, versionName), color = WadjetColors.Text, style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(stringResource(DesignR.string.footer_credit), color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.height(12.dp))

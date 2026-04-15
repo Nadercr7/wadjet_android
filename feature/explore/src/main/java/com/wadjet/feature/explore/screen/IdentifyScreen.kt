@@ -414,7 +414,7 @@ private fun WarningBanner(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(10.dp),
         ) {
-            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+            Icon(icon, contentDescription = text, tint = color, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
             Text(text, style = MaterialTheme.typography.bodySmall, color = color)
         }

@@ -59,6 +59,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wadjet.core.common.ToastController
 import com.wadjet.feature.scan.ScanEvent
 import kotlinx.coroutines.launch
+import com.wadjet.app.navigation.lifecycleIsResumed
 
 @Composable
 fun WadjetNavGraph(
@@ -110,19 +111,19 @@ fun WadjetNavGraph(
             exitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
             popEnterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
             popExitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
-        ) {
+        ) { navEntry ->
             val viewModel: LandingViewModel = hiltViewModel()
             val landingState by viewModel.state.collectAsStateWithLifecycle()
             LandingScreen(
                 state = landingState,
-                onNavigateToScan = { navController.navigate(Route.Scan) },
-                onNavigateToExplore = { navController.navigate(Route.Explore) },
-                onNavigateToDictionary = { navController.navigate(Route.Dictionary()) },
-                onNavigateToWrite = { navController.navigate(Route.Dictionary(initialTab = 2)) },
-                onNavigateToIdentify = { navController.navigate(Route.Identify) },
-                onNavigateToStories = { navController.navigate(Route.Stories) },
-                onNavigateToChat = { navController.navigate(Route.Chat) },
-                onNavigateToStoryReader = { storyId -> navController.navigate(Route.StoryReader(storyId)) },
+                onNavigateToScan = { navController.navigate(Route.Scan) { launchSingleTop = true } },
+                onNavigateToExplore = { navController.navigate(Route.Explore) { launchSingleTop = true } },
+                onNavigateToDictionary = { navController.navigate(Route.Dictionary()) { launchSingleTop = true } },
+                onNavigateToWrite = { navController.navigate(Route.Dictionary(initialTab = 2)) { launchSingleTop = true } },
+                onNavigateToIdentify = { navController.navigate(Route.Identify) { launchSingleTop = true } },
+                onNavigateToStories = { navController.navigate(Route.Stories) { launchSingleTop = true } },
+                onNavigateToChat = { navController.navigate(Route.Chat) { launchSingleTop = true } },
+                onNavigateToStoryReader = { storyId -> if (navEntry.lifecycleIsResumed()) navController.navigate(Route.StoryReader(storyId)) { launchSingleTop = true } },
             )
         }
 
@@ -134,9 +135,9 @@ fun WadjetNavGraph(
             popExitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
         ) {
             HieroglyphsHubScreen(
-                onNavigateToScan = { navController.navigate(Route.Scan) },
-                onNavigateToDictionary = { navController.navigate(Route.Dictionary()) },
-                onNavigateToWrite = { navController.navigate(Route.Dictionary(initialTab = 2)) },
+                onNavigateToScan = { navController.navigate(Route.Scan) { launchSingleTop = true } },
+                onNavigateToDictionary = { navController.navigate(Route.Dictionary()) { launchSingleTop = true } },
+                onNavigateToWrite = { navController.navigate(Route.Dictionary(initialTab = 2)) { launchSingleTop = true } },
             )
         }
 
@@ -146,7 +147,7 @@ fun WadjetNavGraph(
             exitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
             popEnterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
             popExitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
-        ) {
+        ) { navEntry ->
             val viewModel: ScanViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -167,7 +168,7 @@ fun WadjetNavGraph(
                     ttsStates = state.ttsStates,
                     onSpeak = { key, text, lang -> viewModel.speak(key, text, lang) },
                     onScanAgain = { viewModel.resetScan() },
-                    onNavigateToDictionarySign = { code -> navController.navigate(Route.DictionarySign(code)) },
+                    onNavigateToDictionarySign = { code -> if (navEntry.lifecycleIsResumed()) navController.navigate(Route.DictionarySign(code)) { launchSingleTop = true } },
                     onBack = { navController.popBackStack() },
                 )
             } else {
@@ -175,25 +176,25 @@ fun WadjetNavGraph(
                     state = state,
                     onImageCaptured = { viewModel.onImageCaptured(it) },
                     onImageSelected = { viewModel.onImageSelected(it) },
-                    onNavigateToHistory = { navController.navigate(Route.ScanHistory) },
+                    onNavigateToHistory = { navController.navigate(Route.ScanHistory) { launchSingleTop = true } },
                     onBack = { navController.popBackStack() },
                 )
             }
         }
 
-        composable<Route.ScanHistory> {
+        composable<Route.ScanHistory> { navEntry ->
             val viewModel: HistoryViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
             ScanHistoryScreen(
                 state = state,
-                onScanTap = { scanId -> navController.navigate(Route.ScanResult(scanId.toString())) },
+                onScanTap = { scanId -> if (navEntry.lifecycleIsResumed()) navController.navigate(Route.ScanResult(scanId.toString())) { launchSingleTop = true } },
                 onDelete = { viewModel.deleteScan(it) },
                 onRefresh = viewModel::refresh,
                 onBack = { navController.popBackStack() },
             )
         }
 
-        composable<Route.ScanResult> {
+        composable<Route.ScanResult> { navEntry ->
             val viewModel: ScanResultViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
             val result = state.result
@@ -214,7 +215,7 @@ fun WadjetNavGraph(
                         ttsStates = state.ttsStates,
                         onSpeak = { key, text, lang -> viewModel.speak(key, text, lang) },
                         onScanAgain = { navController.popBackStack() },
-                        onNavigateToDictionarySign = { code -> navController.navigate(Route.DictionarySign(code)) },
+                    onNavigateToDictionarySign = { code -> if (navEntry.lifecycleIsResumed()) navController.navigate(Route.DictionarySign(code)) { launchSingleTop = true } },
                         onBack = { navController.popBackStack() },
                     )
                 }
@@ -237,8 +238,9 @@ fun WadjetNavGraph(
         composable<Route.Dictionary> { backStackEntry ->
             val route = backStackEntry.toRoute<Route.Dictionary>()
             DictionaryScreen(
-                onNavigateToLesson = { level -> navController.navigate(Route.Lesson(level)) },
+                onNavigateToLesson = { level -> navController.navigate(Route.Lesson(level)) { launchSingleTop = true } },
                 initialTab = route.initialTab,
+                prefillGlyph = route.prefillGlyph,
             )
         }
 
@@ -252,9 +254,16 @@ fun WadjetNavGraph(
             )
         }
 
-        composable<Route.DictionarySign> {
+        composable<Route.DictionarySign> { navEntry ->
             DictionarySignScreen(
                 onBack = { navController.popBackStack() },
+                onPracticeWriting = { code ->
+                    if (navEntry.lifecycleIsResumed()) {
+                        navController.navigate(Route.Dictionary(initialTab = 2, prefillGlyph = code)) {
+                            launchSingleTop = true
+                        }
+                    }
+                },
             )
         }
         composable<Route.Explore>(
@@ -262,7 +271,7 @@ fun WadjetNavGraph(
             exitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
             popEnterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
             popExitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
-        ) {
+        ) { navEntry ->
             val viewModel: ExploreViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
             ExploreScreen(
@@ -270,28 +279,28 @@ fun WadjetNavGraph(
                 onCategorySelected = viewModel::selectCategory,
                 onCitySelected = viewModel::selectCity,
                 onSearchChanged = viewModel::updateSearch,
-                onLandmarkTap = { slug -> navController.navigate(Route.LandmarkDetail(slug)) },
+                onLandmarkTap = { slug -> if (navEntry.lifecycleIsResumed()) navController.navigate(Route.LandmarkDetail(slug)) { launchSingleTop = true } },
                 onToggleFavorite = viewModel::toggleFavorite,
                 onLoadMore = viewModel::loadMore,
                 onRefresh = viewModel::refresh,
-                onIdentify = { navController.navigate(Route.Identify) },
+                onIdentify = { navController.navigate(Route.Identify) { launchSingleTop = true } },
                 onBack = { navController.popBackStack() },
             )
         }
-        composable<Route.LandmarkDetail> {
+        composable<Route.LandmarkDetail> { navEntry ->
             val viewModel: DetailViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
             LandmarkDetailScreen(
                 state = state,
                 onTabSelected = viewModel::selectTab,
                 onToggleFavorite = viewModel::toggleFavorite,
-                onRecommendationTap = { slug -> navController.navigate(Route.LandmarkDetail(slug)) },
-                onChildTap = { slug -> navController.navigate(Route.LandmarkDetail(slug)) },
-                onChatAbout = { slug -> navController.navigate(Route.ChatLandmark(slug)) },
+                onRecommendationTap = { slug -> if (navEntry.lifecycleIsResumed()) navController.navigate(Route.LandmarkDetail(slug)) { launchSingleTop = true } },
+                onChildTap = { slug -> if (navEntry.lifecycleIsResumed()) navController.navigate(Route.LandmarkDetail(slug)) { launchSingleTop = true } },
+                onChatAbout = { slug -> if (navEntry.lifecycleIsResumed()) navController.navigate(Route.ChatLandmark(slug)) { launchSingleTop = true } },
                 onBack = { navController.popBackStack() },
             )
         }
-        composable<Route.Identify> {
+        composable<Route.Identify> { navEntry ->
             val viewModel: IdentifyViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
             IdentifyScreen(
@@ -299,13 +308,13 @@ fun WadjetNavGraph(
                 onImageCaptured = viewModel::onImageCaptured,
                 onImageSelected = viewModel::onImageSelected,
                 onMatchTap = { slug ->
-                    navController.navigate(Route.LandmarkDetail(slug))
+                    if (navEntry.lifecycleIsResumed()) navController.navigate(Route.LandmarkDetail(slug)) { launchSingleTop = true }
                 },
                 onViewDetails = { slug ->
-                    navController.navigate(Route.LandmarkDetail(slug))
+                    if (navEntry.lifecycleIsResumed()) navController.navigate(Route.LandmarkDetail(slug)) { launchSingleTop = true }
                 },
                 onAskThoth = { slug ->
-                    navController.navigate(Route.ChatLandmark(slug))
+                    if (navEntry.lifecycleIsResumed()) navController.navigate(Route.ChatLandmark(slug)) { launchSingleTop = true }
                 },
                 onIdentifyAnother = viewModel::reset,
                 onRetry = viewModel::reset,
@@ -368,13 +377,13 @@ fun WadjetNavGraph(
             exitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
             popEnterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
             popExitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
-        ) {
+        ) { navEntry ->
             val viewModel: StoriesViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
             StoriesScreen(
                 state = state,
                 onDifficultySelected = viewModel::selectDifficulty,
-                onStoryTap = { storyId -> navController.navigate(Route.StoryReader(storyId)) },
+                onStoryTap = { storyId -> if (navEntry.lifecycleIsResumed()) navController.navigate(Route.StoryReader(storyId)) { launchSingleTop = true } },
                 onToggleFavorite = viewModel::toggleStoryFavorite,
                 onRefresh = viewModel::refresh,
                 onBack = { navController.popBackStack() },
@@ -411,7 +420,7 @@ fun WadjetNavGraph(
                 onFavTabSelected = viewModel::selectFavTab,
                 onRemoveFavorite = viewModel::removeFavorite,
                 onRefresh = viewModel::refresh,
-                onSettings = { navController.navigate(Route.Settings) },
+                onSettings = { navController.navigate(Route.Settings) { launchSingleTop = true } },
                 onBack = { navController.popBackStack() },
             )
         }
@@ -455,7 +464,7 @@ fun WadjetNavGraph(
                     }
                 },
                 onSignOut = viewModel::signOut,
-                onFeedback = { navController.navigate(Route.Feedback) },
+                onFeedback = { navController.navigate(Route.Feedback) { launchSingleTop = true } },
                 onDismissMessage = viewModel::dismissMessage,
                 onBack = { navController.popBackStack() },
             )

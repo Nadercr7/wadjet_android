@@ -25,10 +25,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Search
 
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -39,8 +37,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -68,6 +64,7 @@ import androidx.compose.ui.res.stringResource
 import com.wadjet.core.designsystem.animation.goldPulse
 import com.wadjet.core.designsystem.animation.shineSweep
 import com.wadjet.core.designsystem.component.ShimmerCardList
+import com.wadjet.core.designsystem.component.WadjetSearchBar
 import com.wadjet.core.domain.model.Landmark
 import com.wadjet.feature.explore.ExploreUiState
 import com.wadjet.feature.explore.R
@@ -126,9 +123,13 @@ fun ExploreScreen(
         )
 
         // Search bar
-        SearchBar(
+        WadjetSearchBar(
             query = state.searchQuery,
             onQueryChange = onSearchChanged,
+            placeholder = stringResource(R.string.explore_search_placeholder),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         )
 
         // Category chips
@@ -258,37 +259,6 @@ fun ExploreScreen(
             }
         }
     }
-}
-
-@Composable
-private fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
-    TextField(
-        value = query,
-        onValueChange = onQueryChange,
-        placeholder = { Text(stringResource(R.string.explore_search_placeholder), color = WadjetColors.TextMuted) },
-        leadingIcon = { Icon(Icons.Default.Search, null, tint = WadjetColors.TextMuted) },
-        trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = { onQueryChange("") }) {
-                    Icon(Icons.Default.Close, stringResource(DesignR.string.action_clear), tint = WadjetColors.TextMuted)
-                }
-            }
-        },
-        singleLine = true,
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = WadjetColors.Surface,
-            unfocusedContainerColor = WadjetColors.Surface,
-            focusedTextColor = WadjetColors.Text,
-            unfocusedTextColor = WadjetColors.Text,
-            cursorColor = WadjetColors.Gold,
-            focusedIndicatorColor = WadjetColors.Gold,
-            unfocusedIndicatorColor = Color.Transparent,
-        ),
-        shape = MaterialTheme.shapes.medium,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-    )
 }
 
 @Composable

@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Wadjet</string>
+    <string name="top_bar_profile">Profile</string>
+    <string name="top_bar_settings">Settings</string>
 </resources>

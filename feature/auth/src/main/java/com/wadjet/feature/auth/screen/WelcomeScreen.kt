@@ -1,6 +1,7 @@
 package com.wadjet.feature.auth.screen
 
 import android.app.Activity
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -161,33 +162,13 @@ fun WelcomeScreen(
                         onClick = {
                             googleLoading = true
                             scope.launch {
-                                try {
-                                    val googleIdOption = GetGoogleIdOption.Builder()
-                                        .setServerClientId(webClientId)
-                                        .setFilterByAuthorizedAccounts(false)
-                                        .build()
-                                    val request = GetCredentialRequest.Builder()
-                                        .addCredentialOption(googleIdOption)
-                                        .build()
-                                    val result = credentialManager.getCredential(
-                                        context as Activity,
-                                        request,
-                                    )
-                                    val googleIdToken = GoogleIdTokenCredential
-                                        .createFrom(result.credential.data)
-                                        .idToken
-                                    viewModel.signInWithGoogle(googleIdToken)
-                                } catch (e: GetCredentialCancellationException) {
-                                    googleLoading = false
-                                    Timber.d("Google sign-in cancelled by user")
-                                } catch (e: NoCredentialException) {
-                                    googleLoading = false
-                                    viewModel.onGoogleSignInError(context.getString(R.string.error_no_google_accounts))
-                                } catch (e: Exception) {
-                                    googleLoading = false
-                                    Timber.e(e, "Google sign-in failed")
-                                    viewModel.onGoogleSignInError(e.message ?: context.getString(R.string.error_google_sign_in_failed))
-                                }
+                                performGoogleSignIn(
+                                    context = context,
+                                    credentialManager = credentialManager,
+                                    webClientId = webClientId,
+                                    onSuccess = { googleLoading = false; viewModel.signInWithGoogle(it) },
+                                    onError = { googleLoading = false; viewModel.onGoogleSignInError(it) },
+                                )
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -209,6 +190,18 @@ fun WelcomeScreen(
                             text = stringResource(R.string.welcome_already_have_account),
                             color = WadjetColors.Sand,
                             style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+
+                    // Inline error (T049)
+                    val errorText = state.error
+                    if (errorText != null && activeSheet == AuthSheet.NONE) {
+                        Text(
+                            text = errorText,
+                            color = WadjetColors.Error,
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     }
                 }
@@ -241,30 +234,13 @@ fun WelcomeScreen(
                     onSignIn = { email, password -> viewModel.signInWithEmail(email, password) },
                     onGoogleSignIn = {
                         scope.launch {
-                            try {
-                                val googleIdOption = GetGoogleIdOption.Builder()
-                                    .setServerClientId(webClientId)
-                                    .setFilterByAuthorizedAccounts(false)
-                                    .build()
-                                val request = GetCredentialRequest.Builder()
-                                    .addCredentialOption(googleIdOption)
-                                    .build()
-                                val result = credentialManager.getCredential(
-                                    context as Activity,
-                                    request,
-                                )
-                                val idToken = GoogleIdTokenCredential
-                                    .createFrom(result.credential.data)
-                                    .idToken
-                                viewModel.signInWithGoogle(idToken)
-                            } catch (e: GetCredentialCancellationException) {
-                                Timber.d("Google sign-in cancelled by user")
-                            } catch (e: NoCredentialException) {
-                                viewModel.onGoogleSignInError(context.getString(R.string.error_no_google_accounts))
-                            } catch (e: Exception) {
-                                Timber.e(e, "Google sign-in failed")
-                                viewModel.onGoogleSignInError(e.message ?: context.getString(R.string.error_google_sign_in_failed))
-                            }
+                            performGoogleSignIn(
+                                context = context,
+                                credentialManager = credentialManager,
+                                webClientId = webClientId,
+                                onSuccess = { viewModel.signInWithGoogle(it) },
+                                onError = { viewModel.onGoogleSignInError(it) },
+                            )
                         }
                     },
                     onForgotPassword = { viewModel.showSheet(AuthSheet.FORGOT_PASSWORD) },
@@ -277,30 +253,13 @@ fun WelcomeScreen(
                     },
                     onGoogleSignIn = {
                         scope.launch {
-                            try {
-                                val googleIdOption = GetGoogleIdOption.Builder()
-                                    .setServerClientId(webClientId)
-                                    .setFilterByAuthorizedAccounts(false)
-                                    .build()
-                                val request = GetCredentialRequest.Builder()
-                                    .addCredentialOption(googleIdOption)
-                                    .build()
-                                val result = credentialManager.getCredential(
-                                    context as Activity,
-                                    request,
-                                )
-                                val idToken = GoogleIdTokenCredential
-                                    .createFrom(result.credential.data)
-                                    .idToken
-                                viewModel.signInWithGoogle(idToken)
-                            } catch (e: GetCredentialCancellationException) {
-                                Timber.d("Google sign-in cancelled by user")
-                            } catch (e: NoCredentialException) {
-                                viewModel.onGoogleSignInError(context.getString(R.string.error_no_google_accounts))
-                            } catch (e: Exception) {
-                                Timber.e(e, "Google sign-in failed")
-                                viewModel.onGoogleSignInError(e.message ?: context.getString(R.string.error_google_sign_in_failed))
-                            }
+                            performGoogleSignIn(
+                                context = context,
+                                credentialManager = credentialManager,
+                                webClientId = webClientId,
+                                onSuccess = { viewModel.signInWithGoogle(it) },
+                                onError = { viewModel.onGoogleSignInError(it) },
+                            )
                         }
                     },
                     onSwitchToLogin = { viewModel.showSheet(AuthSheet.LOGIN) },
@@ -335,5 +294,38 @@ private fun FeatureCard(glyph: String, title: String, subtitle: String, modifier
             Text(text = title, style = MaterialTheme.typography.titleSmall, color = WadjetColors.Gold)
             Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = WadjetColors.TextMuted)
         }
+    }
+}
+
+private suspend fun performGoogleSignIn(
+    context: Context,
+    credentialManager: CredentialManager,
+    webClientId: String,
+    onSuccess: (String) -> Unit,
+    onError: (String) -> Unit,
+) {
+    try {
+        val googleIdOption = GetGoogleIdOption.Builder()
+            .setServerClientId(webClientId)
+            .setFilterByAuthorizedAccounts(false)
+            .build()
+        val request = GetCredentialRequest.Builder()
+            .addCredentialOption(googleIdOption)
+            .build()
+        val result = credentialManager.getCredential(
+            context as Activity,
+            request,
+        )
+        val idToken = GoogleIdTokenCredential
+            .createFrom(result.credential.data)
+            .idToken
+        onSuccess(idToken)
+    } catch (e: GetCredentialCancellationException) {
+        Timber.d("Google sign-in cancelled by user")
+    } catch (e: NoCredentialException) {
+        onError(context.getString(R.string.error_no_google_accounts))
+    } catch (e: Exception) {
+        Timber.e(e, "Google sign-in failed")
+        onError(e.message ?: context.getString(R.string.error_google_sign_in_failed))
     }
 }

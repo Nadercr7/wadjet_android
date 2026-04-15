@@ -41,7 +41,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,7 +63,6 @@ import com.wadjet.feature.scan.ScanUiState
 import com.wadjet.feature.scan.R
 import com.wadjet.core.designsystem.R as DesignR
 import androidx.compose.ui.res.stringResource
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,9 +75,6 @@ fun ScanScreen(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize().background(WadjetColors.Night)) {
-        val (visible, _) = remember { mutableStateOf(false) }
-        LaunchedEffect(Unit) { delay(100) }
-
         Column(
             modifier = Modifier
                 .fillMaxSize()

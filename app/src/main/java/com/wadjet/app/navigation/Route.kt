@@ -10,7 +10,7 @@ sealed interface Route {
     @Serializable data object Scan : Route
     @Serializable data class ScanResult(val scanId: String) : Route
     @Serializable data object ScanHistory : Route
-    @Serializable data class Dictionary(val initialTab: Int = 0) : Route
+    @Serializable data class Dictionary(val initialTab: Int = 0, val prefillGlyph: String? = null) : Route
     @Serializable data class DictionarySign(val code: String) : Route
     @Serializable data class Lesson(val level: Int) : Route
     @Serializable data object Explore : Route

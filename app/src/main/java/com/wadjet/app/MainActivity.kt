@@ -11,32 +11,33 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.wadjet.app.navigation.Route
@@ -52,6 +53,8 @@ import com.wadjet.core.common.ToastType
 import com.wadjet.core.designsystem.component.ToastState
 import com.wadjet.core.designsystem.component.ToastVariant
 import com.wadjet.core.designsystem.component.WadjetToast
+import com.wadjet.core.designsystem.R as DesignR
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import javax.inject.Named
@@ -65,6 +68,7 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var toastController: ToastController
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
@@ -80,6 +84,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WadjetApp(
     isLoggedIn: Boolean,
@@ -105,6 +110,7 @@ private fun WadjetApp(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val isOffline by networkMonitor.isOnline.collectAsStateWithLifecycle(initialValue = true)
+    var showQuickSettings by remember { mutableStateOf(false) }
 
     // Determine start destination based on auth state
     val startDestination: Route = if (isLoggedIn) Route.Landing else Route.Welcome
@@ -114,9 +120,54 @@ private fun WadjetApp(
         currentDestination?.hasRoute(dest.route::class) == true
     }
 
+    // Quick-settings dialog
+    if (showQuickSettings) {
+        com.wadjet.feature.settings.screen.SettingsQuickDialog(
+            onDismiss = { showQuickSettings = false },
+            onOpenFullSettings = {
+                showQuickSettings = false
+                navController.navigate(Route.Settings) { launchSingleTop = true }
+            },
+        )
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = WadjetColors.Night,
+        topBar = {
+            if (showBottomBar) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = stringResource(DesignR.string.app_name_display),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = WadjetColors.Gold,
+                        )
+                    },
+                    actions = {
+                        IconButton(onClick = {
+                            navController.navigate(Route.Dashboard) { launchSingleTop = true }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.AccountCircle,
+                                contentDescription = stringResource(R.string.top_bar_profile),
+                                tint = WadjetColors.Gold,
+                            )
+                        }
+                        IconButton(onClick = { showQuickSettings = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = stringResource(R.string.top_bar_settings),
+                                tint = WadjetColors.TextMuted,
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = WadjetColors.Surface,
+                    ),
+                )
+            }
+        },
         bottomBar = {
             AnimatedVisibility(
                 visible = showBottomBar,
@@ -128,8 +179,9 @@ private fun WadjetApp(
                     currentDestination = currentDestination,
                     onNavigate = { dest ->
                         navController.navigate(dest.route) {
-                            // Pop up to the start destination to avoid back stack buildup
-                            popUpTo(startDestination) { saveState = true }
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
                             launchSingleTop = true
                             restoreState = true
                         }
@@ -157,28 +209,6 @@ private fun WadjetApp(
                 onDismiss = { currentToast = null },
                 modifier = Modifier.align(Alignment.BottomCenter),
             )
-
-            // Floating avatar for Dashboard access on bottom-nav screens
-            if (showBottomBar) {
-                IconButton(
-                    onClick = { navController.navigate(Route.Dashboard) },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 12.dp, end = 12.dp)
-                        .zIndex(1f)
-                        .size(40.dp),
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = WadjetColors.Surface.copy(alpha = 0.85f),
-                    ),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AccountCircle,
-                        contentDescription = "Dashboard",
-                        tint = WadjetColors.Gold,
-                        modifier = Modifier.size(28.dp),
-                    )
-                }
-            }
         }
     }
 }
