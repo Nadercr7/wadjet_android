@@ -71,4 +71,6 @@
     <string name="scan_history_thumbnail_desc">Scan thumbnail</string>
     <string name="scan_history_item_fallback">Scan</string>
     <string name="scan_history_glyph_count">%1$d glyphs</string>
+    <string name="scan_history_deleted">Scan deleted</string>
+    <string name="scan_history_undo">Undo</string>
 </resources>

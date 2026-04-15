@@ -21,6 +21,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.wadjet.app.screen.HieroglyphsHubScreen
+import com.wadjet.app.screen.HieroglyphsHubViewModel
 import com.wadjet.feature.auth.screen.WelcomeScreen
 import com.wadjet.feature.chat.ChatViewModel
 import com.wadjet.feature.chat.screen.ChatScreen
@@ -124,6 +125,7 @@ fun WadjetNavGraph(
                 onNavigateToStories = { navController.navigate(Route.Stories) { launchSingleTop = true } },
                 onNavigateToChat = { navController.navigate(Route.Chat) { launchSingleTop = true } },
                 onNavigateToStoryReader = { storyId -> if (navEntry.lifecycleIsResumed()) navController.navigate(Route.StoryReader(storyId)) { launchSingleTop = true } },
+                onRefresh = viewModel::refresh,
             )
         }
 
@@ -134,7 +136,10 @@ fun WadjetNavGraph(
             popEnterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
             popExitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
         ) {
+            val hubViewModel: HieroglyphsHubViewModel = hiltViewModel()
+            val hubState by hubViewModel.state.collectAsStateWithLifecycle()
             HieroglyphsHubScreen(
+                state = hubState,
                 onNavigateToScan = { navController.navigate(Route.Scan) { launchSingleTop = true } },
                 onNavigateToDictionary = { navController.navigate(Route.Dictionary()) { launchSingleTop = true } },
                 onNavigateToWrite = { navController.navigate(Route.Dictionary(initialTab = 2)) { launchSingleTop = true } },

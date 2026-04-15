@@ -16,9 +16,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,9 +48,12 @@ import com.wadjet.core.designsystem.animation.FadeUp
 import com.wadjet.core.designsystem.animation.GoldGradientText
 import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.designsystem.component.WadjetCard
+import com.wadjet.core.designsystem.component.ErrorState
+import com.wadjet.core.designsystem.component.ShimmerCardList
 import com.wadjet.feature.landing.LandingUiState
 import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LandingScreen(
     state: LandingUiState,
@@ -60,6 +65,7 @@ fun LandingScreen(
     onNavigateToStories: () -> Unit,
     onNavigateToChat: () -> Unit,
     onNavigateToStoryReader: (String) -> Unit,
+    onRefresh: () -> Unit = {},
 ) {
     // Staggered reveal
     var visibleSections by remember { mutableStateOf(0) }
@@ -70,10 +76,37 @@ fun LandingScreen(
         }
     }
 
-    LazyColumn(
+    PullToRefreshBox(
+        isRefreshing = state.isRefreshing,
+        onRefresh = onRefresh,
         modifier = Modifier
             .fillMaxSize()
             .background(WadjetColors.Night),
+    ) {
+        when {
+            state.isLoading -> {
+                ShimmerCardList(
+                    itemCount = 4,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+                )
+            }
+
+            state.error != null -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    ErrorState(
+                        message = state.error ?: "",
+                        onRetry = onRefresh,
+                    )
+                }
+            }
+
+            else -> {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
@@ -166,7 +199,7 @@ fun LandingScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        QuickAction(Modifier.weight(1f), "�", stringResource(R.string.landing_quick_write), onNavigateToWrite)
+                        QuickAction(Modifier.weight(1f), "\uD80C\uDF9E", stringResource(R.string.landing_quick_write), onNavigateToWrite)
                         QuickAction(Modifier.weight(1f), "𓇯", stringResource(R.string.landing_quick_explore), onNavigateToExplore)
                     }
                     Spacer(modifier = Modifier.height(12.dp))
@@ -238,6 +271,9 @@ fun LandingScreen(
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
                 )
+            }
+        }
+    }
             }
         }
     }

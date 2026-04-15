@@ -71,5 +71,7 @@
     <string name="scan_history_thumbnail_desc">Scan thumbnail</string>
     <string name="scan_history_item_fallback">Scan</string>
     <string name="scan_history_glyph_count">%1$d glyphs</string>
+    <string name="scan_history_deleted">تم حذف المسح</string>
+    <string name="scan_history_undo">تراجع</string>
 </resources>
 

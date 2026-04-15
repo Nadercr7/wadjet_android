@@ -133,12 +133,10 @@ fun StoryReaderScreen(
         }
     }
 
-    // Show general errors via Snackbar
-    val snackbarHostState = androidx.compose.material3.SnackbarHostState()
+    // Show general errors via toast (handled by ViewModel's ToastController)
     LaunchedEffect(state.error) {
         val err = state.error ?: return@LaunchedEffect
         if (!err.startsWith("LOCAL_TTS:")) {
-            snackbarHostState.showSnackbar(err)
             onDismissError()
         }
     }
@@ -148,7 +146,6 @@ fun StoryReaderScreen(
 
     Scaffold(
         containerColor = WadjetColors.Night,
-        snackbarHost = { androidx.compose.material3.SnackbarHost(snackbarHostState) },
         topBar = {
             Column {
                 TopAppBar(

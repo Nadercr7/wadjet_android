@@ -140,7 +140,6 @@ fun ChatScreen(
     val coroutineScope = rememberCoroutineScope()
 
     // Local TTS fallback
-    val localTts = remember { mutableMapOf<String, TextToSpeech?>() }
     val ttsInstance = remember {
         var tts: TextToSpeech? = null
         tts = TextToSpeech(context) { status ->
@@ -660,7 +659,7 @@ private fun ChatBubble(
                 modifier = Modifier.padding(top = 2.dp, start = 4.dp),
             ) {
                 Text(
-                    text = formatRelativeTime(context, message.timestamp),
+                    text = remember(message.timestamp) { formatRelativeTime(context, message.timestamp) },
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                     color = WadjetColors.TextMuted,
                 )

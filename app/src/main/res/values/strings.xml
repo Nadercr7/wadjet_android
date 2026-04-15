@@ -2,4 +2,27 @@
     <string name="app_name">Wadjet</string>
     <string name="top_bar_profile">Profile</string>
     <string name="top_bar_settings">Settings</string>
+
+    <!-- Hieroglyphs Hub -->
+    <string name="hub_title">Hieroglyphs</string>
+    <string name="hub_subtitle">Scan, browse, and write ancient Egyptian hieroglyphs</string>
+    <string name="hub_recent_scans">Recent Scans</string>
+    <string name="hub_scan_thumbnail_cd">Scan thumbnail</string>
+    <string name="hub_scan_label">Scan</string>
+    <string name="hub_glyph_count">%d glyphs</string>
+    <string name="hub_progress_title">Dictionary</string>
+    <string name="hub_signs_in_dictionary">%d signs in dictionary</string>
+    <string name="hub_suggested_signs">Suggested Signs</string>
+    <string name="hub_tools">Tools</string>
+    <string name="hub_scan_title">Scan Hieroglyphs</string>
+    <string name="hub_scan_desc">Detect &amp; translate hieroglyphs from photos using AI</string>
+    <string name="hub_dictionary_title">Dictionary</string>
+    <string name="hub_dictionary_desc">Browse 1,000+ hieroglyphic signs with meanings &amp; phonetics</string>
+    <string name="hub_write_title">Write in Hieroglyphs</string>
+    <string name="hub_write_desc">Type English, get hieroglyphs — powered by AI transliteration</string>
+    <string name="hub_how_scanning_title">How Scanning Works</string>
+    <string name="hub_how_step1">Take or upload a photo of hieroglyphs</string>
+    <string name="hub_how_step2">AI detects individual glyphs with bounding boxes</string>
+    <string name="hub_how_step3">Each glyph is classified with Gardiner code &amp; meaning</string>
+    <string name="hub_how_step4">Full transliteration &amp; translation generated</string>
 </resources>

@@ -21,6 +21,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class LandingUiState(
+    val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
+    val error: String? = null,
     val userName: String? = null,
     val recentScan: ScanHistorySummary? = null,
     val inProgressStory: StorySummary? = null,
@@ -43,37 +46,44 @@ class LandingViewModel @Inject constructor(
         loadUserData()
     }
 
+    fun refresh() {
+        _state.update { it.copy(isRefreshing = true, error = null) }
+        loadUserData()
+    }
+
     private fun loadUserData() {
         viewModelScope.launch {
-            // Load user name
-            val user: User? = authRepository.currentUser.firstOrNull()
-            _state.update { it.copy(userName = user?.displayName) }
-        }
-        viewModelScope.launch {
-            // Load usage limits
-            userRepository.getLimits()
-                .onSuccess { limits -> _state.update { it.copy(limits = limits) } }
-        }
-        viewModelScope.launch {
-            // Load most recent scan
-            val history = scanRepository.getScanHistory().firstOrNull()
-            _state.update { it.copy(recentScan = history?.firstOrNull()) }
-        }
-        viewModelScope.launch {
-            // Load in-progress story
-            val allProgress: Map<String, StoryProgress>? =
-                storiesRepository.getAllProgress().firstOrNull()
-            val inProgress = allProgress?.entries
-                ?.firstOrNull { !it.value.completed }
-            if (inProgress != null) {
-                val stories = storiesRepository.getStories().getOrNull()
-                val story = stories?.firstOrNull { it.id == inProgress.key }
-                _state.update {
-                    it.copy(
-                        inProgressStory = story,
-                        inProgressStoryChapter = inProgress.value.chapterIndex,
-                    )
+            try {
+                // Load user name
+                val user: User? = authRepository.currentUser.firstOrNull()
+                _state.update { it.copy(userName = user?.displayName) }
+
+                // Load usage limits
+                userRepository.getLimits()
+                    .onSuccess { limits -> _state.update { it.copy(limits = limits) } }
+
+                // Load most recent scan
+                val history = scanRepository.getScanHistory().firstOrNull()
+                _state.update { it.copy(recentScan = history?.firstOrNull()) }
+
+                // Load in-progress story
+                val allProgress: Map<String, StoryProgress>? =
+                    storiesRepository.getAllProgress().firstOrNull()
+                val inProgress = allProgress?.entries
+                    ?.firstOrNull { !it.value.completed }
+                if (inProgress != null) {
+                    val stories = storiesRepository.getStories().getOrNull()
+                    val story = stories?.firstOrNull { it.id == inProgress.key }
+                    _state.update {
+                        it.copy(
+                            inProgressStory = story,
+                            inProgressStoryChapter = inProgress.value.chapterIndex,
+                        )
+                    }
                 }
+                _state.update { it.copy(isLoading = false, isRefreshing = false) }
+            } catch (e: Exception) {
+                _state.update { it.copy(isLoading = false, isRefreshing = false, error = e.message) }
             }
         }
     }

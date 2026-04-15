@@ -25,6 +25,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
@@ -34,6 +39,8 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,6 +59,7 @@ import com.wadjet.core.designsystem.component.ShimmerCardList
 import com.wadjet.core.designsystem.component.ErrorState
 import com.wadjet.core.domain.model.ScanHistorySummary
 import com.wadjet.feature.scan.HistoryUiState
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -67,20 +75,32 @@ fun ScanHistoryScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(WadjetColors.Night),
-    ) {
-        TopAppBar(
-            title = { Text(stringResource(R.string.scan_history_title), color = WadjetColors.Text) },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(DesignR.string.action_back), tint = WadjetColors.Gold)
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = WadjetColors.Night),
-        )
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val deletedMessage = stringResource(R.string.scan_history_deleted)
+    val undoLabel = stringResource(R.string.scan_history_undo)
+
+    Scaffold(
+        containerColor = WadjetColors.Night,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.scan_history_title), color = WadjetColors.Text) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(DesignR.string.action_back), tint = WadjetColors.Gold)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = WadjetColors.Night),
+            )
+        },
+        modifier = modifier,
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+        ) {
 
         when {
             state.isLoading -> {
@@ -127,12 +147,24 @@ fun ScanHistoryScreen(
                         SwipeToDeleteHistoryItem(
                             item = item,
                             onClick = { onScanTap(item.id) },
-                            onDelete = { onDelete(item.id) },
+                            onDelete = {
+                                scope.launch {
+                                    val result = snackbarHostState.showSnackbar(
+                                        message = deletedMessage,
+                                        actionLabel = undoLabel,
+                                        duration = SnackbarDuration.Short,
+                                    )
+                                    if (result != SnackbarResult.ActionPerformed) {
+                                        onDelete(item.id)
+                                    }
+                                }
+                            },
                         )
                     }
                     item { Spacer(modifier = Modifier.height(16.dp)) }
                 }
             }
+        }
         }
     }
 }

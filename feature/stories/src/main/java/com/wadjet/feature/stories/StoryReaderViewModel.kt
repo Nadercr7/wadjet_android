@@ -143,6 +143,7 @@ class StoryReaderViewModel @Inject constructor(
             }.onFailure { error ->
                 Timber.e(error, "Interaction failed")
                 _state.update { it.copy(error = error.message) }
+                toastController.error(error.message ?: "Interaction failed")
             }
         }
     }
@@ -229,6 +230,7 @@ class StoryReaderViewModel @Inject constructor(
                 .onFailure { error ->
                     Timber.e(error, "Failed to load story")
                     _state.update { it.copy(isLoading = false, error = error.message) }
+                    toastController.error(error.message ?: "Failed to load story")
                 }
         }
     }

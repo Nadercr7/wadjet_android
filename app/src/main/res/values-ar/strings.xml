@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">واجت</string>
+    <string name="top_bar_profile">الملف الشخصي</string>
+    <string name="top_bar_settings">الإعدادات</string>
+
+    <!-- Hieroglyphs Hub -->
+    <string name="hub_title">الهيروغليفية</string>
+    <string name="hub_subtitle">امسح وتصفّح واكتب الهيروغليفية المصرية القديمة</string>
+    <string name="hub_recent_scans">عمليات المسح الأخيرة</string>
+    <string name="hub_scan_thumbnail_cd">صورة مصغّرة للمسح</string>
+    <string name="hub_scan_label">مسح</string>
+    <string name="hub_glyph_count">%d رموز</string>
+    <string name="hub_progress_title">القاموس</string>
+    <string name="hub_signs_in_dictionary">%d رمز في القاموس</string>
+    <string name="hub_suggested_signs">رموز مقترحة</string>
+    <string name="hub_tools">الأدوات</string>
+    <string name="hub_scan_title">مسح الهيروغليفية</string>
+    <string name="hub_scan_desc">اكتشف وترجم الهيروغليفية من الصور باستخدام الذكاء الاصطناعي</string>
+    <string name="hub_dictionary_title">القاموس</string>
+    <string name="hub_dictionary_desc">تصفّح أكثر من ١٠٠٠ رمز هيروغليفي مع المعاني والنطق</string>
+    <string name="hub_write_title">اكتب بالهيروغليفية</string>
+    <string name="hub_write_desc">اكتب بالإنجليزية واحصل على هيروغليفية — بالذكاء الاصطناعي</string>
+    <string name="hub_how_scanning_title">كيف يعمل المسح</string>
+    <string name="hub_how_step1">التقط أو ارفع صورة للهيروغليفية</string>
+    <string name="hub_how_step2">الذكاء الاصطناعي يكتشف الرموز الفردية</string>
+    <string name="hub_how_step3">كل رمز يُصنَّف برمز جاردنر والمعنى</string>
+    <string name="hub_how_step4">يتم إنشاء النقحرة والترجمة الكاملة</string>
+</resources>
