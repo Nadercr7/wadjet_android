@@ -55,6 +55,7 @@ class WriteViewModel @Inject constructor(
     fun convert() {
         val s = _state.value
         if (s.inputText.isBlank()) return
+        if (s.isLoading) return
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             repository.write(s.inputText, "smart")

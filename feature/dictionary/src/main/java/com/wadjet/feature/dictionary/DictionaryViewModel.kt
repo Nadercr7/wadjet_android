@@ -38,6 +38,7 @@ data class BrowseUiState(
     val error: String? = null,
     val selectedSign: Sign? = null,
     val favorites: Set<String> = emptySet(),
+    val localTtsText: String? = null,
 )
 
 val SIGN_TYPES = listOf("All", "uniliteral", "biliteral", "triliteral", "logogram", "determinative")
@@ -161,6 +162,10 @@ class DictionaryViewModel @Inject constructor(
         _state.update { it.copy(error = null) }
     }
 
+    fun dismissLocalTts() {
+        _state.update { it.copy(localTtsText = null) }
+    }
+
     fun showToast(message: String) {
         toastController.success(message)
     }
@@ -170,26 +175,33 @@ class DictionaryViewModel @Inject constructor(
         viewModelScope.launch {
             repository.speakPhonetic(text).onSuccess { bytes ->
                 if (bytes != null) {
+                    var tmp: File? = null
                     try {
-                        val tmp = File.createTempFile("dict_tts_", ".wav")
+                        tmp = File.createTempFile("dict_tts_", ".wav")
                         tmp.writeBytes(bytes)
                         mediaPlayer?.apply { if (isPlaying) stop(); release() }
-                        mediaPlayer = MediaPlayer().apply {
+                        val player = MediaPlayer().apply {
                             setDataSource(tmp.absolutePath)
                             prepare()
-                            setOnCompletionListener { release(); mediaPlayer = null; tmp.delete() }
+                            setOnCompletionListener {
+                                it.release()
+                                if (mediaPlayer === it) mediaPlayer = null
+                                tmp.delete()
+                            }
                             start()
                         }
+                        mediaPlayer = player
                     } catch (e: Exception) {
                         Timber.e(e, "Dictionary TTS playback failed")
-                        _state.update { it.copy(error = "LOCAL_TTS:$text") }
+                        tmp?.delete()
+                        _state.update { it.copy(localTtsText = text) }
                     }
                 } else {
-                    _state.update { it.copy(error = "LOCAL_TTS:$text") }
+                    _state.update { it.copy(localTtsText = text) }
                 }
             }.onFailure {
                 Timber.e(it, "Dictionary TTS failed")
-                _state.update { it.copy(error = "LOCAL_TTS:$text") }
+                _state.update { it.copy(localTtsText = text) }
             }
         }
     }

@@ -132,6 +132,7 @@ fun ChatScreen(
     onLoadConversation: (String) -> Unit,
     onClearHistory: () -> Unit,
     onDismissError: () -> Unit,
+    onDismissLocalTts: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -154,25 +155,20 @@ fun ChatScreen(
         onDispose { ttsInstance?.shutdown() }
     }
 
-    // Handle LOCAL_TTS error signal
-    LaunchedEffect(state.error) {
-        val error = state.error ?: return@LaunchedEffect
-        if (error.startsWith("LOCAL_TTS:")) {
-            val text = error.removePrefix("LOCAL_TTS:")
-            val isArabic = text.any { it in '\u0600'..'\u06FF' || it in '\u0750'..'\u077F' }
-            ttsInstance?.language = if (isArabic) Locale("ar") else Locale.US
-            ttsInstance?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
-            onDismissError()
-        }
+    // Handle local TTS fallback
+    LaunchedEffect(state.localTtsText) {
+        val text = state.localTtsText ?: return@LaunchedEffect
+        val isArabic = text.any { it in '\u0600'..'\u06FF' || it in '\u0750'..'\u077F' }
+        ttsInstance?.language = if (isArabic) Locale("ar") else Locale.US
+        ttsInstance?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        onDismissLocalTts()
     }
 
     // Show non-TTS errors via toast
     LaunchedEffect(state.error) {
         val error = state.error ?: return@LaunchedEffect
-        if (!error.startsWith("LOCAL_TTS:")) {
-            // Error is displayed via toast from ViewModel already; just dismiss state
-            onDismissError()
-        }
+        // Error is displayed via toast from ViewModel already; just dismiss state
+        onDismissError()
     }
 
     // Auto-scroll to bottom on new messages
@@ -407,7 +403,7 @@ fun ChatScreen(
                                 isLoadingTts = state.isLoadingTts && state.speakingMessageId == message.id,
                                 isLastBotMessage = message.role == Role.ASSISTANT &&
                                     state.messages.lastOrNull { it.role == Role.ASSISTANT } == message,
-                                hasError = state.error != null && !state.error.orEmpty().startsWith("LOCAL_TTS:"),
+                                hasError = state.error != null,
                                 isEditing = state.editingMessageId == message.id,
                                 onSpeak = { onSpeak(message) },
                                 onCopy = {

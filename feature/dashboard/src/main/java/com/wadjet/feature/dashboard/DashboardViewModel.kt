@@ -10,6 +10,7 @@ import com.wadjet.core.domain.model.UserStats
 import com.wadjet.core.domain.repository.AuthRepository
 import com.wadjet.core.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -77,25 +78,38 @@ class DashboardViewModel @Inject constructor(
     private fun loadDashboard() {
         _state.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
-            // Load stats
-            userRepository.getStats()
+            val statsDeferred = async { userRepository.getStats() }
+            val scansDeferred = async { userRepository.getScanHistory() }
+            val favsDeferred = async { userRepository.getFavorites() }
+            val progressDeferred = async { userRepository.getStoryProgress() }
+
+            statsDeferred.await()
                 .onSuccess { stats -> _state.update { it.copy(stats = stats) } }
-                .onFailure { Timber.w(it, "Stats load failed") }
+                .onFailure { e ->
+                    Timber.w(e, "Stats load failed")
+                    _state.update { it.copy(error = e.message ?: "Failed to load stats") }
+                }
 
-            // Load scan history
-            userRepository.getScanHistory()
+            scansDeferred.await()
                 .onSuccess { scans -> _state.update { it.copy(recentScans = scans) } }
-                .onFailure { Timber.w(it, "Scan history load failed") }
+                .onFailure { e ->
+                    Timber.w(e, "Scan history load failed")
+                    _state.update { it.copy(error = e.message ?: "Failed to load scan history") }
+                }
 
-            // Load favorites
-            userRepository.getFavorites()
+            favsDeferred.await()
                 .onSuccess { favs -> _state.update { it.copy(favorites = favs) } }
-                .onFailure { Timber.w(it, "Favorites load failed") }
+                .onFailure { e ->
+                    Timber.w(e, "Favorites load failed")
+                    _state.update { it.copy(error = e.message ?: "Failed to load favorites") }
+                }
 
-            // Load story progress
-            userRepository.getStoryProgress()
+            progressDeferred.await()
                 .onSuccess { progress -> _state.update { it.copy(storyProgress = progress) } }
-                .onFailure { Timber.w(it, "Story progress load failed") }
+                .onFailure { e ->
+                    Timber.w(e, "Story progress load failed")
+                    _state.update { it.copy(error = e.message ?: "Failed to load story progress") }
+                }
 
             _state.update { it.copy(isLoading = false) }
         }

@@ -87,6 +87,7 @@ class SettingsViewModel @Inject constructor(
             _state.update { it.copy(message = "New password must be at least 8 characters") }
             return
         }
+        if (_state.value.isChangingPassword) return
         _state.update { it.copy(isChangingPassword = true) }
         viewModelScope.launch {
             userRepository.changePassword(current, new)
@@ -122,8 +123,13 @@ class SettingsViewModel @Inject constructor(
 
     fun signOut() {
         viewModelScope.launch {
-            authRepository.signOut()
-            _state.update { it.copy(signedOut = true) }
+            try {
+                authRepository.signOut()
+                _state.update { it.copy(signedOut = true) }
+            } catch (e: Exception) {
+                Timber.e(e, "Sign out failed")
+                _state.update { it.copy(message = e.message ?: "Sign out failed") }
+            }
         }
     }
 

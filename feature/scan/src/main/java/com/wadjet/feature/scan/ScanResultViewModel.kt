@@ -25,6 +25,8 @@ data class ScanResultUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val ttsStates: Map<String, TtsState> = emptyMap(),
+    val localTtsText: String? = null,
+    val localTtsLang: String? = null,
 )
 
 @HiltViewModel
@@ -83,7 +85,8 @@ class ScanResultViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             ttsStates = it.ttsStates + (key to TtsState.IDLE),
-                            error = "LOCAL_TTS:$lang:$text",
+                            localTtsText = text,
+                            localTtsLang = lang,
                         )
                     }
                 }
@@ -124,6 +127,10 @@ class ScanResultViewModel @Inject constructor(
     private fun stopMediaPlayer() {
         mediaPlayer?.apply { if (isPlaying) stop(); release() }
         mediaPlayer = null
+    }
+
+    fun dismissLocalTts() {
+        _state.update { it.copy(localTtsText = null, localTtsLang = null) }
     }
 
     override fun onCleared() {

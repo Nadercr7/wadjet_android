@@ -74,7 +74,8 @@ class ExploreViewModel @Inject constructor(
         if (s.isLoadingMore || s.currentPage >= s.totalPages) return
         _state.update { it.copy(isLoadingMore = true) }
         viewModelScope.launch {
-            val nextPage = s.currentPage + 1
+            val currentPage = _state.value.currentPage
+            val nextPage = currentPage + 1
             exploreRepository.getLandmarks(
                 category = s.selectedCategory.takeIf { it != "All" },
                 city = s.selectedCity,

@@ -37,6 +37,8 @@ data class ScanUiState(
     val error: String? = null,
     val isLoading: Boolean = false,
     val ttsStates: Map<String, TtsState> = emptyMap(),
+    val localTtsText: String? = null,
+    val localTtsLang: String? = null,
 )
 
 sealed class ScanEvent {
@@ -80,7 +82,8 @@ class ScanViewModel @Inject constructor(
                     _state.update {
                         it.copy(
                             ttsStates = it.ttsStates + (key to TtsState.IDLE),
-                            error = "LOCAL_TTS:$lang:$text",
+                            localTtsText = text,
+                            localTtsLang = lang,
                         )
                     }
                 }
@@ -102,6 +105,7 @@ class ScanViewModel @Inject constructor(
                 setOnCompletionListener {
                     _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) }
                     stopMediaPlayer()
+                    tmp.delete()
                 }
                 start()
             }
@@ -201,6 +205,21 @@ class ScanViewModel @Inject constructor(
 
     fun dismissError() {
         _state.update { it.copy(error = null) }
+    }
+
+    fun dismissLocalTts() {
+        _state.update { it.copy(localTtsText = null, localTtsLang = null) }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        stopMediaPlayer()
+        // Clean up temp files in cacheDir
+        context.cacheDir.listFiles()?.forEach { file ->
+            if (file.name.startsWith("scan_") || file.name.startsWith("tts_") || file.name.startsWith("picked_")) {
+                file.delete()
+            }
+        }
     }
 
     private fun compressImage(file: File): File {

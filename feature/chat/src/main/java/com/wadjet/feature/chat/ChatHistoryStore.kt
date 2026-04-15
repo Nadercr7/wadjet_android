@@ -3,6 +3,8 @@ package com.wadjet.feature.chat
 import android.content.Context
 import com.wadjet.core.domain.model.ChatMessage
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import timber.log.Timber
@@ -53,7 +55,7 @@ class ChatHistoryStore @Inject constructor(
             .apply()
     }
 
-    fun listConversations(): List<ConversationSummary> =
+    suspend fun listConversations(): List<ConversationSummary> = withContext(Dispatchers.IO) {
         dir.listFiles { f -> f.extension == "json" }
             ?.mapNotNull { file ->
                 try {
@@ -71,11 +73,12 @@ class ChatHistoryStore @Inject constructor(
             }
             ?.sortedByDescending { it.createdAt }
             ?: emptyList()
+    }
 
-    fun saveConversation(id: String, messages: List<ChatMessage>) {
-        if (messages.size < 2) return
+    suspend fun saveConversation(id: String, messages: List<ChatMessage>) = withContext(Dispatchers.IO) {
+        if (messages.size < 2) return@withContext
         val userMessages = messages.filter { it.role == ChatMessage.Role.USER }
-        if (userMessages.isEmpty()) return
+        if (userMessages.isEmpty()) return@withContext
         val title = userMessages.first().content.take(50)
         val obj = JSONObject().apply {
             put("id", id)
@@ -94,10 +97,10 @@ class ChatHistoryStore @Inject constructor(
         File(dir, "$id.json").writeText(obj.toString())
     }
 
-    fun loadConversation(id: String): List<ChatMessage>? {
+    suspend fun loadConversation(id: String): List<ChatMessage>? = withContext(Dispatchers.IO) {
         val file = File(dir, "$id.json")
-        if (!file.exists()) return null
-        return try {
+        if (!file.exists()) return@withContext null
+        try {
             val obj = JSONObject(file.readText())
             val arr = obj.getJSONArray("messages")
             (0 until arr.length()).map { i ->
@@ -115,12 +118,11 @@ class ChatHistoryStore @Inject constructor(
         }
     }
 
-    fun clearAll() {
+    suspend fun clearAll() = withContext(Dispatchers.IO) {
         dir.listFiles()?.forEach { it.delete() }
     }
 
-    /** Returns the most recent conversation's messages, or null if none exist. */
-    fun loadLatestConversation(): Pair<String, List<ChatMessage>>? {
+    suspend fun loadLatestConversation(): Pair<String, List<ChatMessage>>? = withContext(Dispatchers.IO) {
         val latest = dir.listFiles { f -> f.extension == "json" }
             ?.mapNotNull { file ->
                 try {
@@ -131,8 +133,8 @@ class ChatHistoryStore @Inject constructor(
                 }
             }
             ?.maxByOrNull { it.second }
-            ?: return null
-        val messages = loadConversation(latest.first) ?: return null
-        return latest.first to messages
+            ?: return@withContext null
+        val messages = loadConversation(latest.first) ?: return@withContext null
+        latest.first to messages
     }
 }

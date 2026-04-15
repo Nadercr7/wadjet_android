@@ -16,6 +16,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -29,6 +30,7 @@ data class ReaderUiState(
     val currentChapter: Int = 0,
     val isLoading: Boolean = false,
     val error: String? = null,
+    val localTtsText: String? = null,
     val sceneImageUrl: String? = null,
     val isLoadingImage: Boolean = false,
     val imageLoadFailed: Boolean = false,
@@ -36,7 +38,7 @@ data class ReaderUiState(
     val interactionAnswers: Map<Int, String> = emptyMap(),
     val writeInputs: Map<Int, String> = emptyMap(),
     val score: Int = 0,
-    val glyphsLearned: MutableSet<String> = mutableSetOf(),
+    val glyphsLearned: Set<String> = emptySet(),
     val isSpeaking: Boolean = false,
     val isNarrating: Boolean = false,
     val narratingParagraphIndex: Int = -1,
@@ -96,7 +98,7 @@ class StoryReaderViewModel @Inject constructor(
         _state.update {
             it.copy(
                 score = 0,
-                glyphsLearned = mutableSetOf(),
+                glyphsLearned = emptySet(),
             )
         }
         goToChapter(0)
@@ -137,7 +139,7 @@ class StoryReaderViewModel @Inject constructor(
                     state.copy(
                         interactionResults = state.interactionResults + (interactionIndex to result),
                         score = newScore,
-                        glyphsLearned = newGlyphs,
+                        glyphsLearned = newGlyphs.toSet(),
                     )
                 }
             }.onFailure { error ->
@@ -192,14 +194,15 @@ class StoryReaderViewModel @Inject constructor(
      */
     private suspend fun speakAndWait(text: String, voice: String?, style: String?): Boolean {
         return suspendCancellableCoroutine { cont ->
+            cont.invokeOnCancellation { stopSpeaking() }
             viewModelScope.launch {
                 storiesRepository.speakChapter(text, voice = voice, style = style)
                     .onSuccess { bytes ->
                         if (bytes != null) {
-                            playWavBytesAndWait(bytes) { cont.resume(true) }
+                            playWavBytesAndWait(bytes) { if (cont.isActive) cont.resume(true) }
                         } else {
                             // LOCAL_TTS fallback
-                            _state.update { it.copy(error = "LOCAL_TTS:$text") }
+                            _state.update { it.copy(localTtsText = text) }
                             // Give local TTS time to speak — roughly 80ms per word
                             val estimatedMs = text.split(" ").size * 80L + 500L
                             kotlinx.coroutines.delay(estimatedMs)
@@ -211,12 +214,15 @@ class StoryReaderViewModel @Inject constructor(
                         if (cont.isActive) cont.resume(false)
                     }
             }
-            cont.invokeOnCancellation { stopSpeaking() }
         }
     }
 
     fun dismissError() {
         _state.update { it.copy(error = null) }
+    }
+
+    fun dismissLocalTts() {
+        _state.update { it.copy(localTtsText = null) }
     }
 
     private fun loadStory() {
@@ -276,13 +282,15 @@ class StoryReaderViewModel @Inject constructor(
 
     private fun restoreProgress() {
         viewModelScope.launch {
+            // Wait for story to be loaded before applying progress
+            _state.first { it.story != null }
             storiesRepository.getStoryProgress(storyId).collect { progress ->
-                if (progress != null && _state.value.story != null && _state.value.currentChapter == 0) {
+                if (progress != null && _state.value.currentChapter == 0) {
                     _state.update {
                         it.copy(
                             currentChapter = progress.chapterIndex,
                             score = progress.score,
-                            glyphsLearned = progress.glyphsLearned.toMutableSet(),
+                            glyphsLearned = progress.glyphsLearned.toSet(),
                         )
                     }
                     loadChapterImage()
@@ -344,7 +352,17 @@ class StoryReaderViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        saveCurrentProgress()
+        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.NonCancellable) {
+            storiesRepository.saveProgress(
+                StoryProgress(
+                    storyId = storyId,
+                    chapterIndex = _state.value.currentChapter,
+                    glyphsLearned = _state.value.glyphsLearned.toList(),
+                    score = _state.value.score,
+                    completed = _state.value.currentChapter >= _state.value.totalChapters - 1,
+                ),
+            )
+        }
         stopNarration()
     }
 }

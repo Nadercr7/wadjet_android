@@ -52,6 +52,7 @@ class FeedbackViewModel @Inject constructor(
 
     fun submit() {
         val s = _state.value
+        if (s.isSubmitting) return
         if (s.selectedCategory.isBlank()) {
             _state.update { it.copy(error = "Please select a category") }
             return

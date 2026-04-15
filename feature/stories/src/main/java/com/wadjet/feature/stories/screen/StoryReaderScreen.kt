@@ -111,6 +111,7 @@ fun StoryReaderScreen(
     onSpeak: () -> Unit,
     onRetryImage: () -> Unit,
     onDismissError: () -> Unit,
+    onDismissLocalTts: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -124,24 +125,19 @@ fun StoryReaderScreen(
     }
     DisposableEffect(Unit) { onDispose { ttsInstance?.shutdown() } }
 
-    // Handle LOCAL_TTS fallback
-    LaunchedEffect(state.error) {
-        val err = state.error ?: return@LaunchedEffect
-        if (err.startsWith("LOCAL_TTS:")) {
-            val text = err.removePrefix("LOCAL_TTS:")
-            val isArabic = text.any { it in '\u0600'..'\u06FF' || it in '\u0750'..'\u077F' }
-            ttsInstance?.language = if (isArabic) Locale("ar") else Locale.US
-            ttsInstance?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
-            onDismissError()
-        }
+    // Handle LOCAL_TTS fallback via dedicated state field
+    LaunchedEffect(state.localTtsText) {
+        val text = state.localTtsText ?: return@LaunchedEffect
+        val isArabic = text.any { it in '\u0600'..'\u06FF' || it in '\u0750'..'\u077F' }
+        ttsInstance?.language = if (isArabic) Locale("ar") else Locale.US
+        ttsInstance?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        onDismissLocalTts()
     }
 
     // Show general errors via toast (handled by ViewModel's ToastController)
     LaunchedEffect(state.error) {
         val err = state.error ?: return@LaunchedEffect
-        if (!err.startsWith("LOCAL_TTS:")) {
-            onDismissError()
-        }
+        onDismissError()
     }
 
     val story = state.story

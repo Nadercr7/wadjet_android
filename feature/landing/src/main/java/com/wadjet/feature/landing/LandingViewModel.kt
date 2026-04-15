@@ -12,6 +12,7 @@ import com.wadjet.core.domain.repository.ScanRepository
 import com.wadjet.core.domain.repository.StoriesRepository
 import com.wadjet.core.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -58,17 +59,19 @@ class LandingViewModel @Inject constructor(
                 val user: User? = authRepository.currentUser.firstOrNull()
                 _state.update { it.copy(userName = user?.displayName) }
 
-                // Load usage limits
-                userRepository.getLimits()
+                // Launch parallel requests
+                val limitsDeferred = async { userRepository.getLimits() }
+                val historyDeferred = async { scanRepository.getScanHistory().firstOrNull() }
+                val progressDeferred = async { storiesRepository.getAllProgress().firstOrNull() }
+
+                // Process results
+                limitsDeferred.await()
                     .onSuccess { limits -> _state.update { it.copy(limits = limits) } }
 
-                // Load most recent scan
-                val history = scanRepository.getScanHistory().firstOrNull()
+                val history = historyDeferred.await()
                 _state.update { it.copy(recentScan = history?.firstOrNull()) }
 
-                // Load in-progress story
-                val allProgress: Map<String, StoryProgress>? =
-                    storiesRepository.getAllProgress().firstOrNull()
+                val allProgress: Map<String, StoryProgress>? = progressDeferred.await()
                 val inProgress = allProgress?.entries
                     ?.firstOrNull { !it.value.completed }
                 if (inProgress != null) {

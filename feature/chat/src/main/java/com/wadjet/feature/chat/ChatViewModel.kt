@@ -38,6 +38,7 @@ data class ChatUiState(
     val landmarkSlug: String? = null,
     val chatHistory: List<ConversationSummary> = emptyList(),
     val showHistory: Boolean = false,
+    val localTtsText: String? = null,
 )
 
 @HiltViewModel
@@ -80,19 +81,22 @@ class ChatViewModel @Inject constructor(
             val activeId = chatHistoryStore.getActiveSessionId()
             if (activeId != null) {
                 sessionId = activeId
-                val restored = chatHistoryStore.loadConversation(activeId)
-                if (!restored.isNullOrEmpty()) {
-                    _state.update { it.copy(messages = restored) }
-                } else {
-                    addGreeting()
+                viewModelScope.launch {
+                    val restored = chatHistoryStore.loadConversation(activeId)
+                    if (!restored.isNullOrEmpty()) {
+                        _state.update { it.copy(messages = restored) }
+                    } else {
+                        addGreeting()
+                    }
+                    loadChatHistory()
                 }
             } else {
                 sessionId = UUID.randomUUID().toString()
                 chatHistoryStore.storeSessionId(sessionId)
                 addGreeting()
+                viewModelScope.launch { loadChatHistory() }
             }
         }
-        loadChatHistory()
     }
 
     private fun addGreeting() {
@@ -268,7 +272,9 @@ class ChatViewModel @Inject constructor(
     }
 
     fun retryLastMessage() {
+        if (_state.value.isStreaming) return
         val last = lastSentMessage ?: return
+        streamJob?.cancel()
         // Remove the last failed bot message
         _state.update { state ->
             val messages = state.messages.toMutableList()
@@ -306,7 +312,7 @@ class ChatViewModel @Inject constructor(
                             isSpeaking = false,
                             isLoadingTts = false,
                             speakingMessageId = null,
-                            error = "LOCAL_TTS:${message.content}",
+                            localTtsText = message.content,
                         )
                     }
                 }
@@ -317,7 +323,7 @@ class ChatViewModel @Inject constructor(
                         isSpeaking = false,
                         isLoadingTts = false,
                         speakingMessageId = null,
-                        error = "LOCAL_TTS:${message.content}",
+                        localTtsText = message.content,
                     )
                 }
             }
@@ -407,24 +413,24 @@ class ChatViewModel @Inject constructor(
         streamJob?.cancel()
         stopSpeaking()
         // Save current conversation to history before clearing
-        saveCurrentConversation()
         viewModelScope.launch {
+            saveCurrentConversation()
             chatRepository.clearSession(sessionId)
-        }
-        // Clear stored session so next init creates fresh
-        chatHistoryStore.clearSessionId()
-        toastController.success("Chat cleared")
-        val greeting = ChatMessage(
-            id = UUID.randomUUID().toString(),
-            role = Role.ASSISTANT,
-            content = "Chat cleared. How can I help you?",
-        )
-        _state.update {
-            ChatUiState(
-                messages = listOf(greeting),
-                landmarkSlug = it.landmarkSlug,
-                chatHistory = chatHistoryStore.listConversations(),
+            // Clear stored session so next init creates fresh
+            chatHistoryStore.clearSessionId()
+            toastController.success("Chat cleared")
+            val greeting = ChatMessage(
+                id = UUID.randomUUID().toString(),
+                role = Role.ASSISTANT,
+                content = "Chat cleared. How can I help you?",
             )
+            _state.update {
+                ChatUiState(
+                    messages = listOf(greeting),
+                    landmarkSlug = it.landmarkSlug,
+                    chatHistory = chatHistoryStore.listConversations(),
+                )
+            }
         }
     }
 
@@ -433,18 +439,22 @@ class ChatViewModel @Inject constructor(
     }
 
     fun loadConversation(conversationId: String) {
-        val messages = chatHistoryStore.loadConversation(conversationId) ?: return
-        _state.update {
-            it.copy(messages = messages, showHistory = false)
+        viewModelScope.launch {
+            val messages = chatHistoryStore.loadConversation(conversationId) ?: return@launch
+            _state.update {
+                it.copy(messages = messages, showHistory = false)
+            }
         }
     }
 
     fun clearHistory() {
-        chatHistoryStore.clearAll()
-        _state.update { it.copy(chatHistory = emptyList()) }
+        viewModelScope.launch {
+            chatHistoryStore.clearAll()
+            _state.update { it.copy(chatHistory = emptyList()) }
+        }
     }
 
-    private fun loadChatHistory() {
+    private suspend fun loadChatHistory() {
         _state.update { it.copy(chatHistory = chatHistoryStore.listConversations()) }
     }
 
@@ -452,14 +462,20 @@ class ChatViewModel @Inject constructor(
         _state.update { it.copy(error = null) }
     }
 
-    private fun saveCurrentConversation() {
+    fun dismissLocalTts() {
+        _state.update { it.copy(localTtsText = null) }
+    }
+
+    private suspend fun saveCurrentConversation() {
         chatHistoryStore.saveConversation(sessionId, _state.value.messages)
     }
 
     override fun onCleared() {
         super.onCleared()
         streamJob?.cancel()
-        saveCurrentConversation()
+        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.NonCancellable) {
+            saveCurrentConversation()
+        }
         mediaPlayer?.release()
         mediaPlayer = null
     }

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.wadjet.core.domain.model.ScanHistorySummary
 import com.wadjet.core.domain.repository.ScanRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,12 +28,15 @@ class HistoryViewModel @Inject constructor(
     private val _state = MutableStateFlow(HistoryUiState())
     val state: StateFlow<HistoryUiState> = _state.asStateFlow()
 
+    private var collectorJob: Job? = null
+
     init {
         loadHistory()
     }
 
     private fun loadHistory() {
-        viewModelScope.launch {
+        collectorJob?.cancel()
+        collectorJob = viewModelScope.launch {
             try {
                 scanRepository.getScanHistory().collect { items ->
                     _state.update { it.copy(items = items, isLoading = false, error = null) }

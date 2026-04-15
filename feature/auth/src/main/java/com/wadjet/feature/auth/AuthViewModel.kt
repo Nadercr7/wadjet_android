@@ -39,6 +39,7 @@ class AuthViewModel @Inject constructor(
     }
 
     fun signInWithGoogle(idToken: String) {
+        if (_state.value.isLoading) return
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             authRepository.signInWithGoogle(idToken)
@@ -63,6 +64,7 @@ class AuthViewModel @Inject constructor(
             _state.update { it.copy(error = "Please enter a valid email and password") }
             return
         }
+        if (_state.value.isLoading) return
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             authRepository.signInWithEmail(email.trim(), password)
@@ -91,6 +93,7 @@ class AuthViewModel @Inject constructor(
             _state.update { it.copy(error = "Passwords do not match") }
             return
         }
+        if (_state.value.isLoading) return
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             authRepository.register(email.trim(), password, displayName?.trim()?.ifBlank { null })
@@ -110,6 +113,7 @@ class AuthViewModel @Inject constructor(
             _state.update { it.copy(error = "Please enter a valid email") }
             return
         }
+        if (_state.value.isLoading) return
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             authRepository.forgotPassword(email.trim())

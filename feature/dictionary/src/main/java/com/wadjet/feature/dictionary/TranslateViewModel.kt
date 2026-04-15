@@ -40,6 +40,7 @@ class TranslateViewModel @Inject constructor(
     fun translate() {
         val input = _state.value.input.trim()
         if (input.isBlank()) return
+        if (_state.value.isLoading) return
         _state.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             translateRepository.translate(

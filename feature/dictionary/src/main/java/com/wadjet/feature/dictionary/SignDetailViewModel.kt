@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.io.File
 import javax.inject.Inject
 
@@ -96,8 +97,16 @@ class SignDetailViewModel @Inject constructor(
                             start()
                             setOnCompletionListener { tmp.delete() }
                         }
-                    } catch (_: Exception) { }
+                    } catch (e: Exception) {
+                        Timber.e(e, "Sign TTS playback failed")
+                        _state.update { it.copy(error = "TTS playback failed") }
+                    }
+                } else {
+                    _state.update { it.copy(error = "TTS not available") }
                 }
+            }.onFailure { e ->
+                Timber.e(e, "Sign TTS failed")
+                _state.update { it.copy(error = "TTS failed: ${e.message}") }
             }
         }
     }

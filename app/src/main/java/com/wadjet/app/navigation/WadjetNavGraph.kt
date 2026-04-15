@@ -367,6 +367,7 @@ fun WadjetNavGraph(
                 onLoadConversation = viewModel::loadConversation,
                 onClearHistory = viewModel::clearHistory,
                 onDismissError = viewModel::dismissError,
+                onDismissLocalTts = viewModel::dismissLocalTts,
                 onBack = { navController.popBackStack() },
             )
         }
@@ -390,6 +391,7 @@ fun WadjetNavGraph(
                 onLoadConversation = viewModel::loadConversation,
                 onClearHistory = viewModel::clearHistory,
                 onDismissError = viewModel::dismissError,
+                onDismissLocalTts = viewModel::dismissLocalTts,
                 onBack = { navController.popBackStack() },
             )
         }
@@ -433,6 +435,7 @@ fun WadjetNavGraph(
                 onSpeak = viewModel::speakChapter,
                 onRetryImage = viewModel::retryChapterImage,
                 onDismissError = viewModel::dismissError,
+                onDismissLocalTts = viewModel::dismissLocalTts,
                 onBack = { navController.popBackStack() },
             )
             }

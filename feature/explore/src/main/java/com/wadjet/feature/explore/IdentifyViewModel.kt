@@ -51,6 +51,7 @@ class IdentifyViewModel @Inject constructor(
                 }
                 .onFailure { error ->
                     Timber.e(error, "Identify failed")
+                    if (compressed !== file) compressed.delete()
                     _state.update {
                         it.copy(
                             error = error.message ?: "Identification failed",
