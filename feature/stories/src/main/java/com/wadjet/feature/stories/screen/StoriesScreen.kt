@@ -387,9 +387,9 @@ private fun StoryCard(
 @Composable
 private fun DifficultyBadge(difficulty: String, modifier: Modifier = Modifier) {
     val color = when (difficulty.lowercase()) {
-        "beginner" -> WadjetColors.Success
-        "intermediate" -> WadjetColors.Warning
-        "advanced" -> WadjetColors.Error
+        "beginner" -> WadjetColors.DifficultyBeginner
+        "intermediate" -> WadjetColors.DifficultyIntermediate
+        "advanced" -> WadjetColors.DifficultyAdvanced
         else -> WadjetColors.TextMuted
     }
     Text(

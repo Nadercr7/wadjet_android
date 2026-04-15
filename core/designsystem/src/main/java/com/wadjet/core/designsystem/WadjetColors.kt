@@ -32,11 +32,11 @@ object WadjetColors {
     val Error = Color(0xFFEF4444)
     val Warning = Color(0xFFF59E0B)
 
-    // Difficulty
-    val DifficultyBeginner = Color(0xFFD4AF37)
+    // Difficulty — Egyptian pigment palette
+    val DifficultyBeginner = Color(0xFFD4AF37)       // Gold — like new gold jewelry
     val DifficultyBeginnerDark = Color(0xFF8B6914)
-    val DifficultyIntermediate = Color(0xFF4A90D9)
-    val DifficultyIntermediateDark = Color(0xFF1A3A6B)
-    val DifficultyAdvanced = Color(0xFF9B59B6)
-    val DifficultyAdvancedDark = Color(0xFF4A1A6B)
+    val DifficultyIntermediate = Color(0xFF26648B)    // Lapis Lazuli — the prized deep blue
+    val DifficultyIntermediateDark = Color(0xFF133245)
+    val DifficultyAdvanced = Color(0xFFA63A28)        // Carnelian — semi-precious red stone
+    val DifficultyAdvancedDark = Color(0xFF5C1F16)
 }
