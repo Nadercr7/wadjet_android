@@ -45,6 +45,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.animation.FadeUp
 import com.wadjet.core.designsystem.component.BadgeVariant
@@ -55,6 +57,7 @@ import com.wadjet.core.designsystem.component.WadjetTextButton
 import com.wadjet.core.domain.model.IdentifyMatch
 import com.wadjet.core.domain.model.IdentifyResult
 import com.wadjet.feature.explore.IdentifyUiState
+import com.wadjet.feature.explore.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,9 +86,9 @@ fun IdentifyScreen(
                 FadeUp(visible = true) {
                     ImageUploadZone(
                         onImageSelected = onImageSelected,
-                        title = "Upload a photo of an Egyptian landmark",
-                        subtitle = "Supports JPG, PNG up to 10MB",
-                        analyzeButtonText = "Identify Landmark",
+                        title = stringResource(R.string.identify_upload_title),
+                        subtitle = stringResource(R.string.identify_upload_subtitle),
+                        analyzeButtonText = stringResource(R.string.identify_analyze_button),
                         isAnalyzing = state.isLoading,
                         onAnalyze = null,
                     )
@@ -95,10 +98,10 @@ fun IdentifyScreen(
 
         // Top bar
         TopAppBar(
-            title = { Text("Identify Landmark", color = WadjetColors.Text) },
+            title = { Text(stringResource(R.string.identify_title), color = WadjetColors.Text) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = WadjetColors.Gold)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(DesignR.string.action_back), tint = WadjetColors.Gold)
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
@@ -119,7 +122,7 @@ fun IdentifyScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     com.wadjet.core.designsystem.component.WadjetSectionLoader(
-                        text = "Identifying landmark...",
+                        text = stringResource(R.string.identify_loading),
                     )
                 }
             }
@@ -146,7 +149,7 @@ fun IdentifyScreen(
                     .fillMaxWidth(),
             ) {
                 com.wadjet.core.designsystem.component.ErrorState(
-                    message = error ?: "Couldn't identify this landmark. Try another photo",
+                    message = error ?: stringResource(R.string.identify_error),
                     onRetry = onRetry,
                 )
             }
@@ -179,19 +182,19 @@ private fun IdentifyResults(
             if (topMatch == null || result.matches.isEmpty()) {
                 // No result
                 Text(
-                    text = "No landmarks identified",
+                    text = stringResource(R.string.identify_no_match_title),
                     style = MaterialTheme.typography.titleMedium,
                     color = WadjetColors.Gold,
                     fontWeight = FontWeight.SemiBold,
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Try a different angle or get closer to the landmark.",
+                    stringResource(R.string.identify_no_match_subtitle),
                     color = WadjetColors.TextMuted,
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Spacer(Modifier.height(16.dp))
-                WadjetButton(text = "Identify Another", onClick = onIdentifyAnother)
+                WadjetButton(text = stringResource(R.string.identify_another_button), onClick = onIdentifyAnother)
                 return@Column
             }
 
@@ -235,7 +238,7 @@ private fun IdentifyResults(
                 Spacer(Modifier.height(8.dp))
                 WarningBanner(
                     icon = Icons.Default.Warning,
-                    text = "This may not be an Egyptian landmark",
+                    text = stringResource(R.string.identify_not_egyptian_warning),
                     color = WadjetColors.Warning,
                 )
             }
@@ -243,7 +246,7 @@ private fun IdentifyResults(
                 Spacer(Modifier.height(8.dp))
                 WarningBanner(
                     icon = Icons.Default.Info,
-                    text = "This landmark is not in our database yet",
+                    text = stringResource(R.string.identify_unknown_landmark),
                     color = WadjetColors.Sand,
                 )
             }
@@ -270,7 +273,7 @@ private fun IdentifyResults(
             if (result.matches.isNotEmpty()) {
                 Spacer(Modifier.height(16.dp))
                 Text(
-                    text = "Top Matches",
+                    text = stringResource(R.string.identify_top_matches),
                     style = MaterialTheme.typography.titleSmall,
                     color = WadjetColors.TextMuted,
                     fontWeight = FontWeight.SemiBold,
@@ -292,7 +295,7 @@ private fun IdentifyResults(
             Spacer(Modifier.height(16.dp))
             if (topMatch.slug.isNotBlank() && result.isKnownLandmark) {
                 WadjetButton(
-                    text = "View Full Details",
+                    text = stringResource(R.string.identify_view_details),
                     onClick = { onViewDetails(topMatch.slug) },
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -317,7 +320,7 @@ private fun IdentifyResults(
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            text = "Ask Thoth about this landmark",
+                            text = stringResource(R.string.identify_ask_thoth),
                             style = MaterialTheme.typography.labelLarge,
                             color = WadjetColors.Gold,
                         )
@@ -326,7 +329,7 @@ private fun IdentifyResults(
             }
             Spacer(Modifier.height(8.dp))
             WadjetTextButton(
-                text = "Identify Another",
+                text = stringResource(R.string.identify_another_button),
                 onClick = onIdentifyAnother,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -386,11 +389,11 @@ private fun SourceChip(source: String) {
 @Composable
 private fun AgreementBadge(agreement: String) {
     val (text, variant) = when (agreement.lowercase()) {
-        "full" -> "Verified ✓" to BadgeVariant.Success
-        "partial" -> "Consensus" to BadgeVariant.Gold
-        "tiebreak" -> "Uncertain" to BadgeVariant.Muted
-        "single" -> "Single Source" to BadgeVariant.Muted
-        "best_confidence" -> "Best Guess" to BadgeVariant.Muted
+        "full" -> stringResource(R.string.identify_agreement_verified) to BadgeVariant.Success
+        "partial" -> stringResource(R.string.identify_agreement_consensus) to BadgeVariant.Gold
+        "tiebreak" -> stringResource(R.string.identify_agreement_uncertain) to BadgeVariant.Muted
+        "single" -> stringResource(R.string.identify_agreement_single) to BadgeVariant.Muted
+        "best_confidence" -> stringResource(R.string.identify_agreement_best_guess) to BadgeVariant.Muted
         else -> agreement.replaceFirstChar { it.uppercase() } to BadgeVariant.Muted
     }
     WadjetBadge(text = text, variant = variant)

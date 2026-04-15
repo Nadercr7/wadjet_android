@@ -36,7 +36,9 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs
 import com.wadjet.core.designsystem.R as DesignR
+import com.wadjet.feature.landing.R
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.animation.BorderBeam
 import com.wadjet.core.designsystem.animation.DotPattern
@@ -80,9 +82,9 @@ fun LandingScreen(
             FadeUp(visible = visibleSections >= 1) {
                 Column {
                     val greeting = if (state.userName != null) {
-                        "Welcome back, ${state.userName}"
+                        stringResource(R.string.landing_greeting_name, state.userName!!)
                     } else {
-                        "Welcome back"
+                        stringResource(R.string.landing_greeting)
                     }
                     Text(
                         text = greeting,
@@ -91,12 +93,12 @@ fun LandingScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     GoldGradientText(
-                        text = "WADJET",
+                        text = stringResource(DesignR.string.app_name_display),
                         style = MaterialTheme.typography.displayLarge,
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Decode the Secrets of Ancient Egypt",
+                        text = stringResource(R.string.landing_tagline),
                         style = MaterialTheme.typography.titleMedium,
                         color = WadjetColors.Sand,
                     )
@@ -109,15 +111,15 @@ fun LandingScreen(
             FadeUp(visible = visibleSections >= 2) {
                 PathCardRich(
                     glyph = "𓂀",
-                    title = "Hieroglyphs",
-                    subtitle = "Decode Ancient Egypt",
+                    title = stringResource(R.string.landing_path_hiero_title),
+                    subtitle = stringResource(R.string.landing_path_hiero_subtitle),
                     features = listOf(
-                        "Scan & Identify — detect glyphs from photos",
-                        "Translate — English & Arabic translation",
-                        "Dictionary — 1,000+ Gardiner signs",
-                        "Write — compose in hieroglyphs",
+                        stringResource(R.string.landing_feature_scan),
+                        stringResource(R.string.landing_feature_translate),
+                        stringResource(R.string.landing_feature_dictionary),
+                        stringResource(R.string.landing_feature_write),
                     ),
-                    buttonText = "Start Scanning",
+                    buttonText = stringResource(R.string.landing_start_scanning),
                     onClick = onNavigateToScan,
                 )
             }
@@ -128,15 +130,15 @@ fun LandingScreen(
             FadeUp(visible = visibleSections >= 3) {
                 PathCardRich(
                     glyph = "𓉐",
-                    title = "Landmarks",
-                    subtitle = "Explore Sites & Monuments",
+                    title = stringResource(R.string.landing_path_landmark_title),
+                    subtitle = stringResource(R.string.landing_path_landmark_subtitle),
                     features = listOf(
-                        "Explore — pyramids, temples, museums",
-                        "Identify — snap a photo, AI tells you",
-                        "AI Descriptions — rich history for each site",
-                        "Discover — recommendations & similar sites",
+                        stringResource(R.string.landing_feature_explore),
+                        stringResource(R.string.landing_feature_identify),
+                        stringResource(R.string.landing_feature_ai_desc),
+                        stringResource(R.string.landing_feature_discover),
                     ),
-                    buttonText = "Start Exploring",
+                    buttonText = stringResource(R.string.landing_start_exploring),
                     onClick = onNavigateToExplore,
                 )
             }
@@ -147,7 +149,7 @@ fun LandingScreen(
             FadeUp(visible = visibleSections >= 4) {
                 Column {
                     Text(
-                        text = "Quick Actions",
+                        text = stringResource(R.string.landing_quick_actions),
                         style = MaterialTheme.typography.titleMedium,
                         color = WadjetColors.TextMuted,
                     )
@@ -156,24 +158,24 @@ fun LandingScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        QuickAction(Modifier.weight(1f), "𓂀", "Scan", onNavigateToScan)
-                        QuickAction(Modifier.weight(1f), "𓊹", "Dictionary", onNavigateToDictionary)
+                        QuickAction(Modifier.weight(1f), "𓂀", stringResource(R.string.landing_quick_scan), onNavigateToScan)
+                        QuickAction(Modifier.weight(1f), "𓊹", stringResource(R.string.landing_quick_dictionary), onNavigateToDictionary)
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        QuickAction(Modifier.weight(1f), "�", "Write", onNavigateToWrite)
-                        QuickAction(Modifier.weight(1f), "𓇯", "Explore", onNavigateToExplore)
+                        QuickAction(Modifier.weight(1f), "�", stringResource(R.string.landing_quick_write), onNavigateToWrite)
+                        QuickAction(Modifier.weight(1f), "𓇯", stringResource(R.string.landing_quick_explore), onNavigateToExplore)
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        QuickAction(Modifier.weight(1f), "𓉐", "Identify", onNavigateToIdentify)
-                        QuickAction(Modifier.weight(1f), "𓁟", "Stories", onNavigateToStories)
+                        QuickAction(Modifier.weight(1f), "𓉐", stringResource(R.string.landing_quick_identify), onNavigateToIdentify)
+                        QuickAction(Modifier.weight(1f), "𓁟", stringResource(R.string.landing_quick_stories), onNavigateToStories)
                     }
                 }
             }
@@ -187,7 +189,7 @@ fun LandingScreen(
                 FadeUp(visible = visibleSections >= 5) {
                     Column {
                         Text(
-                            text = "Continue Where You Left Off",
+                            text = stringResource(R.string.landing_continue_title),
                             style = MaterialTheme.typography.titleMedium,
                             color = WadjetColors.TextMuted,
                         )
@@ -229,7 +231,7 @@ fun LandingScreen(
         item {
             FadeUp(visible = visibleSections >= 7) {
                 Text(
-                    text = "Built by Mr Robot",
+                    text = stringResource(DesignR.string.footer_credit),
                     style = MaterialTheme.typography.bodySmall,
                     color = WadjetColors.Dust,
                     modifier = Modifier
@@ -363,7 +365,7 @@ private fun ContinueScanCard(
         Column {
             AsyncImage(
                 model = scan.thumbnailPath,
-                contentDescription = "Recent scan",
+                contentDescription = stringResource(R.string.landing_recent_scan_desc),
                 contentScale = ContentScale.Crop,
                 placeholder = painterResource(DesignR.drawable.ic_placeholder_glyph),
                 error = painterResource(DesignR.drawable.ic_placeholder_error),
@@ -375,14 +377,14 @@ private fun ContinueScanCard(
             )
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(
-                    text = scan.transliteration ?: "Scan Result",
+                    text = scan.transliteration ?: stringResource(R.string.landing_scan_result_fallback),
                     style = MaterialTheme.typography.titleSmall,
                     color = WadjetColors.Gold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = "${scan.glyphCount} glyphs detected",
+                    text = stringResource(R.string.landing_glyphs_detected, scan.glyphCount),
                     style = MaterialTheme.typography.bodySmall,
                     color = WadjetColors.TextMuted,
                 )
@@ -452,12 +454,12 @@ private fun ThothChatEntry(onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Ask Thoth anything...",
+                    text = stringResource(R.string.landing_thoth_prompt),
                     style = MaterialTheme.typography.titleSmall,
                     color = WadjetColors.Text,
                 )
                 Text(
-                    text = "AI-powered Egyptian history expert",
+                    text = stringResource(R.string.landing_thoth_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = WadjetColors.TextMuted,
                 )

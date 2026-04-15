@@ -64,11 +64,13 @@ import coil3.compose.AsyncImage
 import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.core.designsystem.WadjetColors
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.wadjet.core.designsystem.animation.goldPulse
 import com.wadjet.core.designsystem.animation.shineSweep
 import com.wadjet.core.designsystem.component.ShimmerCardList
 import com.wadjet.core.domain.model.Landmark
 import com.wadjet.feature.explore.ExploreUiState
+import com.wadjet.feature.explore.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -106,10 +108,10 @@ fun ExploreScreen(
     ) {
         // Top bar
         TopAppBar(
-            title = { Text("Explore", color = WadjetColors.Text) },
+            title = { Text(stringResource(R.string.explore_title), color = WadjetColors.Text) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = WadjetColors.Gold)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(DesignR.string.action_back), tint = WadjetColors.Gold)
                 }
             },
             actions = {
@@ -117,7 +119,7 @@ fun ExploreScreen(
                     onClick = onIdentify,
                     modifier = Modifier.goldPulse(),
                 ) {
-                    Icon(Icons.Default.FileUpload, "Identify from photo", tint = WadjetColors.Gold)
+                    Icon(Icons.Default.FileUpload, stringResource(R.string.explore_identify_desc), tint = WadjetColors.Gold)
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = WadjetColors.Night),
@@ -170,10 +172,10 @@ fun ExploreScreen(
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     com.wadjet.core.designsystem.component.EmptyState(
                         glyph = "𓉐",
-                        title = if (state.searchQuery.isNotBlank()) "No results for \"${state.searchQuery}\""
-                            else "No landmarks found",
-                        subtitle = if (state.searchQuery.isNotBlank()) "Try a different search term"
-                            else "Explore Egypt's ancient wonders — check back soon",
+                        title = if (state.searchQuery.isNotBlank()) stringResource(R.string.explore_empty_search, state.searchQuery)
+                            else stringResource(R.string.explore_empty_title),
+                        subtitle = if (state.searchQuery.isNotBlank()) stringResource(R.string.explore_empty_search_subtitle)
+                            else stringResource(R.string.explore_empty_subtitle),
                     )
                 }
             } else {
@@ -189,7 +191,7 @@ fun ExploreScreen(
                     if (featured.isNotEmpty() && state.searchQuery.isBlank()) {
                         item(key = "featured_header") {
                             Text(
-                                "Featured",
+                                stringResource(R.string.explore_featured),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = WadjetColors.Gold,
                                 fontWeight = FontWeight.SemiBold,
@@ -209,7 +211,7 @@ fun ExploreScreen(
                         }
                         item(key = "all_header") {
                             Text(
-                                "All Landmarks",
+                                stringResource(R.string.explore_all_landmarks),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = WadjetColors.Gold,
                                 fontWeight = FontWeight.SemiBold,
@@ -232,7 +234,7 @@ fun ExploreScreen(
                                 contentAlignment = Alignment.Center,
                             ) {
                                 com.wadjet.core.designsystem.component.WadjetSectionLoader(
-                                    text = "Loading more...",
+                                    text = stringResource(R.string.explore_loading_more),
                                 )
                             }
                         }
@@ -249,7 +251,7 @@ fun ExploreScreen(
                         .fillMaxWidth(),
                 ) {
                     com.wadjet.core.designsystem.component.ErrorState(
-                        message = error ?: "Couldn't load landmarks. Check your connection",
+                        message = error ?: stringResource(R.string.explore_error),
                         onRetry = onRefresh,
                     )
                 }
@@ -263,12 +265,12 @@ private fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
     TextField(
         value = query,
         onValueChange = onQueryChange,
-        placeholder = { Text("Search landmarks...", color = WadjetColors.TextMuted) },
+        placeholder = { Text(stringResource(R.string.explore_search_placeholder), color = WadjetColors.TextMuted) },
         leadingIcon = { Icon(Icons.Default.Search, null, tint = WadjetColors.TextMuted) },
         trailingIcon = {
             if (query.isNotEmpty()) {
                 IconButton(onClick = { onQueryChange("") }) {
-                    Icon(Icons.Default.Close, "Clear", tint = WadjetColors.TextMuted)
+                    Icon(Icons.Default.Close, stringResource(DesignR.string.action_clear), tint = WadjetColors.TextMuted)
                 }
             }
         },
@@ -331,7 +333,7 @@ private fun CityFilter(
             FilterChip(
                 selected = selected == null,
                 onClick = { onSelect(null) },
-                label = { Text("All Cities") },
+                label = { Text(stringResource(R.string.explore_all_cities)) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = WadjetColors.Gold,
                     selectedLabelColor = WadjetColors.Night,
@@ -408,7 +410,7 @@ private fun LandmarkCard(
                     )
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                        contentDescription = if (isFavorite) stringResource(DesignR.string.action_remove_favorite) else stringResource(DesignR.string.action_add_favorite),
                         tint = heartColor,
                         modifier = Modifier.size(20.dp),
                     )
@@ -432,7 +434,7 @@ private fun LandmarkCard(
                     )
                     if (landmark.featured) {
                         Spacer(modifier = Modifier.width(6.dp))
-                        Badge(text = "★ Featured", color = WadjetColors.Gold)
+                        Badge(text = stringResource(R.string.explore_featured_badge), color = WadjetColors.Gold)
                     }
                 }
                 landmark.nameAr?.let { ar ->

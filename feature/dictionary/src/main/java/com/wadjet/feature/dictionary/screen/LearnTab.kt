@@ -37,7 +37,9 @@ import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.animation.FadeUp
 import com.wadjet.core.designsystem.component.WadjetCard
 import com.wadjet.core.domain.model.Sign
+import androidx.compose.ui.res.stringResource
 import com.wadjet.feature.dictionary.AlphabetUiState
+import com.wadjet.feature.dictionary.R
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -56,11 +58,11 @@ fun LearnTab(
     }
 
     val lessons = listOf(
-        LessonInfo(1, "The Alphabet", "Learn the 26 uniliteral signs — the building blocks of hieroglyphic writing."),
-        LessonInfo(2, "Common Words", "Combine signs to read and write frequently used Egyptian words."),
-        LessonInfo(3, "Royal Names", "Read cartouches — the oval frames containing pharaoh names."),
-        LessonInfo(4, "Determinatives", "Silent signs that hint at a word's meaning category."),
-        LessonInfo(5, "Full Sentences", "Put it all together — read complete inscriptions."),
+        LessonInfo(1, stringResource(R.string.lesson_1_title), stringResource(R.string.lesson_1_desc)),
+        LessonInfo(2, stringResource(R.string.lesson_2_title), stringResource(R.string.lesson_2_desc)),
+        LessonInfo(3, stringResource(R.string.lesson_3_title), stringResource(R.string.lesson_3_desc)),
+        LessonInfo(4, stringResource(R.string.lesson_4_title), stringResource(R.string.lesson_4_desc)),
+        LessonInfo(5, stringResource(R.string.lesson_5_title), stringResource(R.string.lesson_5_desc)),
     )
 
     var visibleCount by remember { mutableStateOf(0) }
@@ -78,14 +80,14 @@ fun LearnTab(
             item(key = "alphabet_header") {
                 Column {
                     Text(
-                        text = "Egyptian Alphabet",
+                        text = stringResource(R.string.learn_alphabet_title),
                         style = MaterialTheme.typography.titleMedium,
                         color = WadjetColors.Gold,
                         fontWeight = FontWeight.Bold,
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "The 25 uniliteral signs — tap any to explore",
+                        text = stringResource(R.string.learn_alphabet_subtitle),
                         style = MaterialTheme.typography.bodySmall,
                         color = WadjetColors.TextMuted,
                     )
@@ -136,7 +138,7 @@ fun LearnTab(
             item(key = "lessons_header") {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Lessons",
+                    text = stringResource(R.string.learn_lessons_title),
                     style = MaterialTheme.typography.titleMedium,
                     color = WadjetColors.Gold,
                     fontWeight = FontWeight.Bold,
@@ -162,7 +164,7 @@ private fun LessonCard(lesson: LessonInfo, onClick: () -> Unit) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Level ${lesson.level}",
+                text = stringResource(R.string.learn_level, lesson.level),
                 style = MaterialTheme.typography.labelSmall,
                 color = WadjetColors.Gold,
             )

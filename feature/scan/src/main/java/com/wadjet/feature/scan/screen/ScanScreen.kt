@@ -61,6 +61,9 @@ import com.wadjet.core.designsystem.animation.shineSweep
 import com.wadjet.core.designsystem.component.ImageUploadZone
 import com.wadjet.feature.scan.ScanStep
 import com.wadjet.feature.scan.ScanUiState
+import com.wadjet.feature.scan.R
+import com.wadjet.core.designsystem.R as DesignR
+import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,9 +90,9 @@ fun ScanScreen(
             FadeUp(visible = true) {
                 ImageUploadZone(
                     onImageSelected = onImageSelected,
-                    title = "Tap to select a hieroglyph image",
-                    subtitle = "Supports JPG, PNG up to 10MB",
-                    analyzeButtonText = "Scan Hieroglyphs",
+                    title = stringResource(R.string.scan_upload_title),
+                    subtitle = stringResource(R.string.scan_upload_subtitle),
+                    analyzeButtonText = stringResource(R.string.scan_analyze_button),
                     isAnalyzing = state.isLoading,
                     onAnalyze = null,
                 )
@@ -98,15 +101,15 @@ fun ScanScreen(
 
         // Top bar
         TopAppBar(
-            title = { Text("Scan", color = WadjetColors.Text) },
+            title = { Text(stringResource(R.string.scan_title), color = WadjetColors.Text) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = WadjetColors.Gold)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(DesignR.string.action_back), tint = WadjetColors.Gold)
                 }
             },
             actions = {
                 IconButton(onClick = onNavigateToHistory) {
-                    Icon(Icons.Default.History, "History", tint = WadjetColors.Gold)
+                    Icon(Icons.Default.History, stringResource(R.string.scan_history_action), tint = WadjetColors.Gold)
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
@@ -135,7 +138,7 @@ fun ScanScreen(
                     .fillMaxWidth(),
             ) {
                 com.wadjet.core.designsystem.component.ErrorState(
-                    message = error ?: "Couldn't read hieroglyphs. Try again with better lighting",
+                    message = error ?: stringResource(R.string.scan_error_fallback),
                 )
             }
         }
@@ -259,10 +262,10 @@ private fun PermissionDeniedContent(onRequestPermission: () -> Unit) {
 @Composable
 private fun ScanProgressOverlay(step: ScanStep) {
     val steps = listOf(
-        ScanStep.DETECTING to ("Detecting glyphs" to "Locating hieroglyphs in image"),
-        ScanStep.CLASSIFYING to ("Classifying signs" to "Matching to Gardiner catalogue"),
-        ScanStep.TRANSLITERATING to ("Transliterating" to "Converting to phonetic script"),
-        ScanStep.TRANSLATING to ("Translating" to "Producing English & Arabic"),
+        ScanStep.DETECTING to (stringResource(R.string.scan_step_detecting) to stringResource(R.string.scan_step_detecting_sub)),
+        ScanStep.CLASSIFYING to (stringResource(R.string.scan_step_classifying) to stringResource(R.string.scan_step_classifying_sub)),
+        ScanStep.TRANSLITERATING to (stringResource(R.string.scan_step_transliterating) to stringResource(R.string.scan_step_transliterating_sub)),
+        ScanStep.TRANSLATING to (stringResource(R.string.scan_step_translating) to stringResource(R.string.scan_step_translating_sub)),
     )
 
     val currentIndex = steps.indexOfFirst { it.first == step }
@@ -294,15 +297,16 @@ private fun ScanProgressOverlay(step: ScanStep) {
             modifier = Modifier.padding(32.dp).fillMaxWidth(),
         ) {
             // Hieroglyph branding icon
+            val eyeDesc = stringResource(R.string.scan_progress_eye_desc)
             Text(
                 "𓂀",
                 fontSize = 48.sp,
                 color = WadjetColors.Gold,
-                modifier = Modifier.semantics { contentDescription = "Eye of Horus" },
+                modifier = Modifier.semantics { contentDescription = eyeDesc },
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "Analyzing Inscription",
+                stringResource(R.string.scan_progress_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = WadjetColors.Gold,
                 fontWeight = FontWeight.Bold,

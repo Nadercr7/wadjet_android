@@ -21,6 +21,9 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wadjet.core.designsystem.WadjetColors
+import androidx.compose.ui.res.stringResource
+import com.wadjet.core.designsystem.R as DesignR
+import com.wadjet.feature.dictionary.R
 import com.wadjet.feature.dictionary.SignDetailViewModel
 import com.wadjet.feature.dictionary.sheet.SignDetailSheet
 
@@ -39,10 +42,10 @@ fun DictionarySignScreen(
             .background(WadjetColors.Night),
     ) {
         TopAppBar(
-            title = { Text("Sign Detail") },
+            title = { Text(stringResource(R.string.sign_detail_title)) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(DesignR.string.action_back))
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
@@ -61,7 +64,7 @@ fun DictionarySignScreen(
             state.error != null -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        text = state.error ?: "Unknown error",
+                        text = state.error ?: stringResource(DesignR.string.error_unknown),
                         color = WadjetColors.Error,
                     )
                 }

@@ -56,7 +56,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.feature.settings.R
 import com.wadjet.feature.settings.SettingsUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,16 +95,16 @@ fun SettingsScreen(
     if (showSignOutDialog) {
         AlertDialog(
             onDismissRequest = { showSignOutDialog = false },
-            title = { Text("Sign Out", color = WadjetColors.Text) },
-            text = { Text("Are you sure you want to sign out?", color = WadjetColors.TextMuted) },
+            title = { Text(stringResource(R.string.settings_sign_out_title), color = WadjetColors.Text) },
+            text = { Text(stringResource(R.string.settings_sign_out_message), color = WadjetColors.TextMuted) },
             confirmButton = {
                 TextButton(onClick = { showSignOutDialog = false; onSignOut() }) {
-                    Text("Sign Out", color = WadjetColors.Error)
+                    Text(stringResource(R.string.settings_sign_out_confirm), color = WadjetColors.Error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showSignOutDialog = false }) {
-                    Text("Cancel", color = WadjetColors.TextMuted)
+                    Text(stringResource(DesignR.string.action_cancel), color = WadjetColors.TextMuted)
                 }
             },
             containerColor = WadjetColors.Surface,
@@ -114,11 +117,11 @@ fun SettingsScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Settings", color = WadjetColors.Gold, style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.settings_title), color = WadjetColors.Gold, style = MaterialTheme.typography.titleLarge)
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = WadjetColors.Text)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(DesignR.string.action_back), tint = WadjetColors.Text)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = WadjetColors.Surface),
@@ -134,7 +137,7 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // ── Profile Section ──
-            item { SectionHeader("Profile") }
+            item { SectionHeader(stringResource(R.string.settings_section_profile)) }
             item {
                 ProfileSection(
                     state = state,
@@ -147,7 +150,7 @@ fun SettingsScreen(
 
             // ── Password (email auth only) ──
             if (state.user?.authProvider == "email" || state.user?.authProvider == "password") {
-                item { SectionHeader("Password") }
+                item { SectionHeader(stringResource(R.string.settings_section_password)) }
                 item {
                     PasswordSection(
                         currentPassword = state.currentPassword,
@@ -161,7 +164,7 @@ fun SettingsScreen(
             }
 
             // ── TTS Settings ──
-            item { SectionHeader("Text-to-Speech") }
+            item { SectionHeader(stringResource(R.string.settings_section_tts)) }
             item {
                 TtsSection(
                     enabled = state.ttsEnabled,
@@ -172,7 +175,7 @@ fun SettingsScreen(
             }
 
             // ── Storage ──
-            item { SectionHeader("Storage") }
+            item { SectionHeader(stringResource(R.string.settings_section_storage)) }
             item {
                 SettingsCard {
                     Row(
@@ -181,9 +184,9 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column {
-                            Text("Cache", color = WadjetColors.Text, style = MaterialTheme.typography.bodyMedium)
+                            Text(stringResource(R.string.settings_cache_label), color = WadjetColors.Text, style = MaterialTheme.typography.bodyMedium)
                             Text(
-                                "${state.cacheSizeMb} MB",
+                                stringResource(R.string.settings_cache_size, state.cacheSizeMb),
                                 color = WadjetColors.TextMuted,
                                 style = MaterialTheme.typography.bodySmall,
                             )
@@ -196,22 +199,22 @@ fun SettingsScreen(
                                 .clickable(onClick = onClearCache)
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                         ) {
-                            Text("Clear Cache", color = WadjetColors.Gold, style = MaterialTheme.typography.labelMedium)
+                            Text(stringResource(R.string.settings_clear_cache), color = WadjetColors.Gold, style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }
             }
 
             // ── About ──
-            item { SectionHeader("About") }
+            item { SectionHeader(stringResource(R.string.settings_section_about)) }
             item {
                 SettingsCard {
-                    Text("Wadjet v1.0.0-beta", color = WadjetColors.Text, style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.settings_app_version), color = WadjetColors.Text, style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("Built by Mr Robot", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(DesignR.string.footer_credit), color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "Send Feedback",
+                        text = stringResource(R.string.settings_send_feedback),
                         color = WadjetColors.Gold,
                         style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier.clickable(onClick = onFeedback),
@@ -220,7 +223,7 @@ fun SettingsScreen(
             }
 
             // ── Account ──
-            item { SectionHeader("Account") }
+            item { SectionHeader(stringResource(R.string.settings_section_account)) }
             item {
                 Box(
                     modifier = Modifier
@@ -232,7 +235,7 @@ fun SettingsScreen(
                         .padding(16.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("Sign Out", color = WadjetColors.Error, style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.settings_sign_out_title), color = WadjetColors.Error, style = MaterialTheme.typography.labelLarge)
                 }
             }
 
@@ -259,20 +262,20 @@ private fun ProfileSection(
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     colors = settingsTextFieldColors(),
-                    placeholder = { Text("Display name", color = WadjetColors.TextMuted) },
+                    placeholder = { Text(stringResource(R.string.settings_display_name_placeholder), color = WadjetColors.TextMuted) },
                 )
                 IconButton(onClick = onSave) {
-                    Icon(Icons.Default.Check, "Save", tint = WadjetColors.Gold)
+                    Icon(Icons.Default.Check, stringResource(DesignR.string.action_save), tint = WadjetColors.Gold)
                 }
                 IconButton(onClick = onCancel) {
-                    Icon(Icons.Default.Close, "Cancel", tint = WadjetColors.TextMuted)
+                    Icon(Icons.Default.Close, stringResource(DesignR.string.action_cancel), tint = WadjetColors.TextMuted)
                 }
             }
         } else {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = state.user?.displayName ?: "No name set",
+                        text = state.user?.displayName ?: stringResource(R.string.settings_no_name),
                         color = WadjetColors.Text,
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium,
@@ -292,7 +295,7 @@ private fun ProfileSection(
                             .padding(horizontal = 8.dp, vertical = 2.dp),
                     ) {
                         Text(
-                            text = if (provider.contains("google")) "Google" else "Email",
+                            text = if (provider.contains("google")) stringResource(R.string.settings_provider_google) else stringResource(R.string.settings_provider_email),
                             color = WadjetColors.Gold,
                             style = MaterialTheme.typography.labelSmall,
                         )
@@ -300,7 +303,7 @@ private fun ProfileSection(
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 IconButton(onClick = onStartEdit) {
-                    Icon(Icons.Default.Edit, "Edit name", tint = WadjetColors.Sand)
+                    Icon(Icons.Default.Edit, stringResource(R.string.settings_edit_name_desc), tint = WadjetColors.Sand)
                 }
             }
         }
@@ -322,7 +325,7 @@ private fun PasswordSection(
             value = currentPassword,
             onValueChange = onUpdateCurrent,
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Current Password", color = WadjetColors.TextMuted) },
+            label = { Text(stringResource(R.string.settings_current_password), color = WadjetColors.TextMuted) },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -334,7 +337,7 @@ private fun PasswordSection(
             value = newPassword,
             onValueChange = onUpdateNew,
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("New Password", color = WadjetColors.TextMuted) },
+            label = { Text(stringResource(R.string.settings_new_password), color = WadjetColors.TextMuted) },
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -350,7 +353,7 @@ private fun PasswordSection(
                 .padding(horizontal = 20.dp, vertical = 10.dp),
         ) {
             Text(
-                text = if (isChanging) "Saving..." else "Change Password",
+                text = if (isChanging) stringResource(R.string.settings_password_saving) else stringResource(R.string.settings_change_password),
                 color = WadjetColors.Night,
                 style = MaterialTheme.typography.labelLarge,
             )
@@ -372,7 +375,7 @@ private fun TtsSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Enable TTS", color = WadjetColors.Text, style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.settings_enable_tts), color = WadjetColors.Text, style = MaterialTheme.typography.bodyMedium)
             Switch(
                 checked = enabled,
                 onCheckedChange = onEnabledChanged,
@@ -390,7 +393,7 @@ private fun TtsSection(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("Speed", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.settings_tts_speed), color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
                 Spacer(modifier = Modifier.width(8.dp))
                 Slider(
                     value = speed,
@@ -406,7 +409,7 @@ private fun TtsSection(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "${String.format("%.1f", speed)}x",
+                    text = stringResource(R.string.settings_tts_speed_value, String.format("%.1f", speed)),
                     color = WadjetColors.Sand,
                     style = MaterialTheme.typography.bodySmall,
                 )

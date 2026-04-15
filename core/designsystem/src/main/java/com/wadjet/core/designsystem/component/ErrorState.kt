@@ -15,7 +15,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wadjet.core.designsystem.HieroglyphStyle
+import com.wadjet.core.designsystem.R
 import com.wadjet.core.designsystem.WadjetColors
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun ErrorState(
@@ -29,11 +31,12 @@ fun ErrorState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
+        val errorDesc = stringResource(R.string.error_state_desc)
         Text(
             text = glyph,
             style = HieroglyphStyle.copy(fontSize = HieroglyphStyle.fontSize * 1.75f),
             color = WadjetColors.Gold.copy(alpha = 0.5f),
-            modifier = Modifier.semantics { contentDescription = "Error" },
+            modifier = Modifier.semantics { contentDescription = errorDesc },
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
@@ -44,7 +47,7 @@ fun ErrorState(
         )
         if (onRetry != null) {
             Spacer(modifier = Modifier.height(16.dp))
-            WadjetButton(text = "Try Again", onClick = onRetry)
+            WadjetButton(text = stringResource(R.string.error_try_again), onClick = onRetry)
         }
     }
 }

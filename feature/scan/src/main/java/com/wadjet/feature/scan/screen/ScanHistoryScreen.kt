@@ -45,7 +45,9 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.feature.scan.R
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.wadjet.core.designsystem.component.ShimmerCardList
 import com.wadjet.core.designsystem.component.ErrorState
 import com.wadjet.core.domain.model.ScanHistorySummary
@@ -71,10 +73,10 @@ fun ScanHistoryScreen(
             .background(WadjetColors.Night),
     ) {
         TopAppBar(
-            title = { Text("Scan History", color = WadjetColors.Text) },
+            title = { Text(stringResource(R.string.scan_history_title), color = WadjetColors.Text) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = WadjetColors.Gold)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(DesignR.string.action_back), tint = WadjetColors.Gold)
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = WadjetColors.Night),
@@ -94,7 +96,7 @@ fun ScanHistoryScreen(
                     contentAlignment = Alignment.Center,
                 ) {
                     ErrorState(
-                        message = state.error ?: "Couldn't load scan history. Check your connection",
+                        message = state.error ?: stringResource(R.string.scan_history_error),
                         onRetry = onRefresh,
                     )
                 }
@@ -107,8 +109,8 @@ fun ScanHistoryScreen(
                 ) {
                     com.wadjet.core.designsystem.component.EmptyState(
                         glyph = "\uD80C\uDC80",
-                        title = "No scans yet",
-                        subtitle = "Scan hieroglyphs to see them here",
+                        title = stringResource(R.string.scan_history_empty_title),
+                        subtitle = stringResource(R.string.scan_history_empty_subtitle),
                     )
                 }
             }
@@ -168,7 +170,7 @@ private fun SwipeToDeleteHistoryItem(
                     .padding(end = 20.dp),
                 contentAlignment = Alignment.CenterEnd,
             ) {
-                Icon(Icons.Default.Delete, "Delete", tint = WadjetColors.Text)
+                Icon(Icons.Default.Delete, stringResource(DesignR.string.action_delete), tint = WadjetColors.Text)
             }
         },
         enableDismissFromStartToEnd = false,
@@ -195,7 +197,7 @@ private fun HistoryCard(
             // Thumbnail
             AsyncImage(
                 model = File(item.thumbnailPath),
-                contentDescription = "Scan thumbnail",
+                contentDescription = stringResource(R.string.scan_history_thumbnail_desc),
                 contentScale = ContentScale.Crop,
                 placeholder = painterResource(DesignR.drawable.ic_placeholder_glyph),
                 error = painterResource(DesignR.drawable.ic_placeholder_error),
@@ -211,7 +213,7 @@ private fun HistoryCard(
             Column(modifier = Modifier.weight(1f)) {
                 // Gardiner sequence or transliteration
                 Text(
-                    text = item.transliteration ?: item.gardinerSequence ?: "Scan",
+                    text = item.transliteration ?: item.gardinerSequence ?: stringResource(R.string.scan_history_item_fallback),
                     style = MaterialTheme.typography.bodyLarge,
                     color = WadjetColors.Text,
                     fontWeight = FontWeight.Medium,
@@ -225,7 +227,7 @@ private fun HistoryCard(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Text(
-                        text = "${item.glyphCount} glyphs",
+                        text = stringResource(R.string.scan_history_glyph_count, item.glyphCount),
                         style = MaterialTheme.typography.labelSmall,
                         color = WadjetColors.TextMuted,
                     )

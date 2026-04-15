@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_sign_out_title">Sign Out</string>
+    <string name="settings_sign_out_message">Are you sure you want to sign out?</string>
+    <string name="settings_sign_out_confirm">Sign Out</string>
+    <string name="settings_section_profile">Profile</string>
+    <string name="settings_section_password">Password</string>
+    <string name="settings_section_tts">Text-to-Speech</string>
+    <string name="settings_section_storage">Storage</string>
+    <string name="settings_cache_label">Cache</string>
+    <string name="settings_cache_size">%1$d MB</string>
+    <string name="settings_clear_cache">Clear Cache</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_app_version">Wadjet v1.0.0-beta</string>
+    <string name="settings_send_feedback">Send Feedback</string>
+    <string name="settings_section_account">Account</string>
+    <string name="settings_display_name_placeholder">Display name</string>
+    <string name="settings_no_name">No name set</string>
+    <string name="settings_provider_google">Google</string>
+    <string name="settings_provider_email">Email</string>
+    <string name="settings_edit_name_desc">Edit name</string>
+    <string name="settings_current_password">Current Password</string>
+    <string name="settings_new_password">New Password</string>
+    <string name="settings_password_saving">Saving…</string>
+    <string name="settings_change_password">Change Password</string>
+    <string name="settings_enable_tts">Enable TTS</string>
+    <string name="settings_tts_speed">Speed</string>
+    <string name="settings_tts_speed_value">%1$sx</string>
+</resources>

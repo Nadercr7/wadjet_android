@@ -39,6 +39,7 @@ import coil3.compose.AsyncImage
 import com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs
 import com.wadjet.core.designsystem.R
 import com.wadjet.core.designsystem.WadjetColors
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun ImageUploadZone(
@@ -89,7 +90,7 @@ fun ImageUploadZone(
             ) {
                 AsyncImage(
                     model = localUri,
-                    contentDescription = "Selected image",
+                    contentDescription = stringResource(R.string.upload_selected_image_desc),
                     contentScale = ContentScale.Crop,
                     placeholder = painterResource(R.drawable.ic_placeholder_glyph),
                     error = painterResource(R.drawable.ic_placeholder_error),
@@ -108,7 +109,7 @@ fun ImageUploadZone(
                         .padding(horizontal = 12.dp, vertical = 6.dp),
                 ) {
                     Text(
-                        text = "Change",
+                        text = stringResource(R.string.upload_change),
                         color = WadjetColors.Gold,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
@@ -183,7 +184,7 @@ fun ImageUploadZone(
             Spacer(modifier = Modifier.height(20.dp))
 
             WadjetGhostButton(
-                text = "Browse Gallery",
+                text = stringResource(R.string.upload_browse_gallery),
                 onClick = {
                     photoPicker.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),

@@ -41,7 +41,10 @@ import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.component.ShimmerGrid
 import com.wadjet.core.designsystem.component.WadjetTextField
 import com.wadjet.core.domain.model.Sign
+import androidx.compose.ui.res.stringResource
+import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.feature.dictionary.BrowseUiState
+import com.wadjet.feature.dictionary.R
 import com.wadjet.feature.dictionary.SIGN_TYPES
 
 @Composable
@@ -74,11 +77,11 @@ fun BrowseTab(
             value = state.searchQuery,
             onValueChange = onSearchChange,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            placeholder = "Search signs…",
+            placeholder = stringResource(R.string.browse_search_placeholder),
             leadingIcon = {
                 Icon(
                     Icons.Default.Search,
-                    contentDescription = "Search",
+                    contentDescription = stringResource(DesignR.string.action_search),
                     tint = WadjetColors.TextMuted,
                 )
             },
@@ -94,7 +97,7 @@ fun BrowseTab(
                 FilterChip(
                     selected = state.selectedCategory == null,
                     onClick = { onCategorySelect(null) },
-                    label = { Text("All") },
+                    label = { Text(stringResource(R.string.browse_all_filter)) },
                     colors = chipColors(state.selectedCategory == null),
                 )
             }
@@ -138,7 +141,7 @@ fun BrowseTab(
                     contentAlignment = Alignment.Center,
                 ) {
                     com.wadjet.core.designsystem.component.ErrorState(
-                        message = state.error ?: "Couldn't load hieroglyphs. Check your connection",
+                        message = state.error ?: stringResource(R.string.browse_error),
                     )
                 }
             } else {
@@ -148,8 +151,8 @@ fun BrowseTab(
                 ) {
                     com.wadjet.core.designsystem.component.EmptyState(
                         glyph = "\uD80C\uDEB9",
-                        title = "No signs found",
-                        subtitle = "Try a different search or filter",
+                        title = stringResource(R.string.browse_empty_title),
+                        subtitle = stringResource(R.string.browse_empty_subtitle),
                     )
                 }
             }
@@ -171,7 +174,7 @@ fun BrowseTab(
                             contentAlignment = Alignment.Center,
                         ) {
                             com.wadjet.core.designsystem.component.WadjetSectionLoader(
-                                text = "Loading more signs...",
+                                text = stringResource(R.string.browse_loading_more),
                             )
                         }
                     }

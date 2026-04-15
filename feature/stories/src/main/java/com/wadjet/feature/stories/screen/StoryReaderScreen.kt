@@ -84,11 +84,13 @@ import coil3.request.crossfade
 import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.core.designsystem.WadjetColors
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.wadjet.core.designsystem.animation.FadeUp
 import com.wadjet.core.domain.model.GlyphAnnotation
 import com.wadjet.core.domain.model.Interaction
 import com.wadjet.core.domain.model.InteractionResult
 import com.wadjet.core.domain.model.Paragraph
+import com.wadjet.feature.stories.R
 import com.wadjet.feature.stories.ReaderUiState
 import java.util.Locale
 
@@ -150,20 +152,20 @@ fun StoryReaderScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            text = story?.titleEn ?: "Loading...",
+                            text = story?.titleEn ?: stringResource(R.string.reader_loading_title),
                             color = WadjetColors.Gold,
                             style = MaterialTheme.typography.titleMedium,
                         )
                     },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = WadjetColors.Text)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(DesignR.string.action_back), tint = WadjetColors.Text)
                         }
                     },
                     actions = {
                         if (state.totalChapters > 0) {
                             Text(
-                                text = "Ch ${state.currentChapter + 1}/${state.totalChapters}",
+                                text = stringResource(R.string.reader_chapter_counter, state.currentChapter + 1, state.totalChapters),
                                 color = WadjetColors.Sand,
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.padding(end = 8.dp),
@@ -173,7 +175,7 @@ fun StoryReaderScreen(
                             Icon(
                                 imageVector = if (state.isSpeaking) Icons.Default.Stop
                                 else Icons.AutoMirrored.Filled.VolumeUp,
-                                contentDescription = if (state.isSpeaking) "Stop" else "Narrate",
+                                contentDescription = if (state.isSpeaking) stringResource(R.string.reader_stop_narrate) else stringResource(R.string.reader_narrate),
                                 tint = if (state.isSpeaking) WadjetColors.Gold else WadjetColors.Sand,
                             )
                         }
@@ -200,7 +202,7 @@ fun StoryReaderScreen(
                     .padding(padding),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("Loading story...", color = WadjetColors.TextMuted)
+                Text(stringResource(R.string.reader_loading), color = WadjetColors.TextMuted)
             }
             return@Scaffold
         }
@@ -273,7 +275,7 @@ fun StoryReaderScreen(
                 ) {
                     if (state.canGoPrev) {
                         ChapterNavButton(
-                            text = "← Previous",
+                            text = stringResource(R.string.reader_prev_chapter),
                             onClick = onPrevChapter,
                         )
                     } else {
@@ -281,7 +283,7 @@ fun StoryReaderScreen(
                     }
                     if (state.canGoNext) {
                         ChapterNavButton(
-                            text = "Next →",
+                            text = stringResource(R.string.reader_next_chapter),
                             onClick = onNextChapter,
                         )
                     }
@@ -334,7 +336,7 @@ fun StoryReaderScreen(
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "Story Complete",
+                                text = stringResource(R.string.reader_story_complete),
                                 style = MaterialTheme.typography.headlineSmall,
                                 color = WadjetColors.Gold,
                                 fontWeight = FontWeight.Bold,
@@ -346,11 +348,11 @@ fun StoryReaderScreen(
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text("${state.score}", color = WadjetColors.Gold, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                                    Text("Score", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                                    Text(stringResource(R.string.reader_score_label), color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
                                 }
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text("${state.glyphsLearned.size}", color = WadjetColors.Gold, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                                    Text("Glyphs", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                                    Text(stringResource(R.string.reader_glyphs_label), color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
                                 }
                             }
 
@@ -390,8 +392,8 @@ fun StoryReaderScreen(
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
-                                ChapterNavButton(text = "Read Again", onClick = onReadAgain)
-                                ChapterNavButton(text = "Back to Stories", onClick = onBack)
+                                ChapterNavButton(text = stringResource(R.string.reader_read_again), onClick = onReadAgain)
+                                ChapterNavButton(text = stringResource(R.string.reader_back_to_stories), onClick = onBack)
                             }
                         }
                     }
@@ -436,7 +438,7 @@ private fun SceneImage(
                     .data(imageUrl)
                     .crossfade(true)
                     .build(),
-                contentDescription = "Scene illustration",
+                contentDescription = stringResource(R.string.reader_scene_desc),
                 placeholder = painterResource(DesignR.drawable.ic_placeholder_story),
                 error = painterResource(DesignR.drawable.ic_placeholder_error),
                 fallback = painterResource(DesignR.drawable.ic_placeholder_story),
@@ -459,7 +461,7 @@ private fun SceneImage(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Image failed to load",
+                    text = stringResource(R.string.reader_image_failed),
                     style = MaterialTheme.typography.bodySmall,
                     color = WadjetColors.TextMuted,
                 )
@@ -470,7 +472,7 @@ private fun SceneImage(
                     color = WadjetColors.Gold.copy(alpha = 0.15f),
                 ) {
                     Text(
-                        text = "Retry",
+                        text = stringResource(DesignR.string.action_retry),
                         color = WadjetColors.Gold,
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -669,12 +671,12 @@ private fun InteractionBlock(
 
             is Interaction.WriteWord -> {
                 Text(
-                    text = "Write the Gardiner code for: ${interaction.targetWordEn}",
+                    text = stringResource(R.string.reader_write_prompt, interaction.targetWordEn),
                     color = WadjetColors.Ivory,
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 Text(
-                    text = "Hint: ${interaction.hintEn}",
+                    text = stringResource(R.string.reader_hint, interaction.hintEn),
                     color = WadjetColors.TextMuted,
                     style = MaterialTheme.typography.bodySmall,
                 )
@@ -691,7 +693,7 @@ private fun InteractionBlock(
                         onValueChange = onWriteInputChanged,
                         modifier = Modifier.weight(1f),
                         enabled = writeEnabled,
-                        placeholder = { Text("e.g. ${interaction.gardinerCode}", color = WadjetColors.TextMuted) },
+                        placeholder = { Text(stringResource(R.string.reader_write_placeholder, interaction.gardinerCode), color = WadjetColors.TextMuted) },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = WadjetColors.Surface,
                             unfocusedContainerColor = WadjetColors.Surface,
@@ -714,7 +716,7 @@ private fun InteractionBlock(
                     ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowForward,
-                            "Submit",
+                            stringResource(DesignR.string.action_submit),
                             tint = if (writeInput.isNotBlank()) WadjetColors.Gold else WadjetColors.TextMuted,
                         )
                     }
@@ -783,7 +785,7 @@ private fun InteractionBlock(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "Glyph Learned",
+                                    text = stringResource(R.string.reader_glyph_learned),
                                     color = WadjetColors.Gold,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
@@ -791,7 +793,7 @@ private fun InteractionBlock(
                             }
                         }
                     } else {
-                        Text("Tap to discover glyph", color = WadjetColors.Gold, style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.reader_tap_discover), color = WadjetColors.Gold, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }
@@ -898,7 +900,7 @@ private fun FeedbackBanner(
             Column {
                 if (!isDecision) {
                     Text(
-                        text = if (result.correct) "Correct!" else "Not quite — try again",
+                        text = if (result.correct) stringResource(R.string.reader_correct) else stringResource(R.string.reader_incorrect),
                         color = iconColor,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,

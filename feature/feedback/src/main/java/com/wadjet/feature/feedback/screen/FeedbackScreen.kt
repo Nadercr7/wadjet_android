@@ -37,13 +37,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wadjet.core.designsystem.WadjetColors
+import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.feature.feedback.FEEDBACK_CATEGORIES
 import com.wadjet.feature.feedback.FeedbackUiState
+import com.wadjet.feature.feedback.R
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -63,11 +66,11 @@ fun FeedbackScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Send Feedback", color = WadjetColors.Gold, style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.feedback_title), color = WadjetColors.Gold, style = MaterialTheme.typography.titleLarge)
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = WadjetColors.Text)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(DesignR.string.action_back), tint = WadjetColors.Text)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = WadjetColors.Surface),
@@ -89,7 +92,7 @@ fun FeedbackScreen(
         ) {
             // Category chips
             item {
-                Text("Category", color = WadjetColors.Text, style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.feedback_category_label), color = WadjetColors.Text, style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.height(8.dp))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FEEDBACK_CATEGORIES.forEach { category ->
@@ -110,7 +113,7 @@ fun FeedbackScreen(
 
             // Message
             item {
-                Text("Message", color = WadjetColors.Text, style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.feedback_message_label), color = WadjetColors.Text, style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.height(8.dp))
                 TextField(
                     value = state.message,
@@ -118,12 +121,12 @@ fun FeedbackScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(160.dp),
-                    placeholder = { Text("Tell us what you think...", color = WadjetColors.TextMuted) },
+                    placeholder = { Text(stringResource(R.string.feedback_message_placeholder), color = WadjetColors.TextMuted) },
                     colors = feedbackTextFieldColors(),
                     maxLines = 8,
                 )
                 Text(
-                    text = "${state.message.length}/1000",
+                    text = stringResource(R.string.feedback_char_count, state.message.length),
                     color = if (state.message.length >= 1000) WadjetColors.Error else WadjetColors.TextMuted,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.fillMaxWidth(),
@@ -134,7 +137,7 @@ fun FeedbackScreen(
             // Optional fields
             item {
                 Text(
-                    "Optional",
+                    stringResource(R.string.feedback_optional_label),
                     color = WadjetColors.TextMuted,
                     style = MaterialTheme.typography.labelMedium,
                 )
@@ -143,7 +146,7 @@ fun FeedbackScreen(
                     value = state.name,
                     onValueChange = onNameChanged,
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Your name", color = WadjetColors.TextMuted) },
+                    placeholder = { Text(stringResource(R.string.feedback_name_placeholder), color = WadjetColors.TextMuted) },
                     colors = feedbackTextFieldColors(),
                     singleLine = true,
                 )
@@ -152,7 +155,7 @@ fun FeedbackScreen(
                     value = state.email,
                     onValueChange = onEmailChanged,
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Your email", color = WadjetColors.TextMuted) },
+                    placeholder = { Text(stringResource(R.string.feedback_email_placeholder), color = WadjetColors.TextMuted) },
                     colors = feedbackTextFieldColors(),
                     singleLine = true,
                 )
@@ -181,7 +184,7 @@ fun FeedbackScreen(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = if (state.isSubmitting) "Sending..." else "Submit Feedback",
+                        text = if (state.isSubmitting) stringResource(R.string.feedback_button_loading) else stringResource(R.string.feedback_button),
                         color = WadjetColors.Night,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
@@ -206,14 +209,14 @@ private fun SuccessContent(modifier: Modifier = Modifier) {
                 Text("✓", fontSize = 64.sp, color = WadjetColors.Success)
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Thank you!",
+                    text = stringResource(R.string.feedback_success_title),
                     color = WadjetColors.Gold,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Your feedback helps us improve Wadjet.",
+                    text = stringResource(R.string.feedback_success_message),
                     color = WadjetColors.TextMuted,
                     style = MaterialTheme.typography.bodyMedium,
                 )

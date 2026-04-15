@@ -44,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -57,8 +58,10 @@ import com.wadjet.core.domain.model.DashboardStoryProgress
 import com.wadjet.core.domain.model.FavoriteItem
 import com.wadjet.core.domain.model.ScanHistoryItem
 import com.wadjet.core.domain.model.UserStats
+import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.feature.dashboard.DashboardUiState
 import com.wadjet.feature.dashboard.FAV_TABS
+import com.wadjet.feature.dashboard.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,16 +79,16 @@ fun DashboardScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Dashboard", color = WadjetColors.Gold, style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.dashboard_title), color = WadjetColors.Gold, style = MaterialTheme.typography.titleLarge)
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = WadjetColors.Text)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(DesignR.string.action_back), tint = WadjetColors.Text)
                     }
                 },
                 actions = {
                     IconButton(onClick = onSettings) {
-                        Icon(Icons.Default.Settings, "Settings", tint = WadjetColors.Sand)
+                        Icon(Icons.Default.Settings, stringResource(R.string.dashboard_settings_desc), tint = WadjetColors.Sand)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = WadjetColors.Surface),
@@ -119,7 +122,7 @@ fun DashboardScreen(
                 if (state.error != null) {
                     item {
                         ErrorState(
-                            message = state.error ?: "Couldn't load your dashboard. Check your connection",
+                            message = state.error ?: stringResource(R.string.dashboard_error),
                             onRetry = onRefresh,
                         )
                     }
@@ -129,7 +132,7 @@ fun DashboardScreen(
                 item {
                     FadeUp(visible = true) {
                         UserHeader(
-                            name = state.user?.displayName ?: "Explorer",
+                            name = state.user?.displayName ?: stringResource(R.string.dashboard_default_name),
                             email = state.user?.email ?: "",
                             avatarUrl = state.user?.avatarUrl,
                         )
@@ -146,7 +149,7 @@ fun DashboardScreen(
                 // Recent Scans
                 if (state.recentScans.isNotEmpty()) {
                     item {
-                        SectionLabel("Recent Scans")
+                        SectionLabel(stringResource(R.string.dashboard_recent_scans))
                         Spacer(modifier = Modifier.height(8.dp))
                         LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -160,7 +163,7 @@ fun DashboardScreen(
 
                 // Favorites
                 item {
-                    SectionLabel("Favorites")
+                    SectionLabel(stringResource(R.string.dashboard_favorites))
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FAV_TABS.forEach { tab ->
@@ -193,8 +196,8 @@ fun DashboardScreen(
                         ) {
                             com.wadjet.core.designsystem.component.EmptyState(
                                 glyph = "\uD80C\uDEB9",
-                                title = "No favorites yet",
-                                subtitle = "Tap ♡ on landmarks, glyphs, or stories to save them here",
+                                title = stringResource(R.string.dashboard_favorites_empty_title),
+                                subtitle = stringResource(R.string.dashboard_favorites_empty_subtitle),
                             )
                         }
                     }
@@ -211,7 +214,7 @@ fun DashboardScreen(
                 if (state.storyProgress.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(4.dp))
-                        SectionLabel("Story Progress")
+                        SectionLabel(stringResource(R.string.dashboard_story_progress))
                     }
                     items(state.storyProgress, key = { it.storyId }) { sp ->
                         StoryProgressRow(progress = sp)
@@ -273,12 +276,12 @@ private fun StatsGrid(
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard("Scans Today", "${stats.scansToday}", Modifier.weight(1f))
-            StatCard("Total Scans", "${stats.totalScans}", Modifier.weight(1f))
+            StatCard(stringResource(R.string.dashboard_stat_scans_today), "${stats.scansToday}", Modifier.weight(1f))
+            StatCard(stringResource(R.string.dashboard_stat_total_scans), "${stats.totalScans}", Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard("Stories Done", "${stats.storiesCompleted}", Modifier.weight(1f))
-            StatCard("Glyphs Learned", "${stats.glyphsLearned}", Modifier.weight(1f))
+            StatCard(stringResource(R.string.dashboard_stat_stories_done), "${stats.storiesCompleted}", Modifier.weight(1f))
+            StatCard(stringResource(R.string.dashboard_stat_glyphs_learned), "${stats.glyphsLearned}", Modifier.weight(1f))
         }
     }
 }
@@ -342,7 +345,7 @@ private fun ScanCard(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "${scan.glyphCount} glyphs",
+            text = stringResource(R.string.dashboard_glyph_count, scan.glyphCount),
             color = WadjetColors.Text,
             style = MaterialTheme.typography.labelSmall,
         )
@@ -402,7 +405,7 @@ private fun FavoriteRow(
             )
         }
         Text(
-            text = "Remove",
+            text = stringResource(R.string.dashboard_remove),
             color = WadjetColors.Error,
             style = MaterialTheme.typography.labelSmall,
             modifier = Modifier.clickable(onClick = onRemove),
@@ -436,9 +439,9 @@ private fun StoryProgressRow(
                 overflow = TextOverflow.Ellipsis,
             )
             if (progress.completed) {
-                Text("✓ Done", color = WadjetColors.Success, style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.dashboard_story_done), color = WadjetColors.Success, style = MaterialTheme.typography.labelSmall)
             } else {
-                Text("Ch ${progress.chapterIndex + 1}", color = WadjetColors.Sand, style = MaterialTheme.typography.labelSmall)
+                Text(stringResource(R.string.dashboard_story_chapter, progress.chapterIndex + 1), color = WadjetColors.Sand, style = MaterialTheme.typography.labelSmall)
             }
         }
         Spacer(modifier = Modifier.height(6.dp))
@@ -453,7 +456,7 @@ private fun StoryProgressRow(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Score: ${progress.score} · Glyphs: ${progress.glyphsLearned}",
+            text = stringResource(R.string.dashboard_story_stats, progress.score, progress.glyphsLearned),
             color = WadjetColors.TextMuted,
             style = MaterialTheme.typography.labelSmall,
         )

@@ -34,6 +34,9 @@ import com.wadjet.core.designsystem.component.WadjetGhostButton
 import com.wadjet.core.designsystem.component.WadjetTextField
 import com.wadjet.feature.auth.AuthUiState
 import com.wadjet.feature.auth.AuthViewModel
+import com.wadjet.feature.auth.R
+import com.wadjet.core.designsystem.R as DesignR
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun RegisterSheet(
@@ -57,7 +60,7 @@ fun RegisterSheet(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
-            text = "Create Account",
+            text = stringResource(R.string.register_title),
             style = MaterialTheme.typography.headlineMedium,
             color = WadjetColors.Gold,
         )
@@ -65,28 +68,28 @@ fun RegisterSheet(
         WadjetTextField(
             value = displayName,
             onValueChange = { displayName = it },
-            label = "Display Name (optional)",
+            label = stringResource(R.string.register_display_name),
             modifier = Modifier.fillMaxWidth(),
         )
 
         WadjetTextField(
             value = email,
             onValueChange = { email = it },
-            label = "Email",
+            label = stringResource(R.string.register_email_label),
             modifier = Modifier.fillMaxWidth(),
         )
 
         WadjetTextField(
             value = password,
             onValueChange = { password = it },
-            label = "Password",
+            label = stringResource(R.string.register_password_label),
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                        contentDescription = if (passwordVisible) stringResource(DesignR.string.action_hide_password) else stringResource(DesignR.string.action_show_password),
                         tint = WadjetColors.TextMuted,
                     )
                 }
@@ -108,17 +111,17 @@ fun RegisterSheet(
                 )
 
                 // Password rules
-                PasswordRule("8+ characters", password.length >= 8)
-                PasswordRule("1 uppercase letter", password.any { it.isUpperCase() })
-                PasswordRule("1 lowercase letter", password.any { it.isLowerCase() })
-                PasswordRule("1 digit", password.any { it.isDigit() })
+                PasswordRule(stringResource(R.string.register_rule_length), password.length >= 8)
+                PasswordRule(stringResource(R.string.register_rule_uppercase), password.any { it.isUpperCase() })
+                PasswordRule(stringResource(R.string.register_rule_lowercase), password.any { it.isLowerCase() })
+                PasswordRule(stringResource(R.string.register_rule_digit), password.any { it.isDigit() })
             }
         }
 
         WadjetTextField(
             value = confirmPassword,
             onValueChange = { confirmPassword = it },
-            label = "Confirm Password",
+            label = stringResource(R.string.register_confirm_password),
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation(),
         )
@@ -132,7 +135,7 @@ fun RegisterSheet(
         }
 
         WadjetButton(
-            text = if (state.isLoading) "Creating account…" else "Create Account",
+            text = if (state.isLoading) stringResource(R.string.register_creating_account) else stringResource(R.string.register_title),
             onClick = { onRegister(email, password, confirmPassword, displayName.ifBlank { null }) },
             modifier = Modifier.fillMaxWidth(),
             enabled = !state.isLoading && email.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank(),
@@ -144,12 +147,12 @@ fun RegisterSheet(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             HorizontalDivider(modifier = Modifier.weight(1f), color = WadjetColors.Border)
-            Text("or", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.login_divider_or), color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
             HorizontalDivider(modifier = Modifier.weight(1f), color = WadjetColors.Border)
         }
 
         WadjetGhostButton(
-            text = "Sign up with Google",
+            text = stringResource(R.string.register_sign_up_google),
             onClick = onGoogleSignIn,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -161,9 +164,9 @@ fun RegisterSheet(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Already have an account?", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.register_have_account), color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodyMedium)
             TextButton(onClick = onSwitchToLogin) {
-                Text("Sign in", color = WadjetColors.Gold)
+                Text(stringResource(R.string.register_sign_in), color = WadjetColors.Gold)
             }
         }
     }

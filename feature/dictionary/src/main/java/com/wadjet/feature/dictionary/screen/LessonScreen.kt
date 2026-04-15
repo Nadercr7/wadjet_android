@@ -33,7 +33,10 @@ import com.wadjet.core.designsystem.component.WadjetGhostButton
 import com.wadjet.core.domain.model.ExampleWord
 import com.wadjet.core.domain.model.PracticeWord
 import com.wadjet.core.domain.model.Sign
+import androidx.compose.ui.res.stringResource
+import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.feature.dictionary.LessonUiState
+import com.wadjet.feature.dictionary.R
 
 @Composable
 fun LessonScreen(
@@ -46,14 +49,14 @@ fun LessonScreen(
         state.isLoading -> {
             Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 com.wadjet.core.designsystem.component.WadjetSectionLoader(
-                    text = "Loading lesson...",
+                    text = stringResource(R.string.lesson_loading),
                 )
             }
         }
         state.error != null -> {
             Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 com.wadjet.core.designsystem.component.ErrorState(
-                    message = state.error ?: "Couldn't load this lesson. Check your connection",
+                    message = state.error ?: stringResource(R.string.lesson_error),
                     onRetry = onRetry,
                 )
             }
@@ -100,7 +103,7 @@ fun LessonScreen(
                                 .padding(12.dp),
                         ) {
                             Text(
-                                text = "💡 $tip",
+                                text = stringResource(R.string.lesson_tip, tip),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = WadjetColors.Gold,
                             )
@@ -126,7 +129,7 @@ fun LessonScreen(
                 // Signs grid
                 if (lesson.signs.isNotEmpty()) {
                     item {
-                        Text("Signs in this lesson:", style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
+                        Text(stringResource(R.string.lesson_signs_label), style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
                         Spacer(Modifier.height(8.dp))
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(4),
@@ -146,7 +149,7 @@ fun LessonScreen(
                 // Example words
                 if (lesson.exampleWords.isNotEmpty()) {
                     item {
-                        Text("Example Words:", style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
+                        Text(stringResource(R.string.lesson_examples_label), style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
                     }
                     items(lesson.exampleWords.size) { index ->
                         ExampleWordItem(lesson.exampleWords[index])
@@ -156,7 +159,7 @@ fun LessonScreen(
                 // Practice words
                 if (lesson.practiceWords.isNotEmpty()) {
                     item {
-                        Text("Practice:", style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
+                        Text(stringResource(R.string.lesson_practice_label), style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
                     }
                     items(lesson.practiceWords.size) { index ->
                         PracticeWordItem(lesson.practiceWords[index])
@@ -170,7 +173,7 @@ fun LessonScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
                     ) {
-                        WadjetGhostButton(text = "Back", onClick = onBack)
+                        WadjetGhostButton(text = stringResource(DesignR.string.action_back), onClick = onBack)
                     }
                 }
             }
@@ -228,7 +231,7 @@ private fun PracticeWordItem(word: PracticeWord) {
         }
         if (word.hint.isNotBlank()) {
             Text(
-                text = "Hint: ${word.hint}",
+                text = stringResource(R.string.lesson_word_hint, word.hint),
                 style = MaterialTheme.typography.labelSmall,
                 color = WadjetColors.Gold.copy(alpha = 0.7f),
                 modifier = Modifier.padding(top = 4.dp),

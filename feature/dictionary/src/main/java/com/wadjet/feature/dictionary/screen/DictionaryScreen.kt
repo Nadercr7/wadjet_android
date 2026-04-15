@@ -24,9 +24,15 @@ import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.feature.dictionary.DictionaryViewModel
 import com.wadjet.feature.dictionary.WriteViewModel
 import com.wadjet.feature.dictionary.sheet.SignDetailSheet
+import androidx.compose.ui.res.stringResource
+import com.wadjet.feature.dictionary.R
 import kotlinx.coroutines.launch
 
-private val TABS = listOf("Browse", "Learn", "Write")
+private val TAB_TITLE_RES = listOf(
+    R.string.dictionary_tab_browse,
+    R.string.dictionary_tab_learn,
+    R.string.dictionary_tab_write,
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,12 +48,12 @@ fun DictionaryScreen(
     val writeState by writeViewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(
-        initialPage = initialTab.coerceIn(0, TABS.size - 1),
-        pageCount = { TABS.size },
+        initialPage = initialTab.coerceIn(0, TAB_TITLE_RES.size - 1),
+        pageCount = { TAB_TITLE_RES.size },
     )
 
     LaunchedEffect(initialTab) {
-        if (initialTab in TABS.indices && pagerState.currentPage != initialTab) {
+        if (initialTab in TAB_TITLE_RES.indices && pagerState.currentPage != initialTab) {
             pagerState.animateScrollToPage(initialTab)
         }
     }
@@ -67,13 +73,13 @@ fun DictionaryScreen(
                 }
             },
         ) {
-            TABS.forEachIndexed { index, title ->
+            TAB_TITLE_RES.forEachIndexed { index, titleRes ->
                 Tab(
                     selected = pagerState.currentPage == index,
                     onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
                     text = {
                         Text(
-                            text = title,
+                            text = stringResource(titleRes),
                             style = MaterialTheme.typography.labelLarge,
                             color = if (pagerState.currentPage == index) WadjetColors.Gold else WadjetColors.TextMuted,
                         )

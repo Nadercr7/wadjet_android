@@ -29,6 +29,9 @@ import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.designsystem.component.WadjetGhostButton
 import com.wadjet.core.domain.model.TranslationResult
+import androidx.compose.ui.res.stringResource
+import com.wadjet.core.designsystem.R as DesignR
+import com.wadjet.feature.dictionary.R
 import com.wadjet.feature.dictionary.TranslateUiState
 
 @Composable
@@ -58,14 +61,14 @@ fun TranslateTab(
             .padding(16.dp),
     ) {
         Text(
-            text = "Translate Hieroglyphs",
+            text = stringResource(R.string.translate_title),
             style = MaterialTheme.typography.titleLarge,
             color = WadjetColors.Gold,
             fontWeight = FontWeight.Bold,
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Enter MdC transliteration to get English and Arabic translations",
+            text = stringResource(R.string.translate_subtitle),
             style = MaterialTheme.typography.bodySmall,
             color = WadjetColors.TextMuted,
         )
@@ -75,8 +78,8 @@ fun TranslateTab(
         OutlinedTextField(
             value = state.input,
             onValueChange = onInputChange,
-            label = { Text("Transliteration (MdC)") },
-            placeholder = { Text("e.g. anx wDA snb", color = WadjetColors.Dust) },
+            label = { Text(stringResource(R.string.translate_input_label)) },
+            placeholder = { Text(stringResource(R.string.translate_input_placeholder), color = WadjetColors.Dust) },
             modifier = Modifier.fillMaxWidth(),
             colors = textFieldColors,
             textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace),
@@ -89,8 +92,8 @@ fun TranslateTab(
         OutlinedTextField(
             value = state.gardinerInput,
             onValueChange = onGardinerChange,
-            label = { Text("Gardiner Sequence (optional)") },
-            placeholder = { Text("e.g. S34-R11-S29-N35-S29", color = WadjetColors.Dust) },
+            label = { Text(stringResource(R.string.translate_gardiner_label)) },
+            placeholder = { Text(stringResource(R.string.translate_gardiner_placeholder), color = WadjetColors.Dust) },
             modifier = Modifier.fillMaxWidth(),
             colors = textFieldColors,
             textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace),
@@ -103,14 +106,14 @@ fun TranslateTab(
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             WadjetButton(
-                text = if (state.isLoading) "Translating…" else "Translate",
+                text = stringResource(if (state.isLoading) R.string.translate_button_loading else R.string.translate_button),
                 onClick = onTranslate,
                 enabled = state.input.isNotBlank() && !state.isLoading,
                 modifier = Modifier.weight(1f),
             )
             if (state.result != null || state.input.isNotBlank()) {
                 WadjetGhostButton(
-                    text = "Clear",
+                    text = stringResource(DesignR.string.action_clear),
                     onClick = onClear,
                     modifier = Modifier.weight(0.5f),
                 )
@@ -161,7 +164,7 @@ private fun TranslationResultCard(result: TranslationResult) {
             // English
             if (result.english.isNotBlank()) {
                 Text(
-                    text = "English",
+                    text = stringResource(R.string.translate_english_label),
                     style = MaterialTheme.typography.labelMedium,
                     color = WadjetColors.Sand,
                 )
@@ -177,7 +180,7 @@ private fun TranslationResultCard(result: TranslationResult) {
             // Arabic
             if (result.arabic.isNotBlank()) {
                 Text(
-                    text = "العربية",
+                    text = stringResource(R.string.translate_arabic_label),
                     style = MaterialTheme.typography.labelMedium,
                     color = WadjetColors.Sand,
                 )
@@ -193,7 +196,7 @@ private fun TranslationResultCard(result: TranslationResult) {
             // Context
             if (result.context.isNotBlank()) {
                 Text(
-                    text = "Context",
+                    text = stringResource(R.string.translate_context_label),
                     style = MaterialTheme.typography.labelMedium,
                     color = WadjetColors.Sand,
                 )
@@ -217,7 +220,7 @@ private fun TranslationResultCard(result: TranslationResult) {
                 }
                 if (result.fromCache) {
                     Text(
-                        text = "cached",
+                        text = stringResource(R.string.translate_cached),
                         style = MaterialTheme.typography.labelSmall,
                         color = WadjetColors.Gold.copy(alpha = 0.6f),
                     )

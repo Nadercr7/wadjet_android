@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Chat screen -->
+    <string name="chat_title">Thoth</string>
+    <string name="chat_discussing">Discussing: %1$s</string>
+    <string name="chat_history_action">Past conversations</string>
+    <string name="chat_clear_action">Clear chat</string>
+    <string name="chat_history_count">Past conversations (%1$d)</string>
+    <string name="chat_clear_all">Clear all</string>
+    <string name="chat_convo_history_desc">Conversation history</string>
+    <string name="chat_message_count">%1$d messages</string>
+    <string name="chat_empty_title">Ask Thoth anything</string>
+    <string name="chat_empty_subtitle">Questions about ancient Egypt, hieroglyphs, pharaohs, and more</string>
+    <string name="chat_thoth_avatar_desc">Thoth</string>
+    <string name="chat_edit_message_desc">Edit message</string>
+    <string name="chat_error_desc">Error</string>
+    <string name="chat_retry">Retry</string>
+    <string name="chat_thoth_thinking">Thoth is thinking</string>
+    <string name="chat_editing_banner">Editing message</string>
+    <string name="chat_char_count">%1$d/2000</string>
+    <string name="chat_input_listening">Listening…</string>
+    <string name="chat_input_placeholder">Ask Thoth anything…</string>
+    <string name="chat_stop_recording_desc">Stop recording</string>
+    <string name="chat_voice_input_desc">Voice input</string>
+    <string name="chat_stop_generating_desc">Stop generating</string>
+    <string name="chat_scroll_to_bottom_desc">Scroll to bottom</string>
+    <string name="action_edit">Edit</string>
+    <string name="chat_narrate">Narrate</string>
+
+    <!-- Suggestion chips -->
+    <string name="chat_suggestion_pyramids_ar">أخبرني عن الأهرامات</string>
+    <string name="chat_suggestion_hieroglyphs_ar">ما هي الهيروغليفية؟</string>
+    <string name="chat_suggestion_pharaohs_ar">فراعنة مشهورين</string>
+    <string name="chat_suggestion_pyramids">Tell me about the pyramids</string>
+    <string name="chat_suggestion_hieroglyphs">What are hieroglyphs?</string>
+    <string name="chat_suggestion_pharaohs">Famous pharaohs</string>
+
+    <!-- Relative time -->
+    <string name="time_just_now">Just now</string>
+    <string name="time_minutes_ago">%1$dm ago</string>
+    <string name="time_hours_ago">%1$dh ago</string>
+    <string name="time_yesterday">Yesterday</string>
+</resources>

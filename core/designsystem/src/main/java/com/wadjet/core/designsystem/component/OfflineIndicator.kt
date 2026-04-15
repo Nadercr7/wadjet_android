@@ -16,7 +16,9 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.wadjet.core.designsystem.R
 import com.wadjet.core.designsystem.WadjetColors
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun OfflineIndicator(
@@ -38,7 +40,7 @@ fun OfflineIndicator(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "No internet connection",
+                text = stringResource(R.string.offline_no_connection),
                 color = WadjetColors.Night,
                 style = MaterialTheme.typography.labelSmall,
             )

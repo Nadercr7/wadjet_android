@@ -38,7 +38,10 @@ import androidx.compose.ui.unit.sp
 import com.wadjet.core.designsystem.GardinerCodeStyle
 import com.wadjet.core.designsystem.HieroglyphStyle
 import com.wadjet.core.designsystem.WadjetColors
+import androidx.compose.ui.res.stringResource
+import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.core.domain.model.Sign
+import com.wadjet.feature.dictionary.R
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -52,6 +55,8 @@ fun SignDetailSheet(
 ) {
     val context = LocalContext.current
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val copiedToast = stringResource(DesignR.string.copied_toast)
+    val shareChooserTitle = stringResource(R.string.sign_share_chooser)
 
     Column(
         modifier = modifier
@@ -108,23 +113,23 @@ fun SignDetailSheet(
 
         // Transliteration
         if (sign.transliteration.isNotBlank()) {
-            DetailRow("Transliteration", sign.transliteration)
+            DetailRow(stringResource(R.string.sign_transliteration_label), sign.transliteration)
         }
 
         // Reading
         val reading = sign.reading
         if (!reading.isNullOrBlank()) {
-            DetailRow("Reading", reading)
+            DetailRow(stringResource(R.string.sign_reading_label), reading)
         }
 
         // Description
         if (sign.description.isNotBlank()) {
-            DetailRow("Description", sign.description)
+            DetailRow(stringResource(R.string.sign_description_label), sign.description)
         }
 
         // Pronunciation guide
         if (!sign.pronunciationSound.isNullOrBlank()) {
-            DetailRow("Pronunciation", "${sign.pronunciationSound} — ${sign.pronunciationExample.orEmpty()}")
+            DetailRow(stringResource(R.string.sign_pronunciation_label), "${sign.pronunciationSound} — ${sign.pronunciationExample.orEmpty()}")
         }
 
         // Fun fact
@@ -138,7 +143,7 @@ fun SignDetailSheet(
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
                     Text(
-                        text = "Fun Fact",
+                        text = stringResource(R.string.sign_fun_fact_label),
                         style = MaterialTheme.typography.labelMedium,
                         color = WadjetColors.Gold,
                     )
@@ -165,7 +170,7 @@ fun SignDetailSheet(
             }) {
                 Icon(
                     if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                    contentDescription = stringResource(if (isFavorite) DesignR.string.action_remove_favorite else DesignR.string.action_add_favorite),
                     tint = if (isFavorite) WadjetColors.Error else WadjetColors.Gold,
                     modifier = Modifier.size(28.dp),
                 )
@@ -179,7 +184,7 @@ fun SignDetailSheet(
                 IconButton(onClick = { onSpeak(ttsText) }) {
                     Icon(
                         Icons.Default.VolumeUp,
-                        contentDescription = "Pronounce",
+                        contentDescription = stringResource(R.string.sign_pronounce_desc),
                         tint = WadjetColors.Gold,
                         modifier = Modifier.size(28.dp),
                     )
@@ -190,11 +195,11 @@ fun SignDetailSheet(
             IconButton(onClick = {
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 clipboard.setPrimaryClip(ClipData.newPlainText("glyph", "${sign.glyph} ${sign.code} — ${sign.description}"))
-                onShowToast("Copied!")
+                onShowToast(copiedToast)
             }) {
                 Icon(
                     Icons.Default.ContentCopy,
-                    contentDescription = "Copy",
+                    contentDescription = stringResource(DesignR.string.action_copy),
                     tint = WadjetColors.Gold,
                     modifier = Modifier.size(28.dp),
                 )
@@ -207,11 +212,11 @@ fun SignDetailSheet(
                     type = "text/plain"
                     putExtra(Intent.EXTRA_TEXT, shareText)
                 }
-                context.startActivity(Intent.createChooser(intent, "Share Sign"))
+                context.startActivity(Intent.createChooser(intent, shareChooserTitle))
             }) {
                 Icon(
                     Icons.Default.Share,
-                    contentDescription = "Share",
+                    contentDescription = stringResource(DesignR.string.action_share),
                     tint = WadjetColors.Gold,
                     modifier = Modifier.size(28.dp),
                 )

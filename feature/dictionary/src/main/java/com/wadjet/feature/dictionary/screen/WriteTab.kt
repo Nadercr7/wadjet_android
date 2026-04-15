@@ -44,6 +44,9 @@ import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.designsystem.component.WadjetTextField
 import com.wadjet.core.domain.model.PaletteSign
+import androidx.compose.ui.res.stringResource
+import com.wadjet.core.designsystem.R as DesignR
+import com.wadjet.feature.dictionary.R
 import com.wadjet.feature.dictionary.WriteUiState
 
 @Composable
@@ -57,6 +60,8 @@ fun WriteTab(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val copiedToast = stringResource(DesignR.string.copied_toast)
+    val shareLabel = stringResource(DesignR.string.action_share)
 
     Column(
         modifier = modifier
@@ -68,8 +73,8 @@ fun WriteTab(
         WadjetTextField(
             value = state.inputText,
             onValueChange = onInputChange,
-            label = "Enter text",
-            placeholder = "Type English text or transliteration…",
+            label = stringResource(R.string.write_input_label),
+            placeholder = stringResource(R.string.write_input_placeholder),
             singleLine = false,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -78,7 +83,7 @@ fun WriteTab(
 
         // Convert button (full width, no palette)
         WadjetButton(
-            text = "Convert",
+            text = stringResource(R.string.write_convert_button),
             onClick = onConvert,
             modifier = Modifier.fillMaxWidth(),
             isLoading = state.isLoading,
@@ -120,7 +125,7 @@ fun WriteTab(
             // Glyph breakdown
             if (result.glyphs.isNotEmpty()) {
                 Spacer(Modifier.height(12.dp))
-                Text("Breakdown:", style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
+                Text(stringResource(R.string.write_breakdown_label), style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
                 result.glyphs.forEach { g ->
                     Row(
                         modifier = Modifier.padding(vertical = 4.dp),
@@ -156,23 +161,23 @@ fun WriteTab(
                     }
                     if (ttsText.isNotBlank()) onSpeak(ttsText)
                 }) {
-                    Icon(Icons.Default.VolumeUp, "Read aloud", tint = WadjetColors.Gold, modifier = Modifier.size(28.dp))
+                    Icon(Icons.Default.VolumeUp, stringResource(R.string.write_read_aloud_desc), tint = WadjetColors.Gold, modifier = Modifier.size(28.dp))
                 }
                 IconButton(onClick = {
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     clipboard.setPrimaryClip(ClipData.newPlainText("hieroglyphs", result.hieroglyphs))
-                    Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, copiedToast, Toast.LENGTH_SHORT).show()
                 }) {
-                    Icon(Icons.Default.ContentCopy, "Copy", tint = WadjetColors.Gold, modifier = Modifier.size(28.dp))
+                    Icon(Icons.Default.ContentCopy, stringResource(DesignR.string.action_copy), tint = WadjetColors.Gold, modifier = Modifier.size(28.dp))
                 }
                 IconButton(onClick = {
                     val intent = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
                         putExtra(Intent.EXTRA_TEXT, result.hieroglyphs)
                     }
-                    context.startActivity(Intent.createChooser(intent, "Share"))
+                    context.startActivity(Intent.createChooser(intent, shareLabel))
                 }) {
-                    Icon(Icons.Default.Share, "Share", tint = WadjetColors.Gold, modifier = Modifier.size(28.dp))
+                    Icon(Icons.Default.Share, stringResource(DesignR.string.action_share), tint = WadjetColors.Gold, modifier = Modifier.size(28.dp))
                 }
             }
         }

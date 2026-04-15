@@ -46,10 +46,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.animation.FadeUp
 import com.wadjet.core.designsystem.animation.shineSweep
@@ -59,6 +61,7 @@ import com.wadjet.core.designsystem.component.ShimmerCardList
 import com.wadjet.core.domain.model.StoryProgress
 import com.wadjet.core.domain.model.StorySummary
 import com.wadjet.feature.stories.DIFFICULTY_FILTERS
+import com.wadjet.feature.stories.R
 import com.wadjet.feature.stories.StoriesUiState
 import kotlinx.coroutines.delay
 
@@ -81,7 +84,7 @@ fun StoriesScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Stories",
+                        text = stringResource(R.string.stories_title),
                         color = WadjetColors.Gold,
                         style = MaterialTheme.typography.titleLarge,
                     )
@@ -90,7 +93,7 @@ fun StoriesScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(DesignR.string.action_back),
                             tint = WadjetColors.Text,
                         )
                     }
@@ -171,7 +174,7 @@ fun StoriesScreen(
                     } else if (state.error != null && filtered.isEmpty()) {
                         item {
                             ErrorState(
-                                message = state.error ?: "Couldn't load stories. Check your connection",
+                                message = state.error ?: stringResource(R.string.stories_error),
                                 onRetry = onRefresh,
                                 modifier = Modifier.fillParentMaxHeight(0.6f),
                             )
@@ -180,8 +183,8 @@ fun StoriesScreen(
                         item {
                             EmptyState(
                                 glyph = "\uD80C\uDC5F",
-                                title = "No stories found",
-                                subtitle = "Try a different difficulty filter",
+                                title = stringResource(R.string.stories_empty_title),
+                                subtitle = stringResource(R.string.stories_empty_subtitle),
                                 modifier = Modifier.fillParentMaxHeight(0.6f),
                             )
                         }
@@ -283,7 +286,7 @@ private fun StoryCard(
                     DifficultyBadge(story.difficulty)
                     if (story.glyphsTaught.isNotEmpty()) {
                         Text(
-                            text = "${story.glyphsTaught.size} glyphs",
+                            text = stringResource(R.string.stories_glyph_count, story.glyphsTaught.size),
                             color = WadjetColors.Gold,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier
@@ -293,12 +296,12 @@ private fun StoryCard(
                         )
                     }
                     Text(
-                        text = "${story.estimatedMinutes}min",
+                        text = stringResource(R.string.stories_estimated_time, story.estimatedMinutes),
                         color = WadjetColors.TextMuted,
                         style = MaterialTheme.typography.bodySmall,
                     )
                     Text(
-                        text = "${story.chapterCount} chapters",
+                        text = stringResource(R.string.stories_chapter_count, story.chapterCount),
                         color = WadjetColors.TextMuted,
                         style = MaterialTheme.typography.bodySmall,
                     )
@@ -321,7 +324,7 @@ private fun StoryCard(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "${(progressFraction * 100).toInt()}%",
+                            text = stringResource(R.string.stories_progress_pct, (progressFraction * 100).toInt()),
                             color = WadjetColors.Sand,
                             style = MaterialTheme.typography.bodySmall,
                         )
@@ -333,13 +336,13 @@ private fun StoryCard(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Lock,
-                            contentDescription = "Locked",
+                            contentDescription = stringResource(R.string.stories_locked_desc),
                             tint = WadjetColors.TextMuted,
                             modifier = Modifier.size(14.dp),
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Premium",
+                            text = stringResource(R.string.stories_premium),
                             color = WadjetColors.TextMuted,
                             style = MaterialTheme.typography.bodySmall,
                             fontStyle = FontStyle.Italic,
@@ -359,7 +362,7 @@ private fun StoryCard(
                 ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                        contentDescription = if (isFavorite) stringResource(DesignR.string.action_remove_favorite) else stringResource(DesignR.string.action_add_favorite),
                         tint = if (isFavorite) WadjetColors.Error else WadjetColors.TextMuted,
                         modifier = Modifier.size(20.dp),
                     )

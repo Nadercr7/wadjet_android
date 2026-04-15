@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared action strings -->
+    <string name="action_back">Back</string>
+    <string name="action_share">Share</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_search">Search</string>
+    <string name="action_save">Save</string>
+    <string name="action_send">Send</string>
+    <string name="action_submit">Submit</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_listen">Listen</string>
+    <string name="action_collapse">Collapse</string>
+    <string name="action_expand">Expand</string>
+    <string name="action_hide_password">Hide password</string>
+    <string name="action_show_password">Show password</string>
+    <string name="action_remove_favorite">Remove from favorites</string>
+    <string name="action_add_favorite">Add to favorites</string>
+
+    <!-- Shared component strings -->
+    <string name="error_try_again">Try Again</string>
+    <string name="error_state_desc">Error</string>
+    <string name="error_unknown">Unknown error</string>
+    <string name="offline_no_connection">No internet connection</string>
+    <string name="copied_toast">Copied!</string>
+
+    <!-- Bottom bar navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_scan">Scan</string>
+    <string name="nav_explore">Explore</string>
+    <string name="nav_stories">Stories</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_hieroglyphs">Hieroglyphs</string>
+    <string name="nav_thoth">Thoth</string>
+
+    <!-- Image upload zone -->
+    <string name="upload_selected_image_desc">Selected image</string>
+    <string name="upload_change">Change</string>
+    <string name="upload_browse_gallery">Browse Gallery</string>
+    <string name="upload_speak_desc">Speak</string>
+
+    <!-- Shared branding -->
+    <string name="app_name_display">WADJET</string>
+    <string name="footer_credit">Built by Mr Robot</string>
+</resources>

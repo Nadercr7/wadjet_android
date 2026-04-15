@@ -62,6 +62,7 @@ import coil3.compose.AsyncImage
 import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.core.designsystem.WadjetColors
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.wadjet.core.designsystem.animation.FadeUp
 import com.wadjet.core.designsystem.animation.KenBurnsImage
 import com.wadjet.core.designsystem.component.ShimmerDetail
@@ -70,6 +71,7 @@ import com.wadjet.core.domain.model.LandmarkDetail
 import com.wadjet.core.domain.model.LandmarkImage
 import com.wadjet.core.domain.model.Recommendation
 import com.wadjet.feature.explore.DetailUiState
+import com.wadjet.feature.explore.R
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -93,7 +95,7 @@ fun LandmarkDetailScreen(
         TopAppBar(
             title = {
                 Text(
-                    text = state.detail?.name ?: "Loading...",
+                    text = state.detail?.name ?: stringResource(R.string.detail_loading),
                     color = WadjetColors.Text,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -101,20 +103,21 @@ fun LandmarkDetailScreen(
             },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = WadjetColors.Gold)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(DesignR.string.action_back), tint = WadjetColors.Gold)
                 }
             },
             actions = {
                 state.detail?.let { detail ->
+                    val shareLabel = stringResource(DesignR.string.action_share)
+                    val shareText = stringResource(R.string.detail_share_text, detail.name, detail.city ?: "")
                     IconButton(onClick = {
-                        val shareText = "${detail.name}\n${detail.city ?: ""}\n\nExplore on Wadjet"
                         val shareIntent = Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
                             putExtra(Intent.EXTRA_TEXT, shareText)
                         }
-                        context.startActivity(Intent.createChooser(shareIntent, "Share"))
+                        context.startActivity(Intent.createChooser(shareIntent, shareLabel))
                     }) {
-                        Icon(Icons.Default.Share, "Share", tint = WadjetColors.Gold)
+                        Icon(Icons.Default.Share, shareLabel, tint = WadjetColors.Gold)
                     }
                 }
             },
@@ -128,7 +131,7 @@ fun LandmarkDetailScreen(
             state.error != null -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     com.wadjet.core.designsystem.component.ErrorState(
-                        message = state.error ?: "Couldn't load landmark details. Check your connection",
+                        message = state.error ?: stringResource(R.string.detail_error),
                         onRetry = onBack,
                     )
                 }
@@ -258,7 +261,7 @@ private fun DetailContent(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                     ) {
-                        Text("Part of: ", style = MaterialTheme.typography.labelSmall, color = WadjetColors.TextMuted)
+                        Text(stringResource(R.string.detail_part_of), style = MaterialTheme.typography.labelSmall, color = WadjetColors.TextMuted)
                         Text(parent.name, style = MaterialTheme.typography.labelSmall, color = WadjetColors.Gold, fontWeight = FontWeight.SemiBold)
                     }
                 }
@@ -274,20 +277,20 @@ private fun DetailContent(
                 detail.coordinates?.let { coords ->
                     ActionButton(
                         icon = Icons.Default.Map,
-                        label = "Maps",
+                        label = stringResource(R.string.detail_action_maps),
                         onClick = { onDirections(coords) },
                         modifier = Modifier.weight(1f),
                     )
                 }
                 ActionButton(
                     icon = Icons.AutoMirrored.Filled.Chat,
-                    label = "Chat",
+                    label = stringResource(R.string.detail_action_chat),
                     onClick = { onChatAbout(detail.slug) },
                     modifier = Modifier.weight(1f),
                 )
                 ActionButton(
                     icon = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    label = if (isFavorite) "Saved" else "Save",
+                    label = if (isFavorite) stringResource(R.string.detail_action_saved) else stringResource(R.string.detail_action_save),
                     onClick = onToggleFavorite,
                     color = if (isFavorite) WadjetColors.Error else WadjetColors.Gold,
                     modifier = Modifier.weight(1f),
@@ -297,11 +300,15 @@ private fun DetailContent(
             Spacer(Modifier.height(16.dp))
 
             // Tabs
+            val tabOverview = stringResource(R.string.detail_tab_overview)
+            val tabHistory = stringResource(R.string.detail_tab_history)
+            val tabTips = stringResource(R.string.detail_tab_tips)
+            val tabGallery = stringResource(R.string.detail_tab_gallery)
             val tabs = buildList {
-                if (!detail.description.isNullOrBlank() || detail.sections.isNotEmpty()) add("Overview")
-                if (!detail.historicalSignificance.isNullOrBlank()) add("History")
-                if (!detail.visitingTips.isNullOrBlank()) add("Tips")
-                if (detail.images.size > 1) add("Gallery")
+                if (!detail.description.isNullOrBlank() || detail.sections.isNotEmpty()) add(tabOverview)
+                if (!detail.historicalSignificance.isNullOrBlank()) add(tabHistory)
+                if (!detail.visitingTips.isNullOrBlank()) add(tabTips)
+                if (detail.images.size > 1) add(tabGallery)
             }
 
             if (tabs.isNotEmpty()) {
@@ -329,10 +336,10 @@ private fun DetailContent(
                 Spacer(Modifier.height(12.dp))
 
                 when (tabs.getOrNull(safeTabIndex)) {
-                    "Overview" -> OverviewTab(detail)
-                    "History" -> HistoryTab(detail)
-                    "Tips" -> TipsTab(detail)
-                    "Gallery" -> GalleryTab(detail.images)
+                    tabOverview -> OverviewTab(detail)
+                    tabHistory -> HistoryTab(detail)
+                    tabTips -> TipsTab(detail)
+                    tabGallery -> GalleryTab(detail.images)
                 }
             }
 
@@ -340,7 +347,7 @@ private fun DetailContent(
             if (detail.recommendations.isNotEmpty()) {
                 Spacer(Modifier.height(24.dp))
                 Text(
-                    "Recommendations",
+                    stringResource(R.string.detail_recommendations),
                     style = MaterialTheme.typography.titleMedium,
                     color = WadjetColors.Gold,
                     fontWeight = FontWeight.SemiBold,
@@ -356,7 +363,7 @@ private fun DetailContent(
             if (detail.children.isNotEmpty()) {
                 Spacer(Modifier.height(24.dp))
                 Text(
-                    "Related Sites",
+                    stringResource(R.string.detail_related_sites),
                     style = MaterialTheme.typography.titleMedium,
                     color = WadjetColors.Gold,
                     fontWeight = FontWeight.SemiBold,
@@ -375,7 +382,7 @@ private fun DetailContent(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Text("Wikipedia", style = MaterialTheme.typography.titleSmall, color = WadjetColors.Gold, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.detail_wikipedia), style = MaterialTheme.typography.titleSmall, color = WadjetColors.Gold, fontWeight = FontWeight.SemiBold)
                         detail.wikipediaExtract?.let { extract ->
                             Spacer(Modifier.height(4.dp))
                             Text(extract, style = MaterialTheme.typography.bodySmall, color = WadjetColors.Text, maxLines = 6, overflow = TextOverflow.Ellipsis)
@@ -387,7 +394,7 @@ private fun DetailContent(
                                 shape = MaterialTheme.shapes.small,
                                 color = WadjetColors.Gold.copy(alpha = 0.15f),
                             ) {
-                                Text("Read on Wikipedia →", color = WadjetColors.Gold, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
+                                Text(stringResource(R.string.detail_read_wikipedia), color = WadjetColors.Gold, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
                             }
                         }
                     }
@@ -498,7 +505,7 @@ private fun OverviewTab(detail: LandmarkDetail) {
         detail.highlights?.let { highlights ->
             Spacer(Modifier.height(16.dp))
             Text(
-                text = "Highlights",
+                text = stringResource(R.string.detail_highlights),
                 style = MaterialTheme.typography.titleSmall,
                 color = WadjetColors.Gold,
                 fontWeight = FontWeight.SemiBold,
@@ -507,11 +514,11 @@ private fun OverviewTab(detail: LandmarkDetail) {
             Text(highlights, style = MaterialTheme.typography.bodyMedium, color = WadjetColors.Text)
         }
 
-        BulletList("Notable Pharaohs", detail.notablePharaohs)
-        BulletList("Notable Tombs", detail.notableTombs)
-        BulletList("Notable Features", detail.notableFeatures)
-        BulletList("Key Artifacts", detail.keyArtifacts)
-        BulletList("Architectural Features", detail.architecturalFeatures)
+        BulletList(stringResource(R.string.detail_notable_pharaohs), detail.notablePharaohs)
+        BulletList(stringResource(R.string.detail_notable_tombs), detail.notableTombs)
+        BulletList(stringResource(R.string.detail_notable_features), detail.notableFeatures)
+        BulletList(stringResource(R.string.detail_key_artifacts), detail.keyArtifacts)
+        BulletList(stringResource(R.string.detail_architectural_features), detail.architecturalFeatures)
     }
 }
 

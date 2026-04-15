@@ -9,7 +9,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.wadjet.core.designsystem.R
 import com.wadjet.core.designsystem.WadjetColors
 
 enum class TtsState { IDLE, LOADING, PLAYING }
@@ -19,7 +21,7 @@ fun TtsButton(
     state: TtsState,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    contentDescription: String = "Speak",
+    contentDescription: String = stringResource(R.string.upload_speak_desc),
 ) {
     IconButton(onClick = onClick, modifier = modifier.size(48.dp)) {
         when (state) {

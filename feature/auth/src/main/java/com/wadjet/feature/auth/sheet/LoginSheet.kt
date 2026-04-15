@@ -31,6 +31,9 @@ import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.designsystem.component.WadjetGhostButton
 import com.wadjet.core.designsystem.component.WadjetTextField
 import com.wadjet.feature.auth.AuthUiState
+import com.wadjet.feature.auth.R
+import com.wadjet.core.designsystem.R as DesignR
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun LoginSheet(
@@ -52,7 +55,7 @@ fun LoginSheet(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
-            text = "Sign In",
+            text = stringResource(R.string.login_title),
             style = MaterialTheme.typography.headlineMedium,
             color = WadjetColors.Gold,
         )
@@ -60,21 +63,21 @@ fun LoginSheet(
         WadjetTextField(
             value = email,
             onValueChange = { email = it },
-            label = "Email",
+            label = stringResource(R.string.login_email_label),
             modifier = Modifier.fillMaxWidth(),
         )
 
         WadjetTextField(
             value = password,
             onValueChange = { password = it },
-            label = "Password",
+            label = stringResource(R.string.login_password_label),
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                        contentDescription = if (passwordVisible) stringResource(DesignR.string.action_hide_password) else stringResource(DesignR.string.action_show_password),
                         tint = WadjetColors.TextMuted,
                     )
                 }
@@ -90,7 +93,7 @@ fun LoginSheet(
         }
 
         WadjetButton(
-            text = if (state.isLoading) "Signing in…" else "Sign In",
+            text = if (state.isLoading) stringResource(R.string.login_signing_in) else stringResource(R.string.login_button),
             onClick = { onSignIn(email, password) },
             modifier = Modifier.fillMaxWidth(),
             enabled = !state.isLoading && email.isNotBlank() && password.isNotBlank(),
@@ -100,7 +103,7 @@ fun LoginSheet(
             onClick = onForgotPassword,
             modifier = Modifier.align(Alignment.End),
         ) {
-            Text("Forgot password?", color = WadjetColors.Sand)
+            Text(stringResource(R.string.login_forgot_password), color = WadjetColors.Sand)
         }
 
         Row(
@@ -109,12 +112,12 @@ fun LoginSheet(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             HorizontalDivider(modifier = Modifier.weight(1f), color = WadjetColors.Border)
-            Text("or", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.login_divider_or), color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
             HorizontalDivider(modifier = Modifier.weight(1f), color = WadjetColors.Border)
         }
 
         WadjetGhostButton(
-            text = "Sign in with Google",
+            text = stringResource(R.string.welcome_sign_in_google),
             onClick = onGoogleSignIn,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -126,9 +129,9 @@ fun LoginSheet(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Don't have an account?", color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.login_no_account), color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodyMedium)
             TextButton(onClick = onSwitchToRegister) {
-                Text("Create one", color = WadjetColors.Gold)
+                Text(stringResource(R.string.login_create_account), color = WadjetColors.Gold)
             }
         }
     }

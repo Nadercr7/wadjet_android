@@ -46,6 +46,8 @@ import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.designsystem.component.WadjetCard
 import com.wadjet.core.designsystem.component.WadjetGhostButton
 import com.wadjet.core.designsystem.R as DesignR
+import com.wadjet.feature.auth.R
+import androidx.compose.ui.res.stringResource
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.NoCredentialException
 import com.wadjet.feature.auth.AuthEvent
@@ -116,17 +118,17 @@ fun WelcomeScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Image(
                         painter = painterResource(DesignR.drawable.logo_wadjet),
-                        contentDescription = "Wadjet logo",
+                        contentDescription = stringResource(R.string.welcome_logo_desc),
                         modifier = Modifier.size(120.dp),
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     GoldGradientText(
-                        text = "WADJET",
+                        text = stringResource(DesignR.string.app_name_display),
                         style = MaterialTheme.typography.headlineLarge,
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Decode the Secrets\nof Ancient Egypt",
+                        text = stringResource(R.string.welcome_tagline),
                         style = MaterialTheme.typography.titleLarge,
                         color = WadjetColors.Gold,
                         textAlign = TextAlign.Center,
@@ -140,9 +142,9 @@ fun WelcomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    FeatureCard("𓂀", "Scan", "Decode hieroglyphs", Modifier.weight(1f))
-                    FeatureCard("𓊹", "Dictionary", "1,000+ signs", Modifier.weight(1f))
-                    FeatureCard("𓉐", "Explore", "260+ landmarks", Modifier.weight(1f))
+                    FeatureCard("𓂀", stringResource(R.string.welcome_feature_scan_title), stringResource(R.string.welcome_feature_scan_subtitle), Modifier.weight(1f))
+                    FeatureCard("𓊹", stringResource(R.string.welcome_feature_dict_title), stringResource(R.string.welcome_feature_dict_subtitle), Modifier.weight(1f))
+                    FeatureCard("𓉐", stringResource(R.string.welcome_feature_explore_title), stringResource(R.string.welcome_feature_explore_subtitle), Modifier.weight(1f))
                 }
             }
 
@@ -154,7 +156,7 @@ fun WelcomeScreen(
                 ) {
                     // Google Sign-In
                     WadjetGhostButton(
-                        text = "Sign in with Google",
+                        text = stringResource(R.string.welcome_sign_in_google),
                         isLoading = googleLoading,
                         onClick = {
                             googleLoading = true
@@ -180,11 +182,11 @@ fun WelcomeScreen(
                                     Timber.d("Google sign-in cancelled by user")
                                 } catch (e: NoCredentialException) {
                                     googleLoading = false
-                                    viewModel.onGoogleSignInError("No Google accounts found on this device")
+                                    viewModel.onGoogleSignInError(context.getString(R.string.error_no_google_accounts))
                                 } catch (e: Exception) {
                                     googleLoading = false
                                     Timber.e(e, "Google sign-in failed")
-                                    viewModel.onGoogleSignInError(e.message ?: "Google sign-in failed")
+                                    viewModel.onGoogleSignInError(e.message ?: context.getString(R.string.error_google_sign_in_failed))
                                 }
                             }
                         },
@@ -193,7 +195,7 @@ fun WelcomeScreen(
 
                     // Email sign-up
                     WadjetButton(
-                        text = "Sign up with Email",
+                        text = stringResource(R.string.welcome_sign_up_email),
                         onClick = { viewModel.showSheet(AuthSheet.REGISTER) },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !state.isLoading,
@@ -204,7 +206,7 @@ fun WelcomeScreen(
                         onClick = { viewModel.showSheet(AuthSheet.LOGIN) },
                     ) {
                         Text(
-                            text = "Already have an account? Sign in",
+                            text = stringResource(R.string.welcome_already_have_account),
                             color = WadjetColors.Sand,
                             style = MaterialTheme.typography.bodyMedium,
                         )
@@ -215,7 +217,7 @@ fun WelcomeScreen(
             // Footer
             FadeUp(visible = visibleSections >= 4) {
                 Text(
-                    text = "Built by Mr Robot",
+                    text = stringResource(DesignR.string.footer_credit),
                     style = MaterialTheme.typography.bodySmall,
                     color = WadjetColors.Dust,
                 )
@@ -258,10 +260,10 @@ fun WelcomeScreen(
                             } catch (e: GetCredentialCancellationException) {
                                 Timber.d("Google sign-in cancelled by user")
                             } catch (e: NoCredentialException) {
-                                viewModel.onGoogleSignInError("No Google accounts found on this device")
+                                viewModel.onGoogleSignInError(context.getString(R.string.error_no_google_accounts))
                             } catch (e: Exception) {
                                 Timber.e(e, "Google sign-in failed")
-                                viewModel.onGoogleSignInError(e.message ?: "Google sign-in failed")
+                                viewModel.onGoogleSignInError(e.message ?: context.getString(R.string.error_google_sign_in_failed))
                             }
                         }
                     },
@@ -294,10 +296,10 @@ fun WelcomeScreen(
                             } catch (e: GetCredentialCancellationException) {
                                 Timber.d("Google sign-in cancelled by user")
                             } catch (e: NoCredentialException) {
-                                viewModel.onGoogleSignInError("No Google accounts found on this device")
+                                viewModel.onGoogleSignInError(context.getString(R.string.error_no_google_accounts))
                             } catch (e: Exception) {
                                 Timber.e(e, "Google sign-in failed")
-                                viewModel.onGoogleSignInError(e.message ?: "Google sign-in failed")
+                                viewModel.onGoogleSignInError(e.message ?: context.getString(R.string.error_google_sign_in_failed))
                             }
                         }
                     },

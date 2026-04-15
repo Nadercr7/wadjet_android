@@ -25,6 +25,8 @@ import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.designsystem.component.WadjetGhostButton
 import com.wadjet.core.designsystem.component.WadjetTextField
 import com.wadjet.feature.auth.AuthUiState
+import com.wadjet.feature.auth.R
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun ForgotPasswordSheet(
@@ -43,7 +45,7 @@ fun ForgotPasswordSheet(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
-            text = "Reset Password",
+            text = stringResource(R.string.forgot_title),
             style = MaterialTheme.typography.headlineMedium,
             color = WadjetColors.Gold,
         )
@@ -62,12 +64,12 @@ fun ForgotPasswordSheet(
                     color = WadjetColors.Gold,
                 )
                 Text(
-                    text = "Check your inbox",
+                    text = stringResource(R.string.forgot_success_title),
                     style = MaterialTheme.typography.titleMedium,
                     color = WadjetColors.Text,
                 )
                 Text(
-                    text = "We sent a password reset link to your email.",
+                    text = stringResource(R.string.forgot_success_message),
                     style = MaterialTheme.typography.bodyMedium,
                     color = WadjetColors.TextMuted,
                 )
@@ -75,7 +77,7 @@ fun ForgotPasswordSheet(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 WadjetGhostButton(
-                    text = "Open Email App",
+                    text = stringResource(R.string.forgot_open_email),
                     onClick = {
                         val intent = Intent(Intent.ACTION_MAIN).apply {
                             addCategory(Intent.CATEGORY_APP_EMAIL)
@@ -89,7 +91,7 @@ fun ForgotPasswordSheet(
         } else {
             // Input state
             Text(
-                text = "Enter your email and we'll send a reset link.",
+                text = stringResource(R.string.forgot_instructions),
                 style = MaterialTheme.typography.bodyMedium,
                 color = WadjetColors.TextMuted,
             )
@@ -97,7 +99,7 @@ fun ForgotPasswordSheet(
             WadjetTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = "Email",
+                label = stringResource(R.string.login_email_label),
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -110,7 +112,7 @@ fun ForgotPasswordSheet(
             }
 
             WadjetButton(
-                text = if (state.isLoading) "Sending…" else "Send Reset Link",
+                text = if (state.isLoading) stringResource(R.string.forgot_sending) else stringResource(R.string.forgot_send_button),
                 onClick = { onSendReset(email) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isLoading && email.isNotBlank(),
@@ -121,7 +123,7 @@ fun ForgotPasswordSheet(
             onClick = onBackToLogin,
             modifier = Modifier.align(Alignment.Start),
         ) {
-            Text("← Back to Sign In", color = WadjetColors.Sand)
+            Text(stringResource(R.string.forgot_back_to_login), color = WadjetColors.Sand)
         }
     }
 }

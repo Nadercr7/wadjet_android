@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.wadjet.core.designsystem.R
 import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.animation.GoldGradientText
+import androidx.compose.ui.res.stringResource
 
 /**
  * Full-screen branded loader: pulsing logo + gold gradient "WADJET" text + shimmer bar.
@@ -80,7 +81,7 @@ fun WadjetFullLoader(
             // Pulsing logo
             Image(
                 painter = painterResource(R.drawable.logo_wadjet),
-                contentDescription = "Wadjet",
+                contentDescription = stringResource(R.string.app_name_display),
                 modifier = Modifier
                     .size(80.dp)
                     .graphicsLayer(scaleX = scale, scaleY = scale),
@@ -89,7 +90,7 @@ fun WadjetFullLoader(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Gold gradient animated text
-            GoldGradientText(text = "WADJET")
+            GoldGradientText(text = stringResource(R.string.app_name_display))
 
             Spacer(modifier = Modifier.height(24.dp))
 

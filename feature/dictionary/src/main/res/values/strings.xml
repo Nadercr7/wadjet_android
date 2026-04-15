@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dictionary screen tabs -->
+    <string name="dictionary_tab_browse">Browse</string>
+    <string name="dictionary_tab_learn">Learn</string>
+    <string name="dictionary_tab_write">Write</string>
+
+    <!-- Browse tab -->
+    <string name="browse_search_placeholder">Search signs…</string>
+    <string name="browse_all_filter">All</string>
+    <string name="browse_error">Couldn\'t load hieroglyphs. Check your connection</string>
+    <string name="browse_empty_title">No signs found</string>
+    <string name="browse_empty_subtitle">Try a different search or filter</string>
+    <string name="browse_loading_more">Loading more signs…</string>
+
+    <!-- Learn tab -->
+    <string name="learn_alphabet_title">Egyptian Alphabet</string>
+    <string name="learn_alphabet_subtitle">The 25 uniliteral signs — tap any to explore</string>
+    <string name="learn_lessons_title">Lessons</string>
+    <string name="learn_level">Level %1$d</string>
+    <string name="lesson_1_title">The Alphabet</string>
+    <string name="lesson_1_desc">Learn the 26 uniliteral signs — the building blocks of hieroglyphic writing.</string>
+    <string name="lesson_2_title">Common Words</string>
+    <string name="lesson_2_desc">Combine signs to read and write frequently used Egyptian words.</string>
+    <string name="lesson_3_title">Royal Names</string>
+    <string name="lesson_3_desc">Read cartouches — the oval frames containing pharaoh names.</string>
+    <string name="lesson_4_title">Determinatives</string>
+    <string name="lesson_4_desc">Silent signs that hint at a word\'s meaning category.</string>
+    <string name="lesson_5_title">Full Sentences</string>
+    <string name="lesson_5_desc">Put it all together — read complete inscriptions.</string>
+
+    <!-- Lesson screen -->
+    <string name="lesson_loading">Loading lesson…</string>
+    <string name="lesson_error">Couldn\'t load this lesson. Check your connection</string>
+    <string name="lesson_tip">💡 %1$s</string>
+    <string name="lesson_signs_label">Signs in this lesson:</string>
+    <string name="lesson_examples_label">Example Words:</string>
+    <string name="lesson_practice_label">Practice:</string>
+    <string name="lesson_word_hint">Hint: %1$s</string>
+
+    <!-- Translate tab -->
+    <string name="translate_title">Translate Hieroglyphs</string>
+    <string name="translate_subtitle">Enter MdC transliteration to get English and Arabic translations</string>
+    <string name="translate_input_label">Transliteration (MdC)</string>
+    <string name="translate_input_placeholder">e.g. anx wDA snb</string>
+    <string name="translate_gardiner_label">Gardiner Sequence (optional)</string>
+    <string name="translate_gardiner_placeholder">e.g. S34-R11-S29-N35-S29</string>
+    <string name="translate_button_loading">Translating…</string>
+    <string name="translate_button">Translate</string>
+    <string name="translate_english_label">English</string>
+    <string name="translate_arabic_label">العربية</string>
+    <string name="translate_context_label">Context</string>
+    <string name="translate_cached">cached</string>
+
+    <!-- Write tab -->
+    <string name="write_input_label">Enter text</string>
+    <string name="write_input_placeholder">Type English text or transliteration…</string>
+    <string name="write_convert_button">Convert</string>
+    <string name="write_breakdown_label">Breakdown:</string>
+    <string name="write_read_aloud_desc">Read aloud</string>
+
+    <!-- Sign detail -->
+    <string name="sign_detail_title">Sign Detail</string>
+    <string name="sign_transliteration_label">Transliteration</string>
+    <string name="sign_reading_label">Reading</string>
+    <string name="sign_description_label">Description</string>
+    <string name="sign_pronunciation_label">Pronunciation</string>
+    <string name="sign_fun_fact_label">Fun Fact</string>
+    <string name="sign_pronounce_desc">Pronounce</string>
+    <string name="sign_share_chooser">Share Sign</string>
+</resources>

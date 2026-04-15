@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dashboard screen -->
+    <string name="dashboard_title">Dashboard</string>
+    <string name="dashboard_settings_desc">Settings</string>
+    <string name="dashboard_error">Couldn\'t load your dashboard. Check your connection</string>
+    <string name="dashboard_default_name">Explorer</string>
+    <string name="dashboard_recent_scans">Recent Scans</string>
+    <string name="dashboard_favorites">Favorites</string>
+    <string name="dashboard_favorites_empty_title">No favorites yet</string>
+    <string name="dashboard_favorites_empty_subtitle">Tap ♡ on landmarks, glyphs, or stories to save them here</string>
+    <string name="dashboard_story_progress">Story Progress</string>
+    <string name="dashboard_stat_scans_today">Scans Today</string>
+    <string name="dashboard_stat_total_scans">Total Scans</string>
+    <string name="dashboard_stat_stories_done">Stories Done</string>
+    <string name="dashboard_stat_glyphs_learned">Glyphs Learned</string>
+    <string name="dashboard_glyph_count">%1$d glyphs</string>
+    <string name="dashboard_remove">Remove</string>
+    <string name="dashboard_story_done">✓ Done</string>
+    <string name="dashboard_story_chapter">Ch %1$d</string>
+    <string name="dashboard_story_stats">Score: %1$d · Glyphs: %2$d</string>
+</resources>

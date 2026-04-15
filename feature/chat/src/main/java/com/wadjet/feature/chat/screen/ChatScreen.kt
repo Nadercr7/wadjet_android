@@ -98,6 +98,9 @@ import com.wadjet.core.domain.model.ChatMessage
 import com.wadjet.core.domain.model.ChatMessage.Role
 import com.wadjet.feature.chat.ChatUiState
 import com.wadjet.feature.chat.ConversationSummary
+import androidx.compose.ui.res.stringResource
+import com.wadjet.core.designsystem.R as DesignR
+import com.wadjet.feature.chat.R
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.launch
 import java.io.File
@@ -235,7 +238,7 @@ fun ChatScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Thoth",
+                            text = stringResource(R.string.chat_title),
                             color = WadjetColors.Gold,
                             style = MaterialTheme.typography.titleLarge,
                         )
@@ -243,7 +246,7 @@ fun ChatScreen(
                             val displayName = state.landmarkSlug.replace("-", " ")
                                 .split(" ").joinToString(" ") { it.replaceFirstChar(Char::uppercase) }
                             Text(
-                                text = "Discussing: $displayName",
+                                text = stringResource(R.string.chat_discussing, displayName),
                                 color = WadjetColors.Sand,
                                 style = MaterialTheme.typography.bodySmall,
                                 maxLines = 1,
@@ -256,7 +259,7 @@ fun ChatScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(DesignR.string.action_back),
                             tint = WadjetColors.Text,
                         )
                     }
@@ -266,7 +269,7 @@ fun ChatScreen(
                         IconButton(onClick = onToggleHistory) {
                             Icon(
                                 imageVector = Icons.Default.History,
-                                contentDescription = "Past conversations",
+                                contentDescription = stringResource(R.string.chat_history_action),
                                 tint = if (state.showHistory) WadjetColors.Gold else WadjetColors.TextMuted,
                             )
                         }
@@ -274,7 +277,7 @@ fun ChatScreen(
                     IconButton(onClick = onClearChat) {
                         Icon(
                             imageVector = Icons.Default.Delete,
-                            contentDescription = "Clear chat",
+                            contentDescription = stringResource(R.string.chat_clear_action),
                             tint = WadjetColors.TextMuted,
                         )
                     }
@@ -305,12 +308,12 @@ fun ChatScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "Past conversations (${state.chatHistory.size})",
+                            text = stringResource(R.string.chat_history_count, state.chatHistory.size),
                             style = MaterialTheme.typography.labelMedium,
                             color = WadjetColors.TextMuted,
                         )
                         Text(
-                            text = "Clear all",
+                            text = stringResource(R.string.chat_clear_all),
                             style = MaterialTheme.typography.labelSmall,
                             color = WadjetColors.Sand,
                             modifier = Modifier
@@ -331,7 +334,7 @@ fun ChatScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.History,
-                                contentDescription = "Conversation history",
+                                contentDescription = stringResource(R.string.chat_convo_history_desc),
                                 tint = WadjetColors.Sand,
                                 modifier = Modifier.size(16.dp),
                             )
@@ -345,7 +348,7 @@ fun ChatScreen(
                                     overflow = TextOverflow.Ellipsis,
                                 )
                                 Text(
-                                    text = "${convo.messageCount} messages",
+                                    text = stringResource(R.string.chat_message_count, convo.messageCount),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = WadjetColors.TextMuted,
                                 )
@@ -375,8 +378,8 @@ fun ChatScreen(
                         item {
                             com.wadjet.core.designsystem.component.EmptyState(
                                 glyph = "\uD80C\uDD5D",
-                                title = "Ask Thoth anything",
-                                subtitle = "Questions about ancient Egypt, hieroglyphs, pharaohs, and more",
+                                title = stringResource(R.string.chat_empty_title),
+                                subtitle = stringResource(R.string.chat_empty_subtitle),
                                 modifier = Modifier.fillParentMaxHeight(0.6f),
                             )
                         }
@@ -441,7 +444,7 @@ fun ChatScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowDown,
-                            contentDescription = "Scroll to bottom",
+                            contentDescription = stringResource(R.string.chat_scroll_to_bottom_desc),
                             modifier = Modifier.size(24.dp),
                         )
                     }
@@ -451,15 +454,10 @@ fun ChatScreen(
             // Quick suggestion chips (first message only — greeting + no user messages yet)
             val hasOnlyGreeting = state.messages.size <= 1 && !state.isStreaming
             if (hasOnlyGreeting) {
-                val isArabic = Locale.getDefault().language == "ar"
-                val suggestions = if (isArabic) listOf(
-                    "أخبرني عن الأهرامات",
-                    "ما هي الهيروغليفية؟",
-                    "فراعنة مشهورين",
-                ) else listOf(
-                    "Tell me about the pyramids",
-                    "What are hieroglyphs?",
-                    "Famous pharaohs",
+                val suggestions = listOf(
+                    stringResource(R.string.chat_suggestion_pyramids),
+                    stringResource(R.string.chat_suggestion_hieroglyphs),
+                    stringResource(R.string.chat_suggestion_pharaohs),
                 )
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
@@ -547,6 +545,8 @@ private fun ChatBubble(
 ) {
     val isUser = message.role == Role.USER
     var showMenu by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val thothDesc = stringResource(R.string.chat_thoth_avatar_desc)
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -565,7 +565,7 @@ private fun ChatBubble(
                     text = "𓅝",
                     fontSize = 18.sp,
                     color = WadjetColors.Night,
-                    modifier = Modifier.semantics { contentDescription = "Thoth" },
+                    modifier = Modifier.semantics { contentDescription = thothDesc },
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
@@ -624,7 +624,7 @@ private fun ChatBubble(
                     onDismissRequest = { showMenu = false },
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Copy") },
+                        text = { Text(stringResource(DesignR.string.action_copy)) },
                         onClick = {
                             onCopy()
                             showMenu = false
@@ -632,7 +632,7 @@ private fun ChatBubble(
                     )
                     if (onEdit != null) {
                         DropdownMenuItem(
-                            text = { Text("Edit") },
+                            text = { Text(stringResource(R.string.action_edit)) },
                             onClick = {
                                 onEdit()
                                 showMenu = false
@@ -648,7 +648,7 @@ private fun ChatBubble(
                 modifier = Modifier.padding(top = 2.dp, start = 4.dp),
             ) {
                 Text(
-                    text = formatRelativeTime(message.timestamp),
+                    text = formatRelativeTime(context, message.timestamp),
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                     color = WadjetColors.TextMuted,
                 )
@@ -656,7 +656,7 @@ private fun ChatBubble(
                     Spacer(modifier = Modifier.width(6.dp))
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit message",
+                        contentDescription = stringResource(R.string.chat_edit_message_desc),
                         tint = WadjetColors.TextMuted,
                         modifier = Modifier
                             .size(14.dp)
@@ -674,13 +674,13 @@ private fun ChatBubble(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Warning,
-                        contentDescription = "Error",
+                        contentDescription = stringResource(R.string.chat_error_desc),
                         tint = WadjetColors.Error,
                         modifier = Modifier.size(14.dp),
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Retry",
+                        text = stringResource(R.string.chat_retry),
                         style = MaterialTheme.typography.labelSmall,
                         color = WadjetColors.Gold,
                         modifier = Modifier
@@ -710,7 +710,7 @@ private fun ChatBubble(
                             } else {
                                 Icons.AutoMirrored.Filled.VolumeUp
                             },
-                            contentDescription = if (isSpeaking) "Stop" else "Listen",
+                            contentDescription = if (isSpeaking) stringResource(DesignR.string.action_stop) else stringResource(DesignR.string.action_listen),
                             tint = WadjetColors.Sand,
                             modifier = Modifier.size(16.dp),
                         )
@@ -749,7 +749,7 @@ private fun TypingIndicator(modifier: Modifier = Modifier) {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "Thoth is thinking",
+                    text = stringResource(R.string.chat_thoth_thinking),
                     style = MaterialTheme.typography.bodySmall,
                     color = WadjetColors.TextMuted,
                 )
@@ -760,14 +760,14 @@ private fun TypingIndicator(modifier: Modifier = Modifier) {
     }
 }
 
-private fun formatRelativeTime(timestamp: Long): String {
+private fun formatRelativeTime(context: android.content.Context, timestamp: Long): String {
     val now = System.currentTimeMillis()
     val diff = now - timestamp
     return when {
-        diff < 60_000 -> "Just now"
-        diff < 3_600_000 -> "${diff / 60_000}m ago"
-        diff < 86_400_000 -> "${diff / 3_600_000}h ago"
-        diff < 172_800_000 -> "Yesterday"
+        diff < 60_000 -> context.getString(R.string.time_just_now)
+        diff < 3_600_000 -> context.getString(R.string.time_minutes_ago, diff / 60_000)
+        diff < 86_400_000 -> context.getString(R.string.time_hours_ago, diff / 3_600_000)
+        diff < 172_800_000 -> context.getString(R.string.time_yesterday)
         else -> {
             val sdf = java.text.SimpleDateFormat("MMM d", Locale.getDefault())
             sdf.format(java.util.Date(timestamp))
@@ -801,12 +801,12 @@ private fun ChatInputBar(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Editing message",
+                    text = stringResource(R.string.chat_editing_banner),
                     style = MaterialTheme.typography.labelMedium,
                     color = WadjetColors.Gold,
                 )
                 Text(
-                    text = "Cancel",
+                    text = stringResource(DesignR.string.action_cancel),
                     style = MaterialTheme.typography.labelMedium,
                     color = WadjetColors.Sand,
                     modifier = Modifier
@@ -819,7 +819,7 @@ private fun ChatInputBar(
         // Character counter
         if (text.isNotEmpty()) {
             Text(
-                text = "${text.length}/2000",
+                text = stringResource(R.string.chat_char_count, text.length),
                 color = if (text.length > 1800) WadjetColors.Error else WadjetColors.TextMuted,
                 style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier
@@ -840,7 +840,7 @@ private fun ChatInputBar(
             modifier = Modifier.weight(1f),
             placeholder = {
                 Text(
-                    text = if (isRecording) "Listening..." else "Ask Thoth anything...",
+                    text = if (isRecording) stringResource(R.string.chat_input_listening) else stringResource(R.string.chat_input_placeholder),
                     color = WadjetColors.TextMuted,
                     fontStyle = if (isRecording) FontStyle.Italic else FontStyle.Normal,
                 )
@@ -871,7 +871,7 @@ private fun ChatInputBar(
         ) {
             Icon(
                 imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
-                contentDescription = if (isRecording) "Stop recording" else "Voice input",
+                contentDescription = if (isRecording) stringResource(R.string.chat_stop_recording_desc) else stringResource(R.string.chat_voice_input_desc),
                 tint = if (isRecording) WadjetColors.Error else WadjetColors.Sand,
             )
         }
@@ -881,7 +881,7 @@ private fun ChatInputBar(
             IconButton(onClick = onStopStreaming) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Stop generating",
+                    contentDescription = stringResource(R.string.chat_stop_generating_desc),
                     tint = WadjetColors.Error,
                 )
             }
@@ -895,7 +895,7 @@ private fun ChatInputBar(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = "Send",
+                    contentDescription = stringResource(DesignR.string.action_send),
                     tint = if (text.isNotBlank()) WadjetColors.Gold else WadjetColors.TextMuted,
                 )
             }

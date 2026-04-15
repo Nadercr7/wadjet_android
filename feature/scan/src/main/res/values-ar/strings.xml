@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <!-- Scan screen -->
+    <string name="scan_title">Scan</string>
+    <string name="scan_upload_title">Tap to select a hieroglyph image</string>
+    <string name="scan_upload_subtitle">Supports JPG, PNG up to 10MB</string>
+    <string name="scan_analyze_button">Scan Hieroglyphs</string>
+    <string name="scan_history_action">History</string>
+    <string name="scan_error_fallback">Couldn\'t read hieroglyphs. Try again with better lighting</string>
+
+    <!-- Scan progress overlay -->
+    <string name="scan_progress_eye_desc">Eye of Horus</string>
+    <string name="scan_progress_title">Analyzing Inscription</string>
+    <string name="scan_step_detecting">Detecting glyphs</string>
+    <string name="scan_step_detecting_sub">Locating hieroglyphs in image</string>
+    <string name="scan_step_classifying">Classifying signs</string>
+    <string name="scan_step_classifying_sub">Matching to Gardiner catalogue</string>
+    <string name="scan_step_transliterating">Transliterating</string>
+    <string name="scan_step_transliterating_sub">Converting to phonetic script</string>
+    <string name="scan_step_translating">Translating</string>
+    <string name="scan_step_translating_sub">Producing English &amp; Arabic</string>
+
+    <!-- Scan result screen -->
+    <string name="scan_results_title">Results</string>
+    <string name="scan_warning_desc">Warning</string>
+    <string name="scan_ai_unverified_warning">AI verification unavailable â€” results may be less accurate</string>
+    <string name="scan_tips_label">Tips</string>
+    <string name="scan_source_gemini">AI Vision (Gemini)</string>
+    <string name="scan_source_ai_vision">AI Vision</string>
+    <string name="scan_source_onnx_fallback">ONNX (Fallback)</string>
+    <string name="scan_source_onnx_ai">ONNX + AI Verified</string>
+    <string name="scan_source_onnx">ONNX</string>
+    <string name="scan_detected_by">Detected by: %1$s</string>
+    <string name="scan_confidence_badge">Confidence: %1$d%%</string>
+    <string name="scan_stat_avg">Avg</string>
+    <string name="scan_stat_min">Min</string>
+    <string name="scan_stat_max">Max</string>
+    <string name="scan_stat_low">Low</string>
+    <string name="scan_detected_count">Detected (%1$d)</string>
+    <string name="scan_transliteration_label">Transliteration</string>
+    <string name="scan_gardiner_label">Gardiner: %1$s</string>
+    <string name="scan_lang_ar">AR</string>
+    <string name="scan_lang_en">EN</string>
+    <string name="scan_lang_toggle_en_ar">EN â†” AR</string>
+    <string name="scan_lang_toggle_ar_en">AR â†” EN</string>
+    <string name="scan_ai_notes_label">AI Notes</string>
+    <string name="scan_performance_label">Performance</string>
+    <string name="scan_timing_detection">Detection</string>
+    <string name="scan_timing_classification">Classification</string>
+    <string name="scan_timing_total">Total</string>
+    <string name="scan_source_info">Source: %1$s</string>
+    <string name="scan_again_button">Scan Again</string>
+    <string name="scan_confidence_classification">Classification</string>
+    <string name="scan_confidence_detection">Detection</string>
+    <string name="scan_view_in_dictionary">View in Dictionary</string>
+    <string name="scan_glyph_desc">Hieroglyph %1$s</string>
+
+    <!-- Share -->
+    <string name="share_scan_title">Wadjet Scan Results</string>
+    <string name="share_transliteration">Transliteration: %1$s</string>
+    <string name="share_translation">Translation: %1$s</string>
+    <string name="share_glyphs">Glyphs: %1$s</string>
+    <string name="share_scan_footer">Scanned with Wadjet â€” Decode the Secrets of Ancient Egypt</string>
+    <string name="share_scan_chooser">Share Scan Results</string>
+
+    <!-- Scan history screen -->
+    <string name="scan_history_title">Scan History</string>
+    <string name="scan_history_error">Couldn\'t load scan history. Check your connection</string>
+    <string name="scan_history_empty_title">No scans yet</string>
+    <string name="scan_history_empty_subtitle">Scan hieroglyphs to see them here</string>
+    <string name="scan_history_thumbnail_desc">Scan thumbnail</string>
+    <string name="scan_history_item_fallback">Scan</string>
+    <string name="scan_history_glyph_count">%1$d glyphs</string>
+</resources>
+

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Greeting -->
+    <string name="landing_greeting_name">Welcome back, %1$s</string>
+    <string name="landing_greeting">Welcome back</string>
+    <string name="landing_tagline">Decode the Secrets of Ancient Egypt</string>
+
+    <!-- Hieroglyphs path card -->
+    <string name="landing_path_hiero_title">Hieroglyphs</string>
+    <string name="landing_path_hiero_subtitle">Decode Ancient Egypt</string>
+    <string name="landing_feature_scan">Scan &amp; Identify — detect glyphs from photos</string>
+    <string name="landing_feature_translate">Translate — English &amp; Arabic translation</string>
+    <string name="landing_feature_dictionary">Dictionary — 1,000+ Gardiner signs</string>
+    <string name="landing_feature_write">Write — compose in hieroglyphs</string>
+    <string name="landing_start_scanning">Start Scanning</string>
+
+    <!-- Landmarks path card -->
+    <string name="landing_path_landmark_title">Landmarks</string>
+    <string name="landing_path_landmark_subtitle">Explore Sites &amp; Monuments</string>
+    <string name="landing_feature_explore">Explore — pyramids, temples, museums</string>
+    <string name="landing_feature_identify">Identify — snap a photo, AI tells you</string>
+    <string name="landing_feature_ai_desc">AI Descriptions — rich history for each site</string>
+    <string name="landing_feature_discover">Discover — recommendations &amp; similar sites</string>
+    <string name="landing_start_exploring">Start Exploring</string>
+
+    <!-- Quick actions -->
+    <string name="landing_quick_actions">Quick Actions</string>
+    <string name="landing_quick_scan">Scan</string>
+    <string name="landing_quick_dictionary">Dictionary</string>
+    <string name="landing_quick_write">Write</string>
+    <string name="landing_quick_explore">Explore</string>
+    <string name="landing_quick_identify">Identify</string>
+    <string name="landing_quick_stories">Stories</string>
+
+    <!-- Continue section -->
+    <string name="landing_continue_title">Continue Where You Left Off</string>
+    <string name="landing_recent_scan_desc">Recent scan</string>
+    <string name="landing_scan_result_fallback">Scan Result</string>
+    <string name="landing_glyphs_detected">%1$d glyphs detected</string>
+    <string name="landing_chapter_progress">Chapter %1$d of %2$d</string>
+
+    <!-- Thoth chat entry -->
+    <string name="landing_thoth_prompt">Ask Thoth anything…</string>
+    <string name="landing_thoth_subtitle">AI-powered Egyptian history expert</string>
+</resources>

@@ -14,21 +14,23 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.wadjet.core.designsystem.R
 import com.wadjet.core.designsystem.WadjetColors
 
 data class BottomNavItem(
     val route: String,
-    val label: String,
+    val labelRes: Int,
     val icon: ImageVector,
 )
 
 val bottomNavItems = listOf(
-    BottomNavItem("landing", "Home", Icons.Filled.Home),
-    BottomNavItem("scan", "Scan", Icons.Filled.QrCodeScanner),
-    BottomNavItem("explore", "Explore", Icons.Filled.Explore),
-    BottomNavItem("stories", "Stories", Icons.Filled.AutoStories),
-    BottomNavItem("dashboard", "Profile", Icons.Filled.Person),
+    BottomNavItem("landing", R.string.nav_home, Icons.Filled.Home),
+    BottomNavItem("scan", R.string.nav_scan, Icons.Filled.QrCodeScanner),
+    BottomNavItem("explore", R.string.nav_explore, Icons.Filled.Explore),
+    BottomNavItem("stories", R.string.nav_stories, Icons.Filled.AutoStories),
+    BottomNavItem("dashboard", R.string.nav_profile, Icons.Filled.Person),
 )
 
 @Composable
@@ -46,9 +48,9 @@ fun WadjetBottomBar(
             NavigationBarItem(
                 selected = selected,
                 onClick = { onTabSelected(item.route) },
-                icon = { Icon(item.icon, contentDescription = item.label) },
+                icon = { Icon(item.icon, contentDescription = stringResource(item.labelRes)) },
                 label = {
-                    Text(item.label, style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(item.labelRes), style = MaterialTheme.typography.labelSmall)
                 },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = WadjetColors.Gold,

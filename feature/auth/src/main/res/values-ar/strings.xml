@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <!-- Welcome screen -->
+    <string name="welcome_logo_desc">Wadjet logo</string>
+    <string name="welcome_tagline">Decode the Secrets\nof Ancient Egypt</string>
+    <string name="welcome_feature_scan_title">Scan</string>
+    <string name="welcome_feature_scan_subtitle">Decode hieroglyphs</string>
+    <string name="welcome_feature_dict_title">Dictionary</string>
+    <string name="welcome_feature_dict_subtitle">1,000+ signs</string>
+    <string name="welcome_feature_explore_title">Explore</string>
+    <string name="welcome_feature_explore_subtitle">260+ landmarks</string>
+    <string name="welcome_sign_in_google">Sign in with Google</string>
+    <string name="welcome_sign_up_email">Sign up with Email</string>
+    <string name="welcome_already_have_account">Already have an account? Sign in</string>
+    <string name="error_no_google_accounts">No Google accounts found on this device</string>
+    <string name="error_google_sign_in_failed">Google sign-in failed</string>
+
+    <!-- Login sheet -->
+    <string name="login_title">Sign In</string>
+    <string name="login_email_label">Email</string>
+    <string name="login_password_label">Password</string>
+    <string name="login_signing_in">Signing inâ€¦</string>
+    <string name="login_button">Sign In</string>
+    <string name="login_forgot_password">Forgot password?</string>
+    <string name="login_divider_or">or</string>
+    <string name="login_no_account">Don\'t have an account?</string>
+    <string name="login_create_account">Create one</string>
+
+    <!-- Register sheet -->
+    <string name="register_title">Create Account</string>
+    <string name="register_display_name">Display Name (optional)</string>
+    <string name="register_email_label">Email</string>
+    <string name="register_password_label">Password</string>
+    <string name="register_confirm_password">Confirm Password</string>
+    <string name="register_creating_account">Creating accountâ€¦</string>
+    <string name="register_rule_length">8+ characters</string>
+    <string name="register_rule_uppercase">1 uppercase letter</string>
+    <string name="register_rule_lowercase">1 lowercase letter</string>
+    <string name="register_rule_digit">1 digit</string>
+    <string name="register_sign_up_google">Sign up with Google</string>
+    <string name="register_have_account">Already have an account?</string>
+    <string name="register_sign_in">Sign in</string>
+
+    <!-- Forgot password sheet -->
+    <string name="forgot_title">Reset Password</string>
+    <string name="forgot_success_title">Check your inbox</string>
+    <string name="forgot_success_message">We sent a password reset link to your email.</string>
+    <string name="forgot_open_email">Open Email App</string>
+    <string name="forgot_instructions">Enter your email and we\'ll send a reset link.</string>
+    <string name="forgot_sending">Sendingâ€¦</string>
+    <string name="forgot_send_button">Send Reset Link</string>
+    <string name="forgot_back_to_login">â† Back to Sign In</string>
+</resources>
+

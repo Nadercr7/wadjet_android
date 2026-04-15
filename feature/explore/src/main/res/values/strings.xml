@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Explore screen -->
+    <string name="explore_title">Explore</string>
+    <string name="explore_identify_desc">Identify from photo</string>
+    <string name="explore_empty_search">No results for \"%1$s\"</string>
+    <string name="explore_empty_title">No landmarks found</string>
+    <string name="explore_empty_search_subtitle">Try a different search term</string>
+    <string name="explore_empty_subtitle">Explore Egypt\'s ancient wonders — check back soon</string>
+    <string name="explore_featured">Featured</string>
+    <string name="explore_all_landmarks">All Landmarks</string>
+    <string name="explore_loading_more">Loading more…</string>
+    <string name="explore_error">Couldn\'t load landmarks. Check your connection</string>
+    <string name="explore_search_placeholder">Search landmarks…</string>
+    <string name="explore_all_cities">All Cities</string>
+    <string name="explore_featured_badge">★ Featured</string>
+
+    <!-- Landmark detail screen -->
+    <string name="detail_loading">Loading…</string>
+    <string name="detail_share_text">%1$s\n%2$s\n\nExplore on Wadjet</string>
+    <string name="detail_error">Couldn\'t load landmark details. Check your connection</string>
+    <string name="detail_part_of">Part of: </string>
+    <string name="detail_action_maps">Maps</string>
+    <string name="detail_action_chat">Chat</string>
+    <string name="detail_action_saved">Saved</string>
+    <string name="detail_action_save">Save</string>
+    <string name="detail_tab_overview">Overview</string>
+    <string name="detail_tab_history">History</string>
+    <string name="detail_tab_tips">Tips</string>
+    <string name="detail_tab_gallery">Gallery</string>
+    <string name="detail_recommendations">Recommendations</string>
+    <string name="detail_related_sites">Related Sites</string>
+    <string name="detail_wikipedia">Wikipedia</string>
+    <string name="detail_read_wikipedia">Read on Wikipedia →</string>
+    <string name="detail_highlights">Highlights</string>
+    <string name="detail_notable_pharaohs">Notable Pharaohs</string>
+    <string name="detail_notable_tombs">Notable Tombs</string>
+    <string name="detail_notable_features">Notable Features</string>
+    <string name="detail_key_artifacts">Key Artifacts</string>
+    <string name="detail_architectural_features">Architectural Features</string>
+
+    <!-- Identify screen -->
+    <string name="identify_title">Identify Landmark</string>
+    <string name="identify_upload_title">Upload a photo of an Egyptian landmark</string>
+    <string name="identify_upload_subtitle">Supports JPG, PNG up to 10MB</string>
+    <string name="identify_analyze_button">Identify Landmark</string>
+    <string name="identify_loading">Identifying landmark…</string>
+    <string name="identify_error">Couldn\'t identify this landmark. Try another photo</string>
+    <string name="identify_no_match_title">No landmarks identified</string>
+    <string name="identify_no_match_subtitle">Try a different angle or get closer to the landmark.</string>
+    <string name="identify_another_button">Identify Another</string>
+    <string name="identify_not_egyptian_warning">This may not be an Egyptian landmark</string>
+    <string name="identify_unknown_landmark">This landmark is not in our database yet</string>
+    <string name="identify_top_matches">Top Matches</string>
+    <string name="identify_view_details">View Full Details</string>
+    <string name="identify_ask_thoth">Ask Thoth about this landmark</string>
+    <string name="identify_agreement_verified">Verified ✓</string>
+    <string name="identify_agreement_consensus">Consensus</string>
+    <string name="identify_agreement_uncertain">Uncertain</string>
+    <string name="identify_agreement_single">Single Source</string>
+    <string name="identify_agreement_best_guess">Best Guess</string>
+</resources>

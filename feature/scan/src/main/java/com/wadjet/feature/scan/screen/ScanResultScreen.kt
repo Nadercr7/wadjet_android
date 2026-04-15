@@ -73,6 +73,9 @@ import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.domain.model.DetectedGlyph
 import com.wadjet.core.domain.model.ScanResult
 import com.wadjet.feature.scan.util.gardinerToUnicode
+import com.wadjet.feature.scan.R
+import com.wadjet.core.designsystem.R as DesignR
+import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -107,15 +110,15 @@ fun ScanResultScreen(
             .background(WadjetColors.Night),
     ) {
         TopAppBar(
-            title = { Text("Results", color = WadjetColors.Text) },
+            title = { Text(stringResource(R.string.scan_results_title), color = WadjetColors.Text) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = WadjetColors.Gold)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(DesignR.string.action_back), tint = WadjetColors.Gold)
                 }
             },
             actions = {
                 IconButton(onClick = { shareResult(context, result) }) {
-                    Icon(Icons.Default.Share, "Share", tint = WadjetColors.Gold)
+                    Icon(Icons.Default.Share, stringResource(DesignR.string.action_share), tint = WadjetColors.Gold)
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = WadjetColors.Night),
@@ -141,13 +144,13 @@ fun ScanResultScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Warning,
-                                contentDescription = "Warning",
+                                contentDescription = stringResource(R.string.scan_warning_desc),
                                 tint = WadjetColors.Warning,
                                 modifier = Modifier.size(18.dp),
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "AI verification unavailable — results may be less accurate",
+                                text = stringResource(R.string.scan_ai_unverified_warning),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = WadjetColors.Warning,
                             )
@@ -166,7 +169,7 @@ fun ScanResultScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text("Tips", style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
+                            Text(stringResource(R.string.scan_tips_label), style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
                             Spacer(modifier = Modifier.height(4.dp))
                             result.qualityHints.forEach { hint ->
                                 Text("• $hint", style = MaterialTheme.typography.bodySmall, color = WadjetColors.Text)
@@ -196,16 +199,16 @@ fun ScanResultScreen(
                     // Pipeline source badge
                     result.detectionSource?.let { source ->
                         val sourceLabel = when {
-                            source.contains("gemini", ignoreCase = true) -> "AI Vision (Gemini)"
-                            source.contains("ai_vision", ignoreCase = true) -> "AI Vision"
-                            source.contains("onnx_fallback", ignoreCase = true) -> "ONNX (Fallback)"
-                            source.contains("onnx", ignoreCase = true) && source.contains("ai", ignoreCase = true) -> "ONNX + AI Verified"
-                            source.contains("onnx", ignoreCase = true) -> "ONNX"
+                            source.contains("gemini", ignoreCase = true) -> stringResource(R.string.scan_source_gemini)
+                            source.contains("ai_vision", ignoreCase = true) -> stringResource(R.string.scan_source_ai_vision)
+                            source.contains("onnx_fallback", ignoreCase = true) -> stringResource(R.string.scan_source_onnx_fallback)
+                            source.contains("onnx", ignoreCase = true) && source.contains("ai", ignoreCase = true) -> stringResource(R.string.scan_source_onnx_ai)
+                            source.contains("onnx", ignoreCase = true) -> stringResource(R.string.scan_source_onnx)
                             else -> source.replaceFirstChar { it.uppercase() }
                         }
-                        WadjetBadge(text = "Detected by: $sourceLabel", variant = BadgeVariant.Gold)
+                        WadjetBadge(text = stringResource(R.string.scan_detected_by, sourceLabel), variant = BadgeVariant.Gold)
                     }
-                    WadjetBadge(text = "Confidence: $avgConf%", variant = variant)
+                    WadjetBadge(text = stringResource(R.string.scan_confidence_badge, avgConf), variant = variant)
                     result.readingDirection?.let { dir ->
                         WadjetBadge(text = dir.replaceFirstChar { it.uppercase() }, variant = BadgeVariant.Muted)
                     }
@@ -229,9 +232,9 @@ fun ScanResultScreen(
                             modifier = Modifier.padding(12.dp).fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceEvenly,
                         ) {
-                            StatItem("Avg", "${(cs.avg * 100).toInt()}%")
-                            StatItem("Min", "${(cs.min * 100).toInt()}%")
-                            StatItem("Max", "${(cs.max * 100).toInt()}%")
+                            StatItem(stringResource(R.string.scan_stat_avg), "${(cs.avg * 100).toInt()}%")
+                            StatItem(stringResource(R.string.scan_stat_min), "${(cs.min * 100).toInt()}%")
+                            StatItem(stringResource(R.string.scan_stat_max), "${(cs.max * 100).toInt()}%")
                             if (cs.lowCount > 0) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
@@ -240,7 +243,7 @@ fun ScanResultScreen(
                                         color = WadjetColors.Error,
                                         fontWeight = FontWeight.Bold,
                                     )
-                                    Text("Low", style = MaterialTheme.typography.labelSmall, color = WadjetColors.TextMuted)
+                                    Text(stringResource(R.string.scan_stat_low), style = MaterialTheme.typography.labelSmall, color = WadjetColors.TextMuted)
                                 }
                             }
                         }
@@ -256,7 +259,7 @@ fun ScanResultScreen(
                         GoldDivider()
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "Detected (${result.numDetections})",
+                            text = stringResource(R.string.scan_detected_count, result.numDetections),
                             style = MaterialTheme.typography.titleMedium,
                             color = WadjetColors.Gold,
                         )
@@ -287,7 +290,7 @@ fun ScanResultScreen(
                         GoldDivider()
                         Spacer(modifier = Modifier.height(12.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            SectionLabel("Transliteration")
+                            SectionLabel(stringResource(R.string.scan_transliteration_label))
                             TtsButton(
                                 state = ttsStates["translit"] ?: TtsState.IDLE,
                                 onClick = { onSpeak("translit", translit, "en") },
@@ -304,7 +307,7 @@ fun ScanResultScreen(
                         )
                         result.gardinerSequence?.let { seq ->
                             Text(
-                                text = "Gardiner: $seq",
+                                text = stringResource(R.string.scan_gardiner_label, seq),
                                 style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                                 color = WadjetColors.Sand,
                             )
@@ -326,7 +329,7 @@ fun ScanResultScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth(),
                         ) {
-                            SectionLabel(if (showArabic) "AR" else "EN")
+                            SectionLabel(if (showArabic) stringResource(R.string.scan_lang_ar) else stringResource(R.string.scan_lang_en))
                             TtsButton(
                                 state = ttsStates[if (showArabic) "ar" else "en"] ?: TtsState.IDLE,
                                 onClick = {
@@ -342,7 +345,7 @@ fun ScanResultScreen(
                                     color = WadjetColors.Gold.copy(alpha = 0.15f),
                                 ) {
                                     Text(
-                                        text = if (showArabic) "EN ↔ AR" else "AR ↔ EN",
+                                        text = if (showArabic) stringResource(R.string.scan_lang_toggle_en_ar) else stringResource(R.string.scan_lang_toggle_ar_en),
                                         color = WadjetColors.Gold,
                                         style = MaterialTheme.typography.labelMedium,
                                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -403,12 +406,12 @@ fun ScanResultScreen(
                                     .fillMaxWidth()
                                     .clickable { aiNotesExpanded = !aiNotesExpanded },
                             ) {
-                                SectionLabel("AI Notes")
+                                SectionLabel(stringResource(R.string.scan_ai_notes_label))
                                 Spacer(modifier = Modifier.weight(1f))
                                 Icon(
                                     imageVector = if (aiNotesExpanded) Icons.Default.KeyboardArrowUp
                                     else Icons.Default.KeyboardArrowDown,
-                                    contentDescription = if (aiNotesExpanded) "Collapse" else "Expand",
+                                    contentDescription = if (aiNotesExpanded) stringResource(DesignR.string.action_collapse) else stringResource(DesignR.string.action_expand),
                                     tint = WadjetColors.Gold,
                                     modifier = Modifier.size(20.dp),
                                 )
@@ -440,7 +443,7 @@ fun ScanResultScreen(
 
             FadeUp(visible = visibleSections >= 8) {
                 WadjetButton(
-                    text = "Scan Again",
+                    text = stringResource(R.string.scan_again_button),
                     onClick = onScanAgain,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -522,15 +525,15 @@ private fun GlyphDetailSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                ConfidenceBar(label = "Classification", value = confidence, fraction = glyph.classConfidence)
-                ConfidenceBar(label = "Detection", value = detConfidence, fraction = glyph.detectionConfidence)
+                ConfidenceBar(label = stringResource(R.string.scan_confidence_classification), value = confidence, fraction = glyph.classConfidence)
+                ConfidenceBar(label = stringResource(R.string.scan_confidence_detection), value = detConfidence, fraction = glyph.detectionConfidence)
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
             // View in Dictionary button
             WadjetButton(
-                text = "View in Dictionary",
+                text = stringResource(R.string.scan_view_in_dictionary),
                 onClick = onViewInDictionary,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -590,11 +593,12 @@ private fun GlyphChip(glyph: DetectedGlyph, onClick: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(12.dp).width(80.dp),
         ) {
+            val glyphDesc = stringResource(R.string.scan_glyph_desc, glyph.gardinerCode)
             Text(
                 text = unicode,
                 style = HieroglyphStyle.copy(fontSize = 32.sp),
                 color = WadjetColors.Gold,
-                modifier = Modifier.semantics { contentDescription = "Hieroglyph ${glyph.gardinerCode}" },
+                modifier = Modifier.semantics { contentDescription = glyphDesc },
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -652,7 +656,7 @@ private fun TimingStats(result: ScanResult) {
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
-                text = "Performance",
+                text = stringResource(R.string.scan_performance_label),
                 style = MaterialTheme.typography.labelMedium,
                 color = WadjetColors.Gold,
             )
@@ -661,14 +665,14 @@ private fun TimingStats(result: ScanResult) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                StatItem("Detection", "${result.detectionMs.toLong()}ms")
-                StatItem("Classification", "${result.classificationMs.toLong()}ms")
-                StatItem("Total", "${result.totalMs.toLong()}ms")
+                StatItem(stringResource(R.string.scan_timing_detection), "${result.detectionMs.toLong()}ms")
+                StatItem(stringResource(R.string.scan_timing_classification), "${result.classificationMs.toLong()}ms")
+                StatItem(stringResource(R.string.scan_timing_total), "${result.totalMs.toLong()}ms")
             }
             result.mode.let {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Source: ${result.detectionSource ?: result.mode}",
+                    text = stringResource(R.string.scan_source_info, result.detectionSource ?: result.mode),
                     style = MaterialTheme.typography.labelSmall,
                     color = WadjetColors.TextMuted,
                 )
@@ -687,21 +691,26 @@ private fun StatItem(label: String, value: String) {
 
 private fun shareResult(context: Context, result: ScanResult) {
     val text = buildString {
-        append("Wadjet Scan Results\n\n")
+        append(context.getString(R.string.share_scan_title))
+        append("\n\n")
         if (!result.transliteration.isNullOrBlank()) {
-            append("Transliteration: ${result.transliteration}\n")
+            append(context.getString(R.string.share_transliteration, result.transliteration))
+            append("\n")
         }
         if (!result.translationEn.isNullOrBlank()) {
-            append("Translation: ${result.translationEn}\n")
+            append(context.getString(R.string.share_translation, result.translationEn))
+            append("\n")
         }
         if (result.glyphs.isNotEmpty()) {
-            append("Glyphs: ${result.glyphs.joinToString(" ") { it.gardinerCode }}\n")
+            append(context.getString(R.string.share_glyphs, result.glyphs.joinToString(" ") { it.gardinerCode }))
+            append("\n")
         }
-        append("\nScanned with Wadjet — Decode the Secrets of Ancient Egypt")
+        append("\n")
+        append(context.getString(R.string.share_scan_footer))
     }
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
         putExtra(Intent.EXTRA_TEXT, text)
     }
-    context.startActivity(Intent.createChooser(intent, "Share Scan Results"))
+    context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_scan_chooser)))
 }

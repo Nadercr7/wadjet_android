@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Stories screen -->
+    <string name="stories_title">Stories</string>
+    <string name="stories_error">Couldn\'t load stories. Check your connection</string>
+    <string name="stories_empty_title">No stories found</string>
+    <string name="stories_empty_subtitle">Try a different difficulty filter</string>
+    <string name="stories_glyph_count">%1$d glyphs</string>
+    <string name="stories_estimated_time">%1$dmin</string>
+    <string name="stories_chapter_count">%1$d chapters</string>
+    <string name="stories_progress_pct">%1$d%%</string>
+    <string name="stories_locked_desc">Locked</string>
+    <string name="stories_premium">Premium</string>
+
+    <!-- Story reader screen -->
+    <string name="reader_loading_title">Loading…</string>
+    <string name="reader_chapter_counter">Ch %1$d/%2$d</string>
+    <string name="reader_stop_narrate">Stop</string>
+    <string name="reader_narrate">Narrate</string>
+    <string name="reader_loading">Loading story…</string>
+    <string name="reader_prev_chapter">← Previous</string>
+    <string name="reader_next_chapter">Next →</string>
+    <string name="reader_story_complete">Story Complete</string>
+    <string name="reader_score_label">Score</string>
+    <string name="reader_glyphs_label">Glyphs</string>
+    <string name="reader_read_again">Read Again</string>
+    <string name="reader_back_to_stories">Back to Stories</string>
+    <string name="reader_scene_desc">Scene illustration</string>
+    <string name="reader_image_failed">Image failed to load</string>
+    <string name="reader_tap_discover">Tap to discover glyph</string>
+    <string name="reader_glyph_learned">Glyph Learned</string>
+    <string name="reader_write_prompt">Write the Gardiner code for: %1$s</string>
+    <string name="reader_hint">Hint: %1$s</string>
+    <string name="reader_write_placeholder">e.g. %1$s</string>
+    <string name="reader_correct">Correct!</string>
+    <string name="reader_incorrect">Not quite — try again</string>
+</resources>

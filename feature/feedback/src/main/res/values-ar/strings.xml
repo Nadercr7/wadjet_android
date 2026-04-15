@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <!-- Feedback screen -->
+    <string name="feedback_title">Send Feedback</string>
+    <string name="feedback_category_label">Category</string>
+    <string name="feedback_message_label">Message</string>
+    <string name="feedback_message_placeholder">Tell us what you thinkâ€¦</string>
+    <string name="feedback_char_count">%1$d/1000</string>
+    <string name="feedback_optional_label">Optional</string>
+    <string name="feedback_name_placeholder">Your name</string>
+    <string name="feedback_email_placeholder">Your email</string>
+    <string name="feedback_button_loading">Sendingâ€¦</string>
+    <string name="feedback_button">Submit Feedback</string>
+    <string name="feedback_success_title">Thank you!</string>
+    <string name="feedback_success_message">Your feedback helps us improve Wadjet.</string>
+</resources>
+
