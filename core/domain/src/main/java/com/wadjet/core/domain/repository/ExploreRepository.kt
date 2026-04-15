@@ -29,6 +29,8 @@ interface ExploreRepository {
 
     suspend fun searchOffline(query: String): List<Landmark>
 
+    suspend fun getCachedFiltered(category: String?, city: String?): List<Landmark>
+
     suspend fun toggleFavorite(
         slug: String,
         name: String,

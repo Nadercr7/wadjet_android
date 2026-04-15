@@ -29,7 +29,7 @@ interface SignDao {
         SELECT signs.* FROM signs
         JOIN signs_fts ON signs.code = signs_fts.code
         WHERE signs_fts MATCH :query
-        ORDER BY signs.code
+        ORDER BY bm25(signs_fts) ASC
         LIMIT :limit
         """
     )

@@ -139,11 +139,14 @@ class ExploreViewModel @Inject constructor(
                 }
             }.onFailure { error ->
                 Timber.e(error, "Load landmarks failed")
-                // Fallback to offline cache
+                // Fallback to offline cache — use search or filtered browse (T087)
                 val cached = if (s.searchQuery.isNotBlank()) {
                     exploreRepository.searchOffline(s.searchQuery)
                 } else {
-                    emptyList()
+                    exploreRepository.getCachedFiltered(
+                        category = s.selectedCategory.takeIf { it != "All" },
+                        city = s.selectedCity,
+                    )
                 }
                 _state.update {
                     it.copy(

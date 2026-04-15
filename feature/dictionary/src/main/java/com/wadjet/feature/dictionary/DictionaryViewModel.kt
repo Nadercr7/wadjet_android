@@ -39,6 +39,7 @@ data class BrowseUiState(
     val selectedSign: Sign? = null,
     val favorites: Set<String> = emptySet(),
     val localTtsText: String? = null,
+    val isOfflineData: Boolean = false,
 )
 
 val SIGN_TYPES = listOf("All", "uniliteral", "biliteral", "triliteral", "logogram", "determinative")
@@ -119,8 +120,7 @@ class DictionaryViewModel @Inject constructor(
                         page = result.page,
                         totalPages = result.totalPages,
                         isLoading = false,
-                        isLoadingMore = false,
-                    )
+                        isLoadingMore = false,                        isOfflineData = result.isOfflineData,                    )
                 }
             }.onFailure { e ->
                 _state.update { it.copy(isLoading = false, isLoadingMore = false, error = e.message) }
@@ -150,6 +150,8 @@ class DictionaryViewModel @Inject constructor(
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
             delay(400) // debounce
+            // Minimum 2 chars for search, or blank to clear search
+            if (query.isNotBlank() && query.trim().length < 2) return@launch
             loadSigns()
         }
     }

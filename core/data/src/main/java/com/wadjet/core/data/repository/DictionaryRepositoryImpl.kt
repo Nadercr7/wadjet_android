@@ -34,6 +34,7 @@ class DictionaryRepositoryImpl @Inject constructor(
     private val writeApi: WriteApiService,
     private val audioApi: AudioApiService,
     private val signDao: SignDao,
+    private val categoryDao: com.wadjet.core.database.dao.CategoryDao,
 ) : DictionaryRepository {
 
     override suspend fun getSigns(
@@ -67,6 +68,21 @@ class DictionaryRepositoryImpl @Inject constructor(
             Timber.w(e, "Network unavailable, falling back to cached signs")
             val limit = perPage
             val offset = (page - 1) * perPage
+
+            // Use FTS search when the user has a search query (T084)
+            if (!search.isNullOrBlank()) {
+                val ftsResults = searchOffline(search)
+                if (ftsResults.isNotEmpty()) {
+                    return@suspendRunCatching SignPage(
+                        signs = ftsResults.take(limit),
+                        total = ftsResults.size,
+                        page = page,
+                        totalPages = 1,
+                        isOfflineData = true,
+                    )
+                }
+            }
+
             val cached = when {
                 category != null && type != null -> signDao.getByFilter(category, type, limit, offset)
                 category != null -> signDao.getByCategory(category, limit, offset)
@@ -74,7 +90,7 @@ class DictionaryRepositoryImpl @Inject constructor(
                 else -> signDao.getAll(limit, offset)
             }
             if (cached.isNotEmpty()) {
-                SignPage(signs = cached.map { it.toDomain() }, total = cached.size, page = page, totalPages = 1)
+                SignPage(signs = cached.map { it.toDomain() }, total = cached.size, page = page, totalPages = 1, isOfflineData = true)
             } else {
                 throw e
             }
@@ -82,24 +98,48 @@ class DictionaryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getSign(code: String, lang: String): Result<Sign> = suspendRunCatching {
-        val response = dictionaryApi.getSign(code, lang = lang)
-        if (response.isSuccessful) {
-            val dto = response.body()!!
-            signDao.insertAll(listOf(dto.toEntity()))
-            dto.toDomain()
-        } else {
-            // Fallback to cache
+        try {
+            val response = dictionaryApi.getSign(code, lang = lang)
+            if (response.isSuccessful) {
+                val dto = response.body()!!
+                signDao.insertAll(listOf(dto.toEntity()))
+                dto.toDomain()
+            } else {
+                // Fallback to cache on non-200
+                signDao.getByCode(code)?.toDomain()
+                    ?: throw ApiException("Sign not found: $code")
+            }
+        } catch (e: java.io.IOException) {
+            // Offline fallback (T085)
+            Timber.w(e, "Network unavailable for sign $code, falling back to cache")
             signDao.getByCode(code)?.toDomain()
-                ?: throw ApiException("Sign not found: $code")
+                ?: throw e
         }
     }
 
     override suspend fun getCategories(lang: String): Result<List<Category>> = suspendRunCatching {
-        val response = dictionaryApi.getCategories(lang = lang)
-        if (response.isSuccessful) {
-            response.body()!!.categories.map { Category(code = it.code, name = it.name, count = it.count) }
-        } else {
-            throw ApiException("Failed to load categories: ${response.code()}")
+        try {
+            val response = dictionaryApi.getCategories(lang = lang)
+            if (response.isSuccessful) {
+                val categories = response.body()!!.categories.map {
+                    Category(code = it.code, name = it.name, count = it.count)
+                }
+                // Cache for offline (T088)
+                categoryDao.insertAll(categories.map {
+                    com.wadjet.core.database.entity.CategoryEntity(code = it.code, name = it.name, count = it.count)
+                })
+                categories
+            } else {
+                throw ApiException("Failed to load categories: ${response.code()}")
+            }
+        } catch (e: java.io.IOException) {
+            Timber.w(e, "Network unavailable, falling back to cached categories")
+            val cached = categoryDao.getAll()
+            if (cached.isNotEmpty()) {
+                cached.map { Category(code = it.code, name = it.name, count = it.count) }
+            } else {
+                throw e
+            }
         }
     }
 
@@ -203,8 +243,9 @@ class DictionaryRepositoryImpl @Inject constructor(
 
     override suspend fun searchOffline(query: String): List<Sign> {
         return try {
-            val ftsQuery = query.trim().replace(Regex("""[^\w\s]"""), "").let { "$it*" }
-            signDao.search(ftsQuery).map { it.toDomain() }
+            val sanitized = sanitizeFtsQuery(query)
+            if (sanitized.isNullOrBlank()) return emptyList()
+            signDao.search(sanitized).map { it.toDomain() }
         } catch (e: Exception) {
             Timber.w(e, "FTS search failed, falling back to empty")
             emptyList()
@@ -213,6 +254,24 @@ class DictionaryRepositoryImpl @Inject constructor(
 }
 
 internal class ApiException(message: String) : Exception(message)
+
+/**
+ * Sanitize user input into a safe FTS5 query.
+ * Preserves Unicode characters (Arabic, diacritics like ḥ ḫ š) while stripping FTS operators.
+ * Returns null if the sanitized query is too short.
+ */
+private fun sanitizeFtsQuery(query: String): String? {
+    // Strip FTS5 operators and punctuation — preserve letters (any script), digits, spaces
+    val cleaned = query.trim()
+        .replace(Regex("""[^\p{L}\p{N}\s]"""), "")
+        .replace(Regex("""\s+"""), " ")
+        .trim()
+    if (cleaned.length < 2) return null
+    // Convert multi-word to FTS5 prefix query: "eye of horus" → "eye" "of" "horus"*
+    val words = cleaned.split(" ").filter { it.isNotBlank() }
+    if (words.isEmpty()) return null
+    return words.joinToString(" ") { "\"$it\"" } + "*"
+}
 
 private val json = Json { ignoreUnknownKeys = true }
 

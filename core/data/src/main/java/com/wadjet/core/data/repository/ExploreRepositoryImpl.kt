@@ -1,7 +1,9 @@
 package com.wadjet.core.data.repository
 
 import com.wadjet.core.common.suspendRunCatching
+import com.wadjet.core.database.dao.FavoriteDao
 import com.wadjet.core.database.dao.LandmarkDao
+import com.wadjet.core.database.entity.FavoriteEntity
 import com.wadjet.core.database.entity.LandmarkEntity
 import com.wadjet.core.domain.model.IdentifyMatch
 import com.wadjet.core.domain.model.IdentifyResult
@@ -37,6 +39,7 @@ class ExploreRepositoryImpl @Inject constructor(
     private val landmarkApi: LandmarkApiService,
     private val landmarkDao: LandmarkDao,
     private val userApi: UserApiService,
+    private val favoriteDao: FavoriteDao,
     private val json: Json,
 ) : ExploreRepository {
 
@@ -97,21 +100,33 @@ class ExploreRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getLandmarkDetail(slug: String): Result<LandmarkDetail> = suspendRunCatching {
-        val response = landmarkApi.getLandmarkDetail(slug)
-        if (response.isSuccessful) {
-            val dto = response.body()!!
-            // Cache detail JSON
-            val detailJson = json.encodeToString(dto)
-            landmarkDao.insert(dto.toEntity(detailJson))
-            dto.toDomain()
-        } else {
-            // Fallback to cached
+        try {
+            val response = landmarkApi.getLandmarkDetail(slug)
+            if (response.isSuccessful) {
+                val dto = response.body()!!
+                // Cache detail JSON
+                val detailJson = json.encodeToString(dto)
+                landmarkDao.insert(dto.toEntity(detailJson))
+                dto.toDomain()
+            } else {
+                // Fallback to cached on non-200
+                val cached = landmarkDao.getBySlug(slug)
+                val cachedJson = cached?.detailJson
+                if (cachedJson != null) {
+                    json.decodeFromString<LandmarkDetailDto>(cachedJson).toDomain()
+                } else {
+                    throw ApiException("Landmark not found: ${response.code()}")
+                }
+            }
+        } catch (e: java.io.IOException) {
+            // Offline fallback (T086)
+            Timber.w(e, "Network unavailable for landmark $slug, falling back to cache")
             val cached = landmarkDao.getBySlug(slug)
             val cachedJson = cached?.detailJson
             if (cachedJson != null) {
                 json.decodeFromString<LandmarkDetailDto>(cachedJson).toDomain()
             } else {
-                throw ApiException("Landmark not found: ${response.code()}")
+                throw e
             }
         }
     }
@@ -167,6 +182,9 @@ class ExploreRepositoryImpl @Inject constructor(
     override suspend fun searchOffline(query: String): List<Landmark> =
         landmarkDao.search(query).map { it.toDomain() }
 
+    override suspend fun getCachedFiltered(category: String?, city: String?): List<Landmark> =
+        landmarkDao.getFiltered(category, city, limit = 50, offset = 0).map { it.toDomain() }
+
     override suspend fun toggleFavorite(
         slug: String,
         name: String,
@@ -179,12 +197,14 @@ class ExploreRepositoryImpl @Inject constructor(
                 throw ApiException("Failed to remove favorite: ${response.code()}")
             }
             _favorites.update { it - slug }
+            favoriteDao.delete("landmark", slug)
         } else {
             val response = userApi.addFavorite(AddFavoriteRequest("landmark", slug))
             if (!response.isSuccessful) {
                 throw ApiException("Failed to add favorite: ${response.code()}")
             }
             _favorites.update { it + slug }
+            favoriteDao.insert(FavoriteEntity(itemType = "landmark", itemId = slug))
         }
     }
 
@@ -205,9 +225,17 @@ class ExploreRepositoryImpl @Inject constructor(
                     ?.toSet() ?: emptySet()
                 _favorites.value = slugs
                 favoritesLoaded = true
+                // Cache to Room
+                favoriteDao.deleteByType("landmark")
+                favoriteDao.insertAll(slugs.map { FavoriteEntity(itemType = "landmark", itemId = it) })
             }
         } catch (e: Exception) {
-            Timber.w(e, "Failed to load favorites from API")
+            Timber.w(e, "Failed to load favorites from API, falling back to Room")
+            val cached = favoriteDao.getByType("landmark").map { it.itemId }.toSet()
+            if (cached.isNotEmpty()) {
+                _favorites.value = cached
+                favoritesLoaded = true
+            }
         }
     }
 

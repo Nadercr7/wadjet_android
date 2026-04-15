@@ -40,6 +40,7 @@ data class SignPage(
     val total: Int,
     val page: Int,
     val totalPages: Int,
+    val isOfflineData: Boolean = false,
 )
 
 data class Category(

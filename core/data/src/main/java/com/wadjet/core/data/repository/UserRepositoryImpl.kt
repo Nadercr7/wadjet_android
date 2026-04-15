@@ -1,6 +1,8 @@
 package com.wadjet.core.data.repository
 
 import com.wadjet.core.common.suspendRunCatching
+import com.wadjet.core.database.dao.FavoriteDao
+import com.wadjet.core.database.entity.FavoriteEntity
 import com.wadjet.core.domain.model.DashboardStoryProgress
 import com.wadjet.core.domain.model.FavoriteItem
 import com.wadjet.core.domain.model.ScanHistoryItem
@@ -19,6 +21,7 @@ import javax.inject.Singleton
 @Singleton
 class UserRepositoryImpl @Inject constructor(
     private val userApi: UserApiService,
+    private val favoriteDao: FavoriteDao,
 ) : UserRepository {
 
     override suspend fun getProfile(): Result<User> = suspendRunCatching {
@@ -94,10 +97,10 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getFavorites(): Result<List<FavoriteItem>> = suspendRunCatching {
+    override suspend fun getFavorites(): Result<List<FavoriteItem>> = try {
         val response = userApi.getFavorites()
         val body = response.body() ?: emptyList()
-        body.map {
+        val items = body.map {
             FavoriteItem(
                 id = it.id,
                 itemType = it.itemType,
@@ -105,6 +108,15 @@ class UserRepositoryImpl @Inject constructor(
                 createdAt = it.createdAt,
             )
         }
+        // Cache to Room
+        favoriteDao.insertAll(items.map { FavoriteEntity(itemType = it.itemType, itemId = it.itemId) })
+        Result.success(items)
+    } catch (e: java.io.IOException) {
+        Timber.w(e, "Failed to load favorites from API, falling back to Room")
+        val cached = favoriteDao.getAll().map {
+            FavoriteItem(id = 0, itemType = it.itemType, itemId = it.itemId, createdAt = null)
+        }
+        Result.success(cached)
     }
 
     override suspend fun addFavorite(
@@ -115,6 +127,7 @@ class UserRepositoryImpl @Inject constructor(
         if (!response.isSuccessful) {
             throw Exception("Failed to add favorite: ${response.code()}")
         }
+        favoriteDao.insert(FavoriteEntity(itemType = itemType, itemId = itemId))
     }
 
     override suspend fun removeFavorite(
@@ -125,6 +138,7 @@ class UserRepositoryImpl @Inject constructor(
         if (!response.isSuccessful) {
             throw Exception("Failed to remove favorite: ${response.code()}")
         }
+        favoriteDao.delete(itemType, itemId)
     }
 
     override suspend fun getStoryProgress(): Result<List<DashboardStoryProgress>> = suspendRunCatching {

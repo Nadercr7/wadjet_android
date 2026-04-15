@@ -21,6 +21,8 @@ import com.wadjet.core.network.model.InteractRequest
 import com.wadjet.core.network.model.InteractionDto
 import com.wadjet.core.network.model.SaveProgressRequest
 import com.wadjet.core.network.model.SpeakRequest
+import com.wadjet.core.database.dao.StoryProgressDao
+import com.wadjet.core.database.entity.StoryProgressEntity
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -36,6 +38,7 @@ class StoriesRepositoryImpl @Inject constructor(
     private val userApi: UserApiService,
     private val firebaseAuth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
+    private val storyProgressDao: StoryProgressDao,
 ) : StoriesRepository {
 
     override suspend fun getStories(): Result<List<StorySummary>> = suspendRunCatching {
@@ -166,7 +169,9 @@ class StoriesRepositoryImpl @Inject constructor(
 
     override fun getStoryProgress(storyId: String): Flow<StoryProgress?> = callbackFlow {
         val uid = firebaseAuth.currentUser?.uid ?: run {
-            trySend(null)
+            // No user — try local cache
+            val cached = storyProgressDao.getByStoryId(storyId)?.toDomain()
+            trySend(cached)
             awaitClose()
             return@callbackFlow
         }
@@ -174,8 +179,10 @@ class StoriesRepositoryImpl @Inject constructor(
             .collection("story_progress").document(storyId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Timber.w(error, "Story progress listen failed")
-                    trySend(null)
+                    Timber.w(error, "Story progress listen failed, falling back to Room")
+                    kotlinx.coroutines.runBlocking {
+                        trySend(storyProgressDao.getByStoryId(storyId)?.toDomain())
+                    }
                     return@addSnapshotListener
                 }
                 if (snapshot == null || !snapshot.exists()) {
@@ -197,7 +204,9 @@ class StoriesRepositoryImpl @Inject constructor(
 
     override fun getAllProgress(): Flow<Map<String, StoryProgress>> = callbackFlow {
         val uid = firebaseAuth.currentUser?.uid ?: run {
-            trySend(emptyMap())
+            // No user — try local cache
+            val cached = storyProgressDao.getAll().associate { it.storyId to it.toDomain() }
+            trySend(cached)
             awaitClose()
             return@callbackFlow
         }
@@ -205,8 +214,10 @@ class StoriesRepositoryImpl @Inject constructor(
             .collection("story_progress")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    Timber.w(error, "All progress listen failed")
-                    trySend(emptyMap())
+                    Timber.w(error, "All progress listen failed, falling back to Room")
+                    kotlinx.coroutines.runBlocking {
+                        trySend(storyProgressDao.getAll().associate { it.storyId to it.toDomain() })
+                    }
                     return@addSnapshotListener
                 }
                 @Suppress("UNCHECKED_CAST")
@@ -226,6 +237,9 @@ class StoriesRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveProgress(progress: StoryProgress) {
+        // Always persist to Room first (offline-safe)
+        storyProgressDao.upsert(progress.toEntity())
+
         val uid = firebaseAuth.currentUser?.uid ?: return
         val data = mapOf(
             "story_id" to progress.storyId,
@@ -306,4 +320,25 @@ class StoriesRepositoryImpl @Inject constructor(
             null
         }
     }
+
+    private fun StoryProgressEntity.toDomain() = StoryProgress(
+        storyId = storyId,
+        chapterIndex = chapterIndex,
+        glyphsLearned = glyphsLearnedJson
+            .removeSurrounding("[", "]")
+            .split(",")
+            .map { it.trim().removeSurrounding("\"") }
+            .filter { it.isNotEmpty() },
+        score = score,
+        completed = completed,
+    )
+
+    private fun StoryProgress.toEntity() = StoryProgressEntity(
+        storyId = storyId,
+        chapterIndex = chapterIndex,
+        glyphsLearnedJson = "[${glyphsLearned.joinToString(",") { "\"$it\"" }}]",
+        score = score,
+        completed = completed,
+        updatedAt = System.currentTimeMillis(),
+    )
 }
