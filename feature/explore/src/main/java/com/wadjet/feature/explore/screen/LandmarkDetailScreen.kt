@@ -2,6 +2,7 @@ package com.wadjet.feature.explore.screen
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -68,9 +69,11 @@ import com.wadjet.core.domain.model.LandmarkDetail
 import com.wadjet.core.domain.model.LandmarkImage
 import com.wadjet.core.domain.model.Recommendation
 import com.wadjet.feature.explore.DetailUiState
+import com.wadjet.core.ui.LocalAnimatedVisibilityScope
+import com.wadjet.core.ui.LocalSharedTransitionScope
 import com.wadjet.feature.explore.R
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun LandmarkDetailScreen(
     state: DetailUiState,
@@ -83,10 +86,21 @@ fun LandmarkDetailScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val animatedVisibilityScope = LocalAnimatedVisibilityScope.current
 
+    with(sharedTransitionScope) {
     Column(
         modifier = modifier
             .fillMaxSize()
+            .then(
+                state.detail?.slug?.let { slug ->
+                    Modifier.sharedBounds(
+                        sharedContentState = rememberSharedContentState(key = "landmark-$slug"),
+                        animatedVisibilityScope = animatedVisibilityScope,
+                    )
+                } ?: Modifier
+            )
             .background(WadjetColors.Night),
     ) {
         TopAppBar(
@@ -159,6 +173,7 @@ fun LandmarkDetailScreen(
             }
         }
     }
+    } // end with(sharedTransitionScope)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

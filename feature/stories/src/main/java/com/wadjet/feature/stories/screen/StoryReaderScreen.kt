@@ -2,6 +2,7 @@ package com.wadjet.feature.stories.screen
 
 import android.speech.tts.TextToSpeech
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -92,11 +93,13 @@ import com.wadjet.core.domain.model.GlyphAnnotation
 import com.wadjet.core.domain.model.Interaction
 import com.wadjet.core.domain.model.InteractionResult
 import com.wadjet.core.domain.model.Paragraph
+import com.wadjet.core.ui.LocalAnimatedVisibilityScope
+import com.wadjet.core.ui.LocalSharedTransitionScope
 import com.wadjet.feature.stories.R
 import com.wadjet.feature.stories.ReaderUiState
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun StoryReaderScreen(
     state: ReaderUiState,
@@ -328,11 +331,19 @@ fun StoryReaderScreen(
                                 .padding(24.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
+                            val stSharedScope = LocalSharedTransitionScope.current
+                            val stAnimScope = LocalAnimatedVisibilityScope.current
+                            with(stSharedScope) {
                             Text(
                                 text = story.coverGlyph,
                                 fontSize = 64.sp,
                                 fontFamily = com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs,
+                                modifier = Modifier.sharedBounds(
+                                    sharedContentState = rememberSharedContentState(key = "story-${story.id}"),
+                                    animatedVisibilityScope = stAnimScope,
+                                ),
                             )
+                            }
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = stringResource(R.string.reader_story_complete),

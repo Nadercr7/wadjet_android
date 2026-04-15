@@ -18,13 +18,18 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -67,17 +72,20 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var networkMonitor: NetworkMonitor
     @Inject lateinit var toastController: ToastController
 
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val windowSizeClass = calculateWindowSizeClass(this)
             WadjetTheme {
                 WadjetApp(
                     isLoggedIn = authRepository.isLoggedIn,
                     webClientId = webClientId,
                     networkMonitor = networkMonitor,
                     toastController = toastController,
+                    widthSizeClass = windowSizeClass.widthSizeClass,
                 )
             }
         }
@@ -91,6 +99,7 @@ private fun WadjetApp(
     webClientId: String,
     networkMonitor: NetworkMonitor,
     toastController: ToastController,
+    widthSizeClass: WindowWidthSizeClass,
 ) {
     var currentToast by remember { mutableStateOf<ToastState?>(null) }
     LaunchedEffect(Unit) {
@@ -115,9 +124,18 @@ private fun WadjetApp(
     // Determine start destination based on auth state
     val startDestination: Route = if (isLoggedIn) Route.Landing else Route.Welcome
 
-    // Show bottom bar only on top-level destinations
-    val showBottomBar = TopLevelDestination.entries.any { dest ->
+    // Show navigation only on top-level destinations
+    val showNav = TopLevelDestination.entries.any { dest ->
         currentDestination?.hasRoute(dest.route::class) == true
+    }
+
+    // Adapt layout based on window size class
+    val layoutType = if (!showNav) {
+        NavigationSuiteType.None
+    } else when (widthSizeClass) {
+        WindowWidthSizeClass.Compact -> NavigationSuiteType.NavigationBar
+        WindowWidthSizeClass.Medium -> NavigationSuiteType.NavigationRail
+        else -> NavigationSuiteType.NavigationDrawer
     }
 
     // Quick-settings dialog
@@ -131,53 +149,34 @@ private fun WadjetApp(
         )
     }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = WadjetColors.Night,
-        topBar = {
-            if (showBottomBar) {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = stringResource(DesignR.string.app_name_display),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = WadjetColors.Gold,
-                        )
-                    },
-                    actions = {
-                        IconButton(onClick = {
-                            navController.navigate(Route.Dashboard) { launchSingleTop = true }
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.AccountCircle,
-                                contentDescription = stringResource(R.string.top_bar_profile),
-                                tint = WadjetColors.Gold,
-                            )
-                        }
-                        IconButton(onClick = { showQuickSettings = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = stringResource(R.string.top_bar_settings),
-                                tint = WadjetColors.TextMuted,
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = WadjetColors.Surface,
-                    ),
-                )
-            }
-        },
-        bottomBar = {
-            AnimatedVisibility(
-                visible = showBottomBar,
-                enter = slideInVertically { it },
-                exit = slideOutVertically { it },
-            ) {
-                WadjetBottomBar(
-                    destinations = TopLevelDestination.entries,
-                    currentDestination = currentDestination,
-                    onNavigate = { dest ->
+    // Pre-compute composable colors outside the builder DSL
+    val navBarItemColors = NavigationBarItemDefaults.colors(
+        selectedIconColor = WadjetColors.Gold,
+        selectedTextColor = WadjetColors.Gold,
+        unselectedIconColor = WadjetColors.TextMuted,
+        unselectedTextColor = WadjetColors.TextMuted,
+        indicatorColor = WadjetColors.Gold.copy(alpha = 0.12f),
+    )
+    val navRailItemColors = NavigationRailItemDefaults.colors(
+        selectedIconColor = WadjetColors.Gold,
+        selectedTextColor = WadjetColors.Gold,
+        unselectedIconColor = WadjetColors.TextMuted,
+        unselectedTextColor = WadjetColors.TextMuted,
+        indicatorColor = WadjetColors.Gold.copy(alpha = 0.12f),
+    )
+    val navItemColors = NavigationSuiteDefaults.itemColors(
+        navigationBarItemColors = navBarItemColors,
+        navigationRailItemColors = navRailItemColors,
+    )
+
+    NavigationSuiteScaffold(
+        layoutType = layoutType,
+        navigationSuiteItems = {
+            TopLevelDestination.entries.forEach { dest ->
+                val selected = currentDestination?.hasRoute(dest.route::class) == true
+                item(
+                    selected = selected,
+                    onClick = {
                         navController.navigate(dest.route) {
                             popUpTo(navController.graph.findStartDestination().id) {
                                 saveState = true
@@ -186,63 +185,82 @@ private fun WadjetApp(
                             restoreState = true
                         }
                     },
+                    icon = {
+                        Icon(
+                            imageVector = dest.icon,
+                            contentDescription = stringResource(dest.labelRes),
+                        )
+                    },
+                    label = { Text(stringResource(dest.labelRes)) },
+                    colors = navItemColors,
                 )
             }
         },
-    ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            Column {
-                OfflineIndicator(isOffline = !isOffline)
+        navigationSuiteColors = NavigationSuiteDefaults.colors(
+            navigationBarContainerColor = WadjetColors.Surface,
+            navigationBarContentColor = WadjetColors.TextMuted,
+            navigationRailContainerColor = WadjetColors.Surface,
+            navigationRailContentColor = WadjetColors.TextMuted,
+        ),
+        containerColor = WadjetColors.Night,
+    ) {
+        Scaffold(
+            containerColor = WadjetColors.Night,
+            topBar = {
+                if (showNav) {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = stringResource(DesignR.string.app_name_display),
+                                style = MaterialTheme.typography.titleLarge,
+                                color = WadjetColors.Gold,
+                            )
+                        },
+                        actions = {
+                            IconButton(onClick = {
+                                navController.navigate(Route.Dashboard) { launchSingleTop = true }
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.AccountCircle,
+                                    contentDescription = stringResource(R.string.top_bar_profile),
+                                    tint = WadjetColors.Gold,
+                                )
+                            }
+                            IconButton(onClick = { showQuickSettings = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = stringResource(R.string.top_bar_settings),
+                                    tint = WadjetColors.TextMuted,
+                                )
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = WadjetColors.Surface,
+                        ),
+                    )
+                }
+            },
+        ) { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                Column {
+                    OfflineIndicator(isOffline = !isOffline)
 
-                WadjetNavGraph(
-                    navController = navController,
-                    startDestination = startDestination,
-                    webClientId = webClientId,
-                    toastController = toastController,
-                    modifier = Modifier.weight(1f),
+                    WadjetNavGraph(
+                        navController = navController,
+                        startDestination = startDestination,
+                        webClientId = webClientId,
+                        toastController = toastController,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+
+                // Global toast overlay
+                WadjetToast(
+                    toast = currentToast,
+                    onDismiss = { currentToast = null },
+                    modifier = Modifier.align(Alignment.BottomCenter),
                 )
             }
-
-            // Global toast overlay
-            WadjetToast(
-                toast = currentToast,
-                onDismiss = { currentToast = null },
-                modifier = Modifier.align(Alignment.BottomCenter),
-            )
-        }
-    }
-}
-
-@Composable
-private fun WadjetBottomBar(
-    destinations: List<TopLevelDestination>,
-    currentDestination: androidx.navigation.NavDestination?,
-    onNavigate: (TopLevelDestination) -> Unit,
-) {
-    NavigationBar(
-        containerColor = WadjetColors.Surface,
-        contentColor = WadjetColors.TextMuted,
-    ) {
-        destinations.forEach { dest ->
-            val selected = currentDestination?.hasRoute(dest.route::class) == true
-            NavigationBarItem(
-                selected = selected,
-                onClick = { onNavigate(dest) },
-                icon = {
-                    Icon(
-                        imageVector = dest.icon,
-                        contentDescription = stringResource(dest.labelRes),
-                    )
-                },
-                label = { Text(stringResource(dest.labelRes)) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = WadjetColors.Gold,
-                    selectedTextColor = WadjetColors.Gold,
-                    unselectedIconColor = WadjetColors.TextMuted,
-                    unselectedTextColor = WadjetColors.TextMuted,
-                    indicatorColor = WadjetColors.Gold.copy(alpha = 0.12f),
-                ),
-            )
         }
     }
 }

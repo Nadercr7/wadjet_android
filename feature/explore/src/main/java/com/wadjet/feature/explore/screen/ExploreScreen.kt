@@ -1,6 +1,7 @@
 package com.wadjet.feature.explore.screen
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -66,6 +67,8 @@ import com.wadjet.core.designsystem.animation.shineSweep
 import com.wadjet.core.designsystem.component.ShimmerCardList
 import com.wadjet.core.designsystem.component.WadjetSearchBar
 import com.wadjet.core.domain.model.Landmark
+import com.wadjet.core.ui.LocalAnimatedVisibilityScope
+import com.wadjet.core.ui.LocalSharedTransitionScope
 import com.wadjet.feature.explore.ExploreUiState
 import com.wadjet.feature.explore.R
 
@@ -328,6 +331,7 @@ private fun CityFilter(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun LandmarkCard(
     landmark: Landmark,
@@ -336,11 +340,18 @@ private fun LandmarkCard(
     onToggleFavorite: () -> Unit,
 ) {
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val animatedVisibilityScope = LocalAnimatedVisibilityScope.current
+    with(sharedTransitionScope) {
     Surface(
         shape = MaterialTheme.shapes.large,
         color = WadjetColors.Surface,
         modifier = Modifier
             .fillMaxWidth()
+            .sharedBounds(
+                sharedContentState = rememberSharedContentState(key = "landmark-${landmark.slug}"),
+                animatedVisibilityScope = animatedVisibilityScope,
+            )
             .shineSweep()
             .clickable(onClick = onClick),
     ) {
@@ -434,6 +445,7 @@ private fun LandmarkCard(
             }
         }
     }
+    } // end with(sharedTransitionScope)
 }
 
 @Composable

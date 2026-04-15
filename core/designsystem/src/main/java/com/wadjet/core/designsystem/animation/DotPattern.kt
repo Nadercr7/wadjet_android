@@ -13,6 +13,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.wadjet.core.designsystem.WadjetColors
 
 /**
@@ -23,8 +25,8 @@ import com.wadjet.core.designsystem.WadjetColors
 fun DotPattern(
     modifier: Modifier = Modifier,
     dotColor: Color = WadjetColors.Gold,
-    dotRadius: Float = 1.5f,
-    spacing: Float = 24f,
+    dotRadius: Dp = 1.5.dp,
+    spacing: Dp = 24.dp,
     baseAlpha: Float = 0.08f,
     glowAlpha: Float = 0.18f,
     durationMs: Int = 3000,
@@ -41,15 +43,17 @@ fun DotPattern(
     )
 
     Canvas(modifier = modifier.fillMaxSize()) {
-        val cols = (size.width / spacing).toInt() + 1
-        val rows = (size.height / spacing).toInt() + 1
+        val dotRadiusPx = dotRadius.toPx()
+        val spacingPx = spacing.toPx()
+        val cols = (size.width / spacingPx).toInt() + 1
+        val rows = (size.height / spacingPx).toInt() + 1
 
         for (row in 0..rows) {
             for (col in 0..cols) {
                 drawCircle(
                     color = dotColor.copy(alpha = alpha),
-                    radius = dotRadius,
-                    center = Offset(col * spacing, row * spacing),
+                    radius = dotRadiusPx,
+                    center = Offset(col * spacingPx, row * spacingPx),
                 )
             }
         }

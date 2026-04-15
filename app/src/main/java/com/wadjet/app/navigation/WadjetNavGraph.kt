@@ -4,6 +4,8 @@ import androidx.compose.animation.core.EaseIn
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandIn
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -11,6 +13,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -61,7 +64,10 @@ import com.wadjet.core.common.ToastController
 import com.wadjet.feature.scan.ScanEvent
 import kotlinx.coroutines.launch
 import com.wadjet.app.navigation.lifecycleIsResumed
+import com.wadjet.core.ui.LocalAnimatedVisibilityScope
+import com.wadjet.core.ui.LocalSharedTransitionScope
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun WadjetNavGraph(
     navController: NavHostController,
@@ -70,6 +76,8 @@ fun WadjetNavGraph(
     toastController: ToastController,
     modifier: Modifier = Modifier,
 ) {
+    SharedTransitionLayout {
+        val sharedTransitionScope = this
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -279,6 +287,10 @@ fun WadjetNavGraph(
         ) { navEntry ->
             val viewModel: ExploreViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
+            CompositionLocalProvider(
+                LocalSharedTransitionScope provides sharedTransitionScope,
+                LocalAnimatedVisibilityScope provides this,
+            ) {
             ExploreScreen(
                 state = state,
                 onCategorySelected = viewModel::selectCategory,
@@ -291,10 +303,15 @@ fun WadjetNavGraph(
                 onIdentify = { navController.navigate(Route.Identify) { launchSingleTop = true } },
                 onBack = { navController.popBackStack() },
             )
+            }
         }
         composable<Route.LandmarkDetail> { navEntry ->
             val viewModel: DetailViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
+            CompositionLocalProvider(
+                LocalSharedTransitionScope provides sharedTransitionScope,
+                LocalAnimatedVisibilityScope provides this,
+            ) {
             LandmarkDetailScreen(
                 state = state,
                 onTabSelected = viewModel::selectTab,
@@ -304,6 +321,7 @@ fun WadjetNavGraph(
                 onChatAbout = { slug -> if (navEntry.lifecycleIsResumed()) navController.navigate(Route.ChatLandmark(slug)) { launchSingleTop = true } },
                 onBack = { navController.popBackStack() },
             )
+            }
         }
         composable<Route.Identify> { navEntry ->
             val viewModel: IdentifyViewModel = hiltViewModel()
@@ -385,6 +403,10 @@ fun WadjetNavGraph(
         ) { navEntry ->
             val viewModel: StoriesViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
+            CompositionLocalProvider(
+                LocalSharedTransitionScope provides sharedTransitionScope,
+                LocalAnimatedVisibilityScope provides this,
+            ) {
             StoriesScreen(
                 state = state,
                 onDifficultySelected = viewModel::selectDifficulty,
@@ -393,11 +415,16 @@ fun WadjetNavGraph(
                 onRefresh = viewModel::refresh,
                 onBack = { navController.popBackStack() },
             )
+            }
         }
 
         composable<Route.StoryReader> {
             val viewModel: StoryReaderViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
+            CompositionLocalProvider(
+                LocalSharedTransitionScope provides sharedTransitionScope,
+                LocalAnimatedVisibilityScope provides this,
+            ) {
             StoryReaderScreen(
                 state = state,
                 onPrevChapter = viewModel::prevChapter,
@@ -410,6 +437,7 @@ fun WadjetNavGraph(
                 onDismissError = viewModel::dismissError,
                 onBack = { navController.popBackStack() },
             )
+            }
         }
 
         composable<Route.Dashboard>(
@@ -490,6 +518,7 @@ fun WadjetNavGraph(
             )
         }
     }
+    } // end SharedTransitionLayout
 }
 
 @dagger.hilt.EntryPoint

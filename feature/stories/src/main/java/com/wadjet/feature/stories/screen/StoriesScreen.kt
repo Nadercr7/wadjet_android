@@ -1,6 +1,7 @@
 package com.wadjet.feature.stories.screen
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -60,6 +61,8 @@ import com.wadjet.core.designsystem.component.ErrorState
 import com.wadjet.core.designsystem.component.ShimmerCardList
 import com.wadjet.core.domain.model.StoryProgress
 import com.wadjet.core.domain.model.StorySummary
+import com.wadjet.core.ui.LocalAnimatedVisibilityScope
+import com.wadjet.core.ui.LocalSharedTransitionScope
 import com.wadjet.feature.stories.DIFFICULTY_FILTERS
 import com.wadjet.feature.stories.R
 import com.wadjet.feature.stories.StoriesUiState
@@ -214,6 +217,7 @@ fun StoriesScreen(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun StoryCard(
     story: StorySummary,
@@ -231,6 +235,8 @@ private fun StoryCard(
     }
 
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val animatedVisibilityScope = LocalAnimatedVisibilityScope.current
 
     Box(
         modifier = modifier
@@ -242,8 +248,13 @@ private fun StoryCard(
     ) {
         Row(verticalAlignment = Alignment.Top) {
             // Cover glyph
+            with(sharedTransitionScope) {
             Box(
                 modifier = Modifier
+                    .sharedBounds(
+                        sharedContentState = rememberSharedContentState(key = "story-${story.id}"),
+                        animatedVisibilityScope = animatedVisibilityScope,
+                    )
                     .size(64.dp)
                     .clip(MaterialTheme.shapes.small)
                     .background(
@@ -265,6 +276,7 @@ private fun StoryCard(
                     fontFamily = com.wadjet.core.designsystem.NotoSansEgyptianHieroglyphs,
                 )
             }
+            } // end with(sharedTransitionScope)
 
             Spacer(modifier = Modifier.width(12.dp))
 

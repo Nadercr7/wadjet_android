@@ -28,8 +28,8 @@ fun Modifier.buttonShimmer(
 ): Modifier = composed {
     val transition = rememberInfiniteTransition(label = "btnShimmer")
     val progress by transition.animateFloat(
-        initialValue = -0.3f,
-        targetValue = 1.3f,
+        initialValue = 0f,
+        targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMs, easing = LinearEasing),
             repeatMode = RepeatMode.Restart,
@@ -43,7 +43,8 @@ fun Modifier.buttonShimmer(
         val w = size.width
         val h = size.height
         val highlightWidth = w * 0.3f
-        val centerX = progress * (w + highlightWidth) - highlightWidth / 2
+        val totalTravel = w + highlightWidth
+        val centerX = progress * totalTravel - highlightWidth / 2f
 
         // Top edge shimmer
         drawLine(

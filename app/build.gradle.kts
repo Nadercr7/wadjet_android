@@ -107,6 +107,8 @@ dependencies {
     // Compose
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.material3)
+    implementation(libs.compose.material3.window.size)
+    implementation(libs.compose.material3.adaptive.navigation.suite)
     implementation(libs.compose.material.icons)
     implementation(libs.navigation.compose)
     implementation(libs.hilt.navigation.compose)

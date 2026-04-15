@@ -25,9 +25,9 @@ fun Modifier.goldGradientSweep(
     alpha: Float = 0.08f,
 ): Modifier = composed {
     val transition = rememberInfiniteTransition(label = "goldGradientSweep")
-    val offset by transition.animateFloat(
-        initialValue = -500f,
-        targetValue = 2000f,
+    val progress by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMs, easing = LinearEasing),
             repeatMode = RepeatMode.Restart,
@@ -37,6 +37,10 @@ fun Modifier.goldGradientSweep(
 
     this.drawWithContent {
         drawContent()
+
+        val sweepWidth = size.width * 0.3f
+        val totalRange = size.width + sweepWidth
+        val offset = progress * totalRange - sweepWidth
 
         drawRect(
             brush = Brush.linearGradient(
@@ -49,7 +53,7 @@ fun Modifier.goldGradientSweep(
                     Color.Transparent,
                 ),
                 start = Offset(offset, 0f),
-                end = Offset(offset + 600f, size.height),
+                end = Offset(offset + sweepWidth, size.height),
             ),
         )
     }
