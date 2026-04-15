@@ -15,6 +15,24 @@ data class Sign(
     val speechText: String?,
     val pronunciationSound: String?,
     val pronunciationExample: String?,
+    val logographicValue: String? = null,
+    val determinativeClass: String? = null,
+    val exampleUsages: List<ExampleUsage> = emptyList(),
+    val relatedSigns: List<RelatedSign> = emptyList(),
+)
+
+data class ExampleUsage(
+    val hieroglyphs: String,
+    val transliteration: String,
+    val translation: String,
+)
+
+data class RelatedSign(
+    val code: String,
+    val glyph: String,
+    val transliteration: String,
+    val reading: String?,
+    val type: String,
 )
 
 data class SignPage(
@@ -51,6 +69,7 @@ data class ExampleWord(
     val transliteration: String,
     val translation: String,
     val highlightCodes: List<String>,
+    val speechText: String? = null,
 )
 
 data class PracticeWord(
@@ -58,6 +77,7 @@ data class PracticeWord(
     val transliteration: String,
     val translation: String,
     val hint: String,
+    val speechText: String? = null,
 )
 
 data class WriteResult(

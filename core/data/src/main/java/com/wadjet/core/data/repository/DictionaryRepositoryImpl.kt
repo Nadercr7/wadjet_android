@@ -5,10 +5,12 @@ import com.wadjet.core.common.suspendRunCatching
 import com.wadjet.core.database.dao.SignDao
 import com.wadjet.core.database.entity.SignEntity
 import com.wadjet.core.domain.model.Category
+import com.wadjet.core.domain.model.ExampleUsage
 import com.wadjet.core.domain.model.ExampleWord
 import com.wadjet.core.domain.model.Lesson
 import com.wadjet.core.domain.model.PaletteSign
 import com.wadjet.core.domain.model.PracticeWord
+import com.wadjet.core.domain.model.RelatedSign
 import com.wadjet.core.domain.model.Sign
 import com.wadjet.core.domain.model.SignPage
 import com.wadjet.core.domain.model.WriteGlyph
@@ -20,6 +22,8 @@ import com.wadjet.core.network.model.SignDetailDto
 import com.wadjet.core.network.model.SpeakRequest
 import com.wadjet.core.network.model.WriteRequest
 import com.wadjet.core.domain.repository.DictionaryRepository
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -118,6 +122,7 @@ class DictionaryRepositoryImpl @Inject constructor(
                         transliteration = it.transliteration,
                         translation = it.translation,
                         highlightCodes = it.highlightCodes,
+                        speechText = it.speechText,
                     )
                 },
                 practiceWords = body.practiceWords.map {
@@ -126,6 +131,7 @@ class DictionaryRepositoryImpl @Inject constructor(
                         transliteration = it.transliteration,
                         translation = it.translation,
                         hint = it.hint,
+                        speechText = it.speechText,
                     )
                 },
                 prevLessonLevel = body.prevLesson?.level,
@@ -208,6 +214,8 @@ class DictionaryRepositoryImpl @Inject constructor(
 
 internal class ApiException(message: String) : Exception(message)
 
+private val json = Json { ignoreUnknownKeys = true }
+
 private fun SignDetailDto.toDomain() = Sign(
     code = code,
     glyph = unicodeChar,
@@ -223,6 +231,14 @@ private fun SignDetailDto.toDomain() = Sign(
     speechText = speechText,
     pronunciationSound = pronunciation?.sound,
     pronunciationExample = pronunciation?.example,
+    logographicValue = logographicValue,
+    determinativeClass = determinativeClass,
+    exampleUsages = exampleUsages?.map {
+        ExampleUsage(hieroglyphs = it.hieroglyphs, transliteration = it.transliteration, translation = it.translation)
+    } ?: emptyList(),
+    relatedSigns = relatedSigns?.map {
+        RelatedSign(code = it.code, glyph = it.unicodeChar, transliteration = it.transliteration, reading = it.reading, type = it.type)
+    } ?: emptyList(),
 )
 
 private fun SignDetailDto.toEntity() = SignEntity(
@@ -240,6 +256,10 @@ private fun SignDetailDto.toEntity() = SignEntity(
     speechText = speechText,
     pronunciationSound = pronunciation?.sound,
     pronunciationExample = pronunciation?.example,
+    logographicValue = logographicValue,
+    determinativeClass = determinativeClass,
+    exampleUsagesJson = exampleUsages?.let { json.encodeToString(it) },
+    relatedSignsJson = relatedSigns?.let { json.encodeToString(it) },
 )
 
 private fun SignEntity.toDomain() = Sign(
@@ -257,4 +277,16 @@ private fun SignEntity.toDomain() = Sign(
     speechText = speechText,
     pronunciationSound = pronunciationSound,
     pronunciationExample = pronunciationExample,
+    logographicValue = logographicValue,
+    determinativeClass = determinativeClass,
+    exampleUsages = exampleUsagesJson?.let {
+        try { json.decodeFromString<List<com.wadjet.core.network.model.ExampleUsageDto>>(it).map { dto ->
+            ExampleUsage(hieroglyphs = dto.hieroglyphs, transliteration = dto.transliteration, translation = dto.translation)
+        } } catch (_: Exception) { emptyList() }
+    } ?: emptyList(),
+    relatedSigns = relatedSignsJson?.let {
+        try { json.decodeFromString<List<com.wadjet.core.network.model.RelatedSignDto>>(it).map { dto ->
+            RelatedSign(code = dto.code, glyph = dto.unicodeChar, transliteration = dto.transliteration, reading = dto.reading, type = dto.type)
+        } } catch (_: Exception) { emptyList() }
+    } ?: emptyList(),
 )

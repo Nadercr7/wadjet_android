@@ -123,7 +123,7 @@ class UserRepositoryImpl @Inject constructor(
     ): Result<Unit> = suspendRunCatching {
         val response = userApi.removeFavorite(itemType, itemId)
         if (!response.isSuccessful) {
-            Timber.w("Remove favorite failed: ${response.code()}")
+            throw Exception("Failed to remove favorite: ${response.code()}")
         }
     }
 

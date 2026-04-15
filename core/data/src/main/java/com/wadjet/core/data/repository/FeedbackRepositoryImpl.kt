@@ -22,6 +22,9 @@ class FeedbackRepositoryImpl @Inject constructor(
                 email = data.email,
             ),
         )
+        if (!response.isSuccessful) {
+            throw Exception("Failed to submit feedback: ${response.code()}")
+        }
         val body = response.body() ?: throw Exception("Failed to submit feedback")
         body.id
     }

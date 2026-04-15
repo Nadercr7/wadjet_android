@@ -21,6 +21,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): WadjetDatabase =
         Room.databaseBuilder(context, WadjetDatabase::class.java, "wadjet.db")
+            .addMigrations(WadjetDatabase.MIGRATION_4_5)
             .fallbackToDestructiveMigration()
             .build()
 

@@ -115,6 +115,12 @@ data class InteractionResult(
     val explanationAr: String?,
     val outcomeEn: String?,
     val outcomeAr: String?,
+    val correctAnswer: String? = null,
+    val targetGlyph: String? = null,
+    val gardinerCode: String? = null,
+    val hintEn: String? = null,
+    val hintAr: String? = null,
+    val choiceId: String? = null,
 )
 
 data class StoryProgress(

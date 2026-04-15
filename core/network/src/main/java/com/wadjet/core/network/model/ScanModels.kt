@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ScanResponse(
-    @SerialName("num_detections") val numDetections: Int = 0,
+    @SerialName("glyph_count") val numDetections: Int = 0,
     val glyphs: List<DetectedGlyphDto> = emptyList(),
     val transliteration: String? = null,
     @SerialName("gardiner_sequence") val gardinerSequence: String? = null,

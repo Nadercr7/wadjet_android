@@ -11,4 +11,6 @@ data class SignFtsEntity(
     val transliteration: String,
     val description: String,
     @androidx.room.ColumnInfo(name = "category_name") val categoryName: String,
+    val reading: String?,
+    @androidx.room.ColumnInfo(name = "type_name") val typeName: String,
 )

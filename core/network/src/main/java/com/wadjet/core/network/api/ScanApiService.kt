@@ -11,7 +11,7 @@ import retrofit2.http.Part
 interface ScanApiService {
 
     @Multipart
-    @POST("/api/scan")
+    @POST("api/scan")
     suspend fun scan(
         @Part file: MultipartBody.Part,
         @Part("mode") mode: RequestBody,

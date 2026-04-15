@@ -21,5 +21,9 @@ data class SignEntity(
     @ColumnInfo(name = "speech_text") val speechText: String? = null,
     @ColumnInfo(name = "pronunciation_sound") val pronunciationSound: String? = null,
     @ColumnInfo(name = "pronunciation_example") val pronunciationExample: String? = null,
+    @ColumnInfo(name = "logographic_value") val logographicValue: String? = null,
+    @ColumnInfo(name = "determinative_class") val determinativeClass: String? = null,
+    @ColumnInfo(name = "example_usages_json") val exampleUsagesJson: String? = null,
+    @ColumnInfo(name = "related_signs_json") val relatedSignsJson: String? = null,
     @ColumnInfo(name = "cached_at") val cachedAt: Long = System.currentTimeMillis(),
 )

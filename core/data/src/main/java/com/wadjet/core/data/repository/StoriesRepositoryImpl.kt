@@ -131,6 +131,12 @@ class StoriesRepositoryImpl @Inject constructor(
                 explanationAr = r.explanation?.ar,
                 outcomeEn = r.outcome?.en,
                 outcomeAr = r.outcome?.ar,
+                correctAnswer = r.correctAnswer,
+                targetGlyph = r.targetGlyph,
+                gardinerCode = r.gardinerCode,
+                hintEn = r.hint?.en,
+                hintAr = r.hint?.ar,
+                choiceId = r.choiceId,
             )
         } else {
             throw Exception("Interaction failed: ${response.code()}")
