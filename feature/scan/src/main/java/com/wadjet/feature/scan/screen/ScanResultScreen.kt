@@ -199,7 +199,7 @@ fun ScanResultScreen(
                     // Pipeline source badge
                     result.detectionSource?.let { source ->
                         val sourceLabel = when {
-                            source.contains("gemini", ignoreCase = true) -> stringResource(R.string.scan_source_gemini)
+                            source.contains("gemini", ignoreCase = true) -> stringResource(R.string.scan_source_ai_vision)
                             source.contains("ai_vision", ignoreCase = true) -> stringResource(R.string.scan_source_ai_vision)
                             source.contains("onnx_fallback", ignoreCase = true) -> stringResource(R.string.scan_source_onnx_fallback)
                             source.contains("onnx", ignoreCase = true) && source.contains("ai", ignoreCase = true) -> stringResource(R.string.scan_source_onnx_ai)

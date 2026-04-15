@@ -25,7 +25,6 @@
     <string name="scan_warning_desc">Warning</string>
     <string name="scan_ai_unverified_warning">AI verification unavailable â€” results may be less accurate</string>
     <string name="scan_tips_label">Tips</string>
-    <string name="scan_source_gemini">AI Vision (Gemini)</string>
     <string name="scan_source_ai_vision">AI Vision</string>
     <string name="scan_source_onnx_fallback">ONNX (Fallback)</string>
     <string name="scan_source_onnx_ai">ONNX + AI Verified</string>

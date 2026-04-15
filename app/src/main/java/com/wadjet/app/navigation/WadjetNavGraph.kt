@@ -330,9 +330,6 @@ fun WadjetNavGraph(
                 state = state,
                 onImageCaptured = viewModel::onImageCaptured,
                 onImageSelected = viewModel::onImageSelected,
-                onMatchTap = { slug ->
-                    if (navEntry.lifecycleIsResumed()) navController.navigate(Route.LandmarkDetail(slug)) { launchSingleTop = true }
-                },
                 onViewDetails = { slug ->
                     if (navEntry.lifecycleIsResumed()) navController.navigate(Route.LandmarkDetail(slug)) { launchSingleTop = true }
                 },
