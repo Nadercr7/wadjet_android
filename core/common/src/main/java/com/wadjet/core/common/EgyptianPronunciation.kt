@@ -36,16 +36,14 @@ object EgyptianPronunciation {
      */
     fun toSpeech(transliteration: String): String {
         if (transliteration.isBlank()) return ""
-        val cleaned = transliteration.trim()
-        // If text already contains non-MdC vowels (e, o, u) it is already
-        // pronounceable — return as-is to avoid double-processing.
-        if (cleaned.any { it in "eouEOU" }) return cleaned
-        return cleaned
+        return transliteration.trim()
             .split(Regex("\\s+"))
             .joinToString(" ") { word ->
-                WORD_MAP[word.removeSuffix(".")]
+                val stripped = word.removeSuffix(".")
+                WORD_MAP[stripped]
                     ?: WORD_MAP[word]
-                    ?: convertWord(word)
+                    ?: if (stripped.any { it in "eouEOU" }) stripped   // already pronounceable
+                    else convertWord(stripped)
             }
     }
 
@@ -71,8 +69,13 @@ object EgyptianPronunciation {
     private fun tokenize(word: String): List<String> =
         word.filter { it !in MdC_STRIP }.map { it.toString() }
 
-    /** Characters to strip: dots (word boundary), colons, numbers (plural markers). */
-    private val MdC_STRIP = setOf('.', ':', '=', '*', '(', ')', '<', '>', '!')
+    /** Characters to strip: MdC structural notation markers, digits, hyphens, damaged-text markers. */
+    private val MdC_STRIP = setOf(
+        '.', ':', '=', '*', '(', ')', '<', '>', '!',
+        '-',                                          // compound separator
+        '#', '&',                                     // damaged-text / special-block markers
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', // Gardiner code digits
+    )
 
     private val VOWEL_SOUNDS = setOf("a", "ee", "oo", "e")
 
@@ -203,7 +206,6 @@ object EgyptianPronunciation {
         "jrj" to "eeri",            // to do / make
         "sDm" to "sedjem",          // to hear / listen
         "mAA" to "maa",             // to see / behold
-        "Dd" to "djed",             // to say / stability
         "jj" to "ee-ee",            // to come
         "jw" to "eew",              // is / are (particle)
         "nn" to "nen",              // these / this
@@ -249,7 +251,6 @@ object EgyptianPronunciation {
         "HqAt" to "heqat",           // scepter of authority
         "sxmty" to "sekhemti",       // Double Crown
         "HDt" to "hedjet",           // White Crown
-        "dSrt" to "deshret",         // Red Crown
         "xaw" to "khau",             // crown / appearance
 
         // ─── Compound phrases ───

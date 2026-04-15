@@ -39,44 +39,44 @@ private val UNICODE_MAP: Map<String, Int> by lazy {
     map
 }
 
-// Most common signs for quick lookup
-private val COMMON_GLYPHS = mapOf(
-    "A1" to "\uD80C\uDC00",     // 𓀀 Seated man
-    "A2" to "\uD80C\uDC01",     // 𓀁
-    "D1" to "\uD80C\uDC81",     // 𓂁 Head
-    "D4" to "\uD80C\uDC84",     // 𓂄 Eye
-    "D21" to "\uD80C\uDC95",    // 𓂕 Mouth
-    "D36" to "\uD80C\uDCA4",    // 𓂤 Forearm
-    "D46" to "\uD80C\uDCAE",    // 𓂮 Hand
-    "D58" to "\uD80C\uDCBA",    // 𓂺 Foot
-    "G1" to "\uD80C\uDD80",     // 𓆀 Vulture
-    "G5" to "\uD80C\uDD84",     // Falcon
-    "G17" to "\uD80C\uDD90",    // Owl
-    "G43" to "\uD80C\uDDAA",    // Quail chick
-    "I9" to "\uD80C\uDE09",     // Horned viper
-    "I10" to "\uD80C\uDE0A",    // Cobra
-    "M17" to "\uD80C\uDE51",    // Reed
-    "M23" to "\uD80C\uDE57",    // Sedge
-    "N1" to "\uD80C\uDEC0",     // Sky
-    "N5" to "\uD80C\uDEC4",     // Sun
-    "N29" to "\uD80C\uDEDD",    // Sand hill
-    "N35" to "\uD80C\uDEE3",    // Water
-    "O1" to "\uD80C\uDF00",     // House
-    "O4" to "\uD80C\uDF03",     // Shelter
-    "O34" to "\uD80C\uDF22",    // Door bolt
-    "Q3" to "\uD80C\uDFE3",     // Stool
-    "R4" to "\uD80C\uE004",     // Hotep
-    "S29" to "\uD80C\uE05D",    // Folded cloth
-    "S34" to "\uD80C\uE062",    // Ankh
-    "T14" to "\uD80C\uE08E",    // Throwstick
-    "U1" to "\uD80C\uE0C0",     // Sickle
-    "V13" to "\uD80C\uE12D",    // Tethering rope
-    "V28" to "\uD80C\uE13C",    // Wick
-    "V31" to "\uD80C\uE13F",    // Basket
-    "W11" to "\uD80C\uE16B",    // Jar stand
-    "X1" to "\uD80C\uE181",     // Bread loaf
-    "Y1" to "\uD80C\uE1C0",     // Papyrus roll
-    "Z1" to "\uD80C\uE1E1",     // Single stroke
-    "Z4" to "\uD80C\uE1E4",     // Dual strokes
-    "Aa1" to "\uD80C\uE200",    // Placenta?
-)
+// Most common signs for quick lookup — codepoints verified against Unicode 15.1 standard
+private val COMMON_GLYPHS: Map<String, String> = mapOf(
+    "A1"  to 0x13000,  // Seated man
+    "A2"  to 0x13001,  // Man with hand to mouth
+    "D1"  to 0x13076,  // Head in profile
+    "D4"  to 0x13079,  // Eye (Horus eye)
+    "D21" to 0x1308B,  // Mouth
+    "D36" to 0x1309D,  // Forearm
+    "D46" to 0x130A7,  // Hand
+    "D58" to 0x130C0,  // Foot
+    "G1"  to 0x1313F,  // Vulture (aleph)
+    "G5"  to 0x13143,  // Falcon
+    "G17" to 0x13153,  // Owl
+    "G43" to 0x13171,  // Quail chick
+    "I9"  to 0x13191,  // Horned viper
+    "I10" to 0x13193,  // Cobra
+    "M17" to 0x131CB,  // Reed
+    "M23" to 0x131D3,  // Sedge
+    "N1"  to 0x131EF,  // Sky
+    "N5"  to 0x131F3,  // Sun
+    "N29" to 0x1320E,  // Sand hill
+    "N35" to 0x13216,  // Water
+    "O1"  to 0x13250,  // House
+    "O4"  to 0x13254,  // Shelter
+    "O34" to 0x13283,  // Door bolt
+    "Q3"  to 0x132AA,  // Stool
+    "R4"  to 0x132B5,  // Hotep
+    "S29" to 0x132F4,  // Folded cloth
+    "S34" to 0x132F9,  // Ankh
+    "T14" to 0x13319,  // Throwstick
+    "U1"  to 0x13333,  // Sickle
+    "V13" to 0x1337F,  // Tethering rope
+    "V28" to 0x1339B,  // Wick
+    "V31" to 0x133A1,  // Basket
+    "W11" to 0x133BC,  // Jar stand
+    "X1"  to 0x133CF,  // Bread loaf
+    "Y1"  to 0x133DB,  // Papyrus roll
+    "Z1"  to 0x133E4,  // Single stroke
+    "Z4"  to 0x133ED,  // Dual strokes
+    "Aa1" to 0x1340D,  // Placenta
+).mapValues { (_, cp) -> String(Character.toChars(cp)) }
