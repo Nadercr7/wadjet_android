@@ -5,6 +5,7 @@ import android.media.MediaPlayer
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wadjet.core.common.EgyptianPronunciation
 import com.wadjet.core.designsystem.component.TtsState
 import com.wadjet.core.domain.model.ScanResult
 import com.wadjet.core.domain.repository.ScanRepository
@@ -70,7 +71,12 @@ class ScanResultViewModel @Inject constructor(
         }
         _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.LOADING)) }
         viewModelScope.launch {
-            scanRepository.speak(text, lang, "scan_pronunciation").onSuccess { bytes ->
+            val isHieroglyphic = key == "translit"
+            val ttsText = if (isHieroglyphic) EgyptianPronunciation.toSpeech(text) else text
+            val ctx = if (isHieroglyphic) EgyptianPronunciation.CONTEXT else "scan_pronunciation"
+            val voice = if (isHieroglyphic) EgyptianPronunciation.VOICE else null
+            val style = if (isHieroglyphic) EgyptianPronunciation.STYLE else null
+            scanRepository.speak(ttsText, lang, ctx, voice, style).onSuccess { bytes ->
                 if (bytes != null) {
                     playWavBytes(key, bytes)
                 } else {

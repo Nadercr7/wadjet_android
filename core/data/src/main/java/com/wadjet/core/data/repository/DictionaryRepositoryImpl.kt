@@ -1,5 +1,6 @@
 package com.wadjet.core.data.repository
 
+import com.wadjet.core.common.EgyptianPronunciation
 import com.wadjet.core.common.suspendRunCatching
 import com.wadjet.core.database.dao.SignDao
 import com.wadjet.core.database.entity.SignEntity
@@ -180,7 +181,13 @@ class DictionaryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun speakPhonetic(text: String): Result<ByteArray?> = suspendRunCatching {
-        val response = audioApi.speak(SpeakRequest(text = text, lang = "en", context = "dictionary_speak"))
+        val response = audioApi.speak(SpeakRequest(
+            text = text,
+            lang = "en",
+            context = EgyptianPronunciation.CONTEXT,
+            voice = EgyptianPronunciation.VOICE,
+            style = EgyptianPronunciation.STYLE,
+        ))
         when (response.code()) {
             200 -> response.body()?.bytes()
             204 -> null

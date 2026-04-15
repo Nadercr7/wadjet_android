@@ -97,8 +97,8 @@ class ScanRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun speak(text: String, lang: String, context: String): Result<ByteArray?> = suspendRunCatching {
-        val response = audioApi.speak(SpeakRequest(text = text, lang = lang, context = context))
+    override suspend fun speak(text: String, lang: String, context: String, voice: String?, style: String?): Result<ByteArray?> = suspendRunCatching {
+        val response = audioApi.speak(SpeakRequest(text = text, lang = lang, context = context, voice = voice, style = style))
         when (response.code()) {
             200 -> response.body()?.bytes()
             204 -> null

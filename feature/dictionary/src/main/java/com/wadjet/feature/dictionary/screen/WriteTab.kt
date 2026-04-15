@@ -42,6 +42,7 @@ import com.wadjet.core.designsystem.GardinerCodeStyle
 import com.wadjet.core.designsystem.HieroglyphStyle
 import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.component.WadjetButton
+import com.wadjet.core.common.EgyptianPronunciation
 import com.wadjet.core.designsystem.component.WadjetTextField
 import com.wadjet.core.domain.model.PaletteSign
 import androidx.compose.ui.res.stringResource
@@ -156,7 +157,7 @@ fun WriteTab(
                     val transliterationText = result.glyphs
                         .mapNotNull { it.transliteration?.takeIf(String::isNotBlank) }
                         .joinToString(" ")
-                    val ttsText = transliterationToSpeech(transliterationText).ifBlank {
+                    val ttsText = EgyptianPronunciation.toSpeech(transliterationText).ifBlank {
                         result.glyphs.mapNotNull { it.description }.joinToString(", ")
                     }
                     if (ttsText.isNotBlank()) onSpeak(ttsText)
@@ -182,25 +183,6 @@ fun WriteTab(
             }
         }
     }
-}
-
-/**
- * Maps Egyptological transliteration ASCII conventions to pronounceable English.
- * e.g. "anx" → "ankh", "nTr" → "netcher", "Htp" → "hetep"
- */
-private fun transliterationToSpeech(text: String): String {
-    // Order matters: replace multi-char sequences before single-char
-    return text
-        .replace("nTr", "netcher")
-        .replace("Htp", "hetep")
-        .replace("x", "kh")
-        .replace("X", "kh")
-        .replace("S", "sh")
-        .replace("D", "dj")
-        .replace("T", "ch")
-        .replace("H", "h")
-        .replace("A", "ah")
-        .replace("aA", "ah")
 }
 
 @Composable
