@@ -206,7 +206,7 @@ class UserRepositoryImplTest {
     fun `getStoryProgress maps items`() = runTest {
         coEvery { userApi.getStoryProgress() } returns Response.success(
             listOf(
-                StoryProgressItemDto(id = 1, storyId = "story-1", chapterIndex = 2, glyphsLearned = 5, score = 80, completed = false),
+                StoryProgressItemDto(id = 1, storyId = "story-1", chapterIndex = 2, glyphsLearned = "[\"A1\",\"A2\",\"A3\",\"A4\",\"A5\"]", score = 80, completed = false),
             ),
         )
 

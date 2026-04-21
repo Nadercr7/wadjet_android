@@ -56,11 +56,24 @@ data class StoryProgressItemDto(
     val id: Int = 0,
     @SerialName("story_id") val storyId: String,
     @SerialName("chapter_index") val chapterIndex: Int = 0,
-    @SerialName("glyphs_learned") val glyphsLearned: Int = 0,
+    // Backend stores this as a JSON-encoded string (e.g. "[]" or "[\"A1\"]") in SQLite
+    // and returns the raw column value. We accept it as a string and compute the count
+    // in the repository. Use `glyphsLearnedCount` for the numeric value.
+    @SerialName("glyphs_learned") val glyphsLearned: String = "[]",
     val score: Int = 0,
     val completed: Boolean = false,
     @SerialName("updated_at") val updatedAt: String? = null,
-)
+) {
+    /** Number of glyphs learned, parsed from the JSON array string. */
+    val glyphsLearnedCount: Int
+        get() = runCatching {
+            kotlinx.serialization.json.Json
+                .parseToJsonElement(glyphsLearned)
+                .let { el ->
+                    if (el is kotlinx.serialization.json.JsonArray) el.size else 0
+                }
+        }.getOrDefault(0)
+}
 
 @Serializable
 data class UserLimitsResponse(

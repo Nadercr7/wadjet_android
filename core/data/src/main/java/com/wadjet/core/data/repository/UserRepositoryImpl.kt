@@ -148,7 +148,7 @@ class UserRepositoryImpl @Inject constructor(
             DashboardStoryProgress(
                 storyId = it.storyId,
                 chapterIndex = it.chapterIndex,
-                glyphsLearned = it.glyphsLearned,
+                glyphsLearned = it.glyphsLearnedCount,
                 score = it.score,
                 completed = it.completed,
             )
