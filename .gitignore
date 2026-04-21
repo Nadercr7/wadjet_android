@@ -28,3 +28,11 @@ Desktop.ini
 .kotlin/
 hs_err_*.log
 replay_pid*.log
+
+# Internal planning & specs (never published)
+.specify/
+old planning (archive)/
+PLAN.md
+PROMPTS.md
+PROJECT-GUIDE.md
+PROMPT*.md
