@@ -41,8 +41,8 @@
 
     <!-- Identify screen -->
     <string name="identify_title">Identify Landmark</string>
-    <string name="identify_upload_title">Upload a photo of an Egyptian landmark</string>
-    <string name="identify_upload_subtitle">Supports JPG, PNG up to 10MB</string>
+    <string name="identify_upload_title">Upload a photo of a landmark</string>
+    <string name="identify_upload_subtitle">Pick a clear photo from your gallery and we\'ll identify the Egyptian landmark for you.</string>
     <string name="identify_analyze_button">Identify Landmark</string>
     <string name="identify_loading">Identifying landmark…</string>
     <string name="identify_error">Couldn\'t identify this landmark. Try another photo</string>

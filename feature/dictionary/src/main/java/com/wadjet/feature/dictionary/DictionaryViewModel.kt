@@ -7,6 +7,7 @@ import com.wadjet.core.domain.model.Category
 import com.wadjet.core.domain.model.Sign
 import com.wadjet.core.domain.model.SignPage
 import com.wadjet.core.domain.repository.DictionaryRepository
+import com.wadjet.core.domain.repository.TtsPreferencesRepository
 import com.wadjet.core.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -14,6 +15,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -49,6 +51,7 @@ val SIGN_TYPES = listOf("All", "uniliteral", "biliteral", "triliteral", "logogra
 class DictionaryViewModel @Inject constructor(
     private val repository: DictionaryRepository,
     private val userRepository: UserRepository,
+    private val ttsPreferences: TtsPreferencesRepository,
     private val toastController: com.wadjet.core.common.ToastController,
 ) : ViewModel() {
 
@@ -59,6 +62,8 @@ class DictionaryViewModel @Inject constructor(
     val alphabetState: StateFlow<AlphabetUiState> = _alphabetState.asStateFlow()
 
     private var searchJob: Job? = null
+    private var loadSignsJob: Job? = null
+    private var isSpeaking = false
     private val lang: String get() = if (java.util.Locale.getDefault().language == "ar") "ar" else "en"
 
     init {
@@ -102,7 +107,8 @@ class DictionaryViewModel @Inject constructor(
 
     fun loadSigns(page: Int = 1) {
         if (page > 1 && _state.value.isLoadingMore) return
-        viewModelScope.launch {
+        if (page == 1) loadSignsJob?.cancel()
+        loadSignsJob = viewModelScope.launch {
             _state.update {
                 if (page == 1) it.copy(isLoading = true, error = null)
                 else it.copy(isLoadingMore = true)
@@ -174,8 +180,17 @@ class DictionaryViewModel @Inject constructor(
     }
 
     fun speakSign(text: String) {
-        toastController.info("Generating pronunciation\u2026")
+        if (isSpeaking) return
+        isSpeaking = true
         viewModelScope.launch {
+            // Respect TTS settings from DataStore
+            if (!ttsPreferences.ttsEnabled.first()) {
+                _state.update { it.copy(localTtsText = text) }
+                isSpeaking = false
+                return@launch
+            }
+            val speed = ttsPreferences.ttsSpeed.first()
+            toastController.info("Generating pronunciation\u2026")
             repository.speakPhonetic(text).onSuccess { bytes ->
                 if (bytes != null) {
                     var tmp: File? = null
@@ -186,6 +201,7 @@ class DictionaryViewModel @Inject constructor(
                         val player = MediaPlayer().apply {
                             setDataSource(tmp.absolutePath)
                             prepare()
+                            playbackParams = playbackParams.setSpeed(speed)
                             setOnCompletionListener {
                                 it.release()
                                 if (mediaPlayer === it) mediaPlayer = null
@@ -206,6 +222,7 @@ class DictionaryViewModel @Inject constructor(
                 Timber.e(it, "Dictionary TTS failed")
                 _state.update { it.copy(localTtsText = text) }
             }
+            isSpeaking = false
         }
     }
 

@@ -23,6 +23,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -86,6 +87,15 @@ fun IdentifyScreen(
                         analyzeButtonText = stringResource(R.string.identify_analyze_button),
                         isAnalyzing = state.isLoading,
                         onAnalyze = null,
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.AddPhotoAlternate,
+                                contentDescription = null,
+                                tint = WadjetColors.Gold,
+                                modifier = Modifier.size(64.dp),
+                            )
+                        },
+                        browseButtonProminent = true,
                     )
                 }
             }
@@ -277,7 +287,7 @@ private fun IdentifyResults(
                     ) {
                         Icon(
                             Icons.AutoMirrored.Filled.Chat,
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.identify_ask_thoth),
                             tint = WadjetColors.Gold,
                             modifier = Modifier.size(18.dp),
                         )

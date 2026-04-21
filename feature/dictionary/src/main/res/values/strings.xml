@@ -4,7 +4,6 @@
     <string name="dictionary_tab_browse">Browse</string>
     <string name="dictionary_tab_learn">Learn</string>
     <string name="dictionary_tab_write">Write</string>
-    <string name="dictionary_tab_translate">Translate</string>
 
     <!-- Browse tab -->
     <string name="browse_search_placeholder">Search signs…</string>
@@ -39,20 +38,6 @@
     <string name="lesson_practice_label">Practice:</string>
     <string name="lesson_word_hint">Hint: %1$s</string>
 
-    <!-- Translate tab -->
-    <string name="translate_title">Translate Hieroglyphs</string>
-    <string name="translate_subtitle">Enter MdC transliteration to get English and Arabic translations</string>
-    <string name="translate_input_label">Transliteration (MdC)</string>
-    <string name="translate_input_placeholder">e.g. anx wDA snb</string>
-    <string name="translate_gardiner_label">Gardiner Sequence (optional)</string>
-    <string name="translate_gardiner_placeholder">e.g. S34-R11-S29-N35-S29</string>
-    <string name="translate_button_loading">Translating…</string>
-    <string name="translate_button">Translate</string>
-    <string name="translate_english_label">English</string>
-    <string name="translate_arabic_label">العربية</string>
-    <string name="translate_context_label">Context</string>
-    <string name="translate_cached">cached</string>
-
     <!-- Write tab -->
     <string name="write_input_label">Enter text</string>
     <string name="write_input_placeholder">Type English text or transliteration…</string>
@@ -74,4 +59,5 @@
     <string name="sign_pronounce_desc">Pronounce</string>
     <string name="sign_share_chooser">Share Sign</string>
     <string name="sign_practice_writing">Practice Writing</string>
+    <string name="lesson_speak">Speak</string>
 </resources>

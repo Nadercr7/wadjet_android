@@ -2,7 +2,6 @@ package com.wadjet.feature.dictionary
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.wadjet.core.domain.model.PaletteSign
 import com.wadjet.core.domain.model.WriteGlyph
 import com.wadjet.core.domain.model.WriteResult
 import com.wadjet.core.domain.repository.DictionaryRepository
@@ -16,11 +15,7 @@ import javax.inject.Inject
 
 data class WriteUiState(
     val inputText: String = "",
-    val selectedMode: String = "smart",
     val result: WriteResult? = null,
-    val preview: WriteResult? = null,
-    val isPreviewLoading: Boolean = false,
-    val palette: List<PaletteSign> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
 )
@@ -33,28 +28,8 @@ class WriteViewModel @Inject constructor(
     private val _state = MutableStateFlow(WriteUiState())
     val state: StateFlow<WriteUiState> = _state.asStateFlow()
 
-    init {
-        loadPalette()
-    }
-
-    private fun loadPalette() {
-        viewModelScope.launch {
-            repository.getPalette()
-                .onSuccess { palette -> _state.update { it.copy(palette = palette) } }
-        }
-    }
-
     fun onInputChange(text: String) {
         _state.update { it.copy(inputText = text, result = null, error = null) }
-    }
-
-    fun onModeChanged(mode: String) {
-        _state.update { it.copy(selectedMode = mode, result = null) }
-    }
-
-    fun appendGlyph(sign: PaletteSign) {
-        val text = sign.glyph
-        _state.update { it.copy(inputText = it.inputText + text) }
     }
 
     fun convert() {
@@ -62,8 +37,10 @@ class WriteViewModel @Inject constructor(
         if (s.inputText.isBlank()) return
         if (s.isLoading) return
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
-            repository.write(s.inputText, s.selectedMode)
+            // Clear any previous result before issuing the new request so the UI
+            // never shows stale output alongside the loading state.
+            _state.update { it.copy(isLoading = true, error = null, result = null) }
+            repository.write(s.inputText, "smart")
                 .onSuccess { result -> _state.update { it.copy(result = result, isLoading = false) } }
                 .onFailure { e -> _state.update { it.copy(isLoading = false, error = e.message) } }
         }

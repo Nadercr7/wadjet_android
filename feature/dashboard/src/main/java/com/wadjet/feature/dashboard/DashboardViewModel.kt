@@ -10,6 +10,7 @@ import com.wadjet.core.domain.model.UserStats
 import com.wadjet.core.domain.repository.AuthRepository
 import com.wadjet.core.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,6 +45,8 @@ class DashboardViewModel @Inject constructor(
     private val _state = MutableStateFlow(DashboardUiState())
     val state: StateFlow<DashboardUiState> = _state.asStateFlow()
 
+    private var dashboardJob: Job? = null
+
     init {
         loadDashboard()
         observeUser()
@@ -76,8 +79,9 @@ class DashboardViewModel @Inject constructor(
     }
 
     private fun loadDashboard() {
+        dashboardJob?.cancel()
         _state.update { it.copy(isLoading = true, error = null) }
-        viewModelScope.launch {
+        dashboardJob = viewModelScope.launch {
             val statsDeferred = async { userRepository.getStats() }
             val scansDeferred = async { userRepository.getScanHistory() }
             val favsDeferred = async { userRepository.getFavorites() }

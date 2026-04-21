@@ -33,14 +33,14 @@ val WadjetTypography = Typography(
     headlineMedium = TextStyle(
         fontFamily = PlayfairDisplay,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 20.sp,
-        lineHeight = 26.sp,
+        fontSize = 22.sp,
+        lineHeight = 28.sp,
     ),
     headlineSmall = TextStyle(
         fontFamily = PlayfairDisplay,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
+        fontSize = 20.sp,
+        lineHeight = 26.sp,
     ),
     titleLarge = TextStyle(
         fontFamily = Inter,

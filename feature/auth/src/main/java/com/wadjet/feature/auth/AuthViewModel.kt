@@ -31,12 +31,12 @@ class AuthViewModel @Inject constructor(
 
     fun showSheet(sheet: AuthSheet) {
         _activeSheet.value = sheet
-        _state.update { it.copy(error = null, forgotPasswordSent = false) }
+        _state.update { it.copy(error = null, forgotPasswordSent = false, verificationSent = false, verificationCheckFailed = false) }
     }
 
     fun dismissSheet() {
         _activeSheet.value = AuthSheet.NONE
-        _state.update { it.copy(error = null, forgotPasswordSent = false) }
+        _state.update { it.copy(error = null, forgotPasswordSent = false, verificationSent = false, verificationCheckFailed = false) }
     }
 
     fun signInWithGoogle(idToken: String) {
@@ -70,9 +70,21 @@ class AuthViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, error = null) }
             authRepository.signInWithEmail(email.trim(), password)
                 .onSuccess { user ->
-                    _state.update { it.copy(isLoading = false, user = user) }
-                    _activeSheet.value = AuthSheet.NONE
-                    _events.emit(AuthEvent.AuthSuccess)
+                    if (!user.emailVerified) {
+                        // Stop at verification gate — don't emit AuthSuccess yet
+                        _state.update {
+                            it.copy(
+                                isLoading = false,
+                                user = user,
+                                pendingVerificationEmail = user.email,
+                            )
+                        }
+                        _activeSheet.value = AuthSheet.VERIFY_EMAIL
+                    } else {
+                        _state.update { it.copy(isLoading = false, user = user, pendingVerificationEmail = null) }
+                        _activeSheet.value = AuthSheet.NONE
+                        _events.emit(AuthEvent.AuthSuccess)
+                    }
                 }
                 .onFailure { e ->
                     _state.update { it.copy(isLoading = false, error = e.message ?: "Login failed") }
@@ -99,13 +111,76 @@ class AuthViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, error = null) }
             authRepository.register(email.trim(), password, displayName?.trim()?.ifBlank { null })
                 .onSuccess { user ->
-                    _state.update { it.copy(isLoading = false, user = user) }
-                    _activeSheet.value = AuthSheet.NONE
-                    _events.emit(AuthEvent.AuthSuccess)
+                    // New accounts are always unverified — gate AuthSuccess on verification.
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            user = user,
+                            pendingVerificationEmail = user.email,
+                            verificationSent = true,
+                        )
+                    }
+                    _activeSheet.value = AuthSheet.VERIFY_EMAIL
+                    _events.emit(AuthEvent.VerificationEmailSent)
                 }
                 .onFailure { e ->
                     _state.update { it.copy(isLoading = false, error = e.message ?: "Registration failed") }
                 }
+        }
+    }
+
+    fun resendVerification() {
+        if (_state.value.isLoading) return
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true, error = null, verificationSent = false, verificationCheckFailed = false) }
+            authRepository.sendEmailVerification()
+                .onSuccess {
+                    _state.update { it.copy(isLoading = false, verificationSent = true) }
+                    _events.emit(AuthEvent.VerificationEmailSent)
+                }
+                .onFailure { e ->
+                    _state.update { it.copy(isLoading = false, error = e.message ?: "Failed to send verification email") }
+                }
+        }
+    }
+
+    fun checkEmailVerified() {
+        if (_state.value.isLoading) return
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true, error = null, verificationCheckFailed = false, verificationSent = false) }
+            authRepository.reloadEmailVerified()
+                .onSuccess { verified ->
+                    if (verified) {
+                        val current = _state.value.user?.copy(emailVerified = true)
+                        _state.update {
+                            it.copy(
+                                isLoading = false,
+                                user = current,
+                                pendingVerificationEmail = null,
+                                verificationCheckFailed = false,
+                            )
+                        }
+                        _activeSheet.value = AuthSheet.NONE
+                        _events.emit(AuthEvent.EmailVerified)
+                        _events.emit(AuthEvent.AuthSuccess)
+                    } else {
+                        _state.update { it.copy(isLoading = false, verificationCheckFailed = true) }
+                    }
+                }
+                .onFailure { e ->
+                    _state.update { it.copy(isLoading = false, error = e.message ?: "Failed to check verification") }
+                }
+        }
+    }
+
+    /** User cancels the verification flow — sign out to avoid a half-authenticated local session. */
+    fun cancelVerification() {
+        viewModelScope.launch {
+            authRepository.signOut()
+            _state.update {
+                AuthUiState()
+            }
+            _activeSheet.value = AuthSheet.NONE
         }
     }
 

@@ -29,6 +29,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -185,6 +187,7 @@ fun LandingScreen(
                         text = stringResource(R.string.landing_quick_actions),
                         style = MaterialTheme.typography.titleMedium,
                         color = WadjetColors.TextMuted,
+                        modifier = Modifier.semantics { heading() },
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Row(
@@ -225,6 +228,7 @@ fun LandingScreen(
                             text = stringResource(R.string.landing_continue_title),
                             style = MaterialTheme.typography.titleMedium,
                             color = WadjetColors.TextMuted,
+                            modifier = Modifier.semantics { heading() },
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         LazyRow(

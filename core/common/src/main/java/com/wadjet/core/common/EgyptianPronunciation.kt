@@ -36,7 +36,8 @@ object EgyptianPronunciation {
      */
     fun toSpeech(transliteration: String): String {
         if (transliteration.isBlank()) return ""
-        return transliteration.trim()
+        val trimmed = transliteration.trim()
+        val converted = trimmed
             .split(Regex("\\s+"))
             .joinToString(" ") { word ->
                 val stripped = word.removeSuffix(".")
@@ -45,6 +46,16 @@ object EgyptianPronunciation {
                     ?: if (stripped.any { it in "eouEOU" }) stripped   // already pronounceable
                     else convertWord(stripped)
             }
+        // For single-character inputs (the alphabet-sign case), repeat the
+        // utterance twice. This guarantees the TTS engine produces clear audio
+        // in the configured Orus voice instead of either reading the raw
+        // character as an English letter name ("d" → "dee") or falling back
+        // to a generic voice due to too-little content.
+        return if (trimmed.length == 1 && converted.isNotBlank()) {
+            "$converted. $converted."
+        } else {
+            converted
+        }
     }
 
     // ── Phoneme-level fallback for unknown words ──
@@ -61,6 +72,14 @@ object EgyptianPronunciation {
                 ) {
                     append('e')
                 }
+            }
+            // For single-phoneme consonant inputs (alphabet signs like d, t, s),
+            // append "eh" so the TTS engine reads a proper syllable ("deh")
+            // instead of the English letter name ("dee"). Multi-phoneme words
+            // and vowel-only inputs are unaffected — matching standard
+            // Egyptological reading convention for uniliteral signs.
+            if (sounds.size == 1 && sounds[0].isNotEmpty() && isConsonantSound(sounds[0])) {
+                append("eh")
             }
         }
     }
@@ -111,7 +130,11 @@ object EgyptianPronunciation {
         "t" to "t",
         "T" to "ch",   // tether — "ch" as in "church" (ṯ)
         "d" to "d",
-        "D" to "j",    // snake — /dʒ/ as in "judge" (ḏ) — use "j" not "dj" for clear TTS
+        "D" to "dj",   // snake — /dʒ/ as in "judge" (ḏ). Use "dj" (standard
+                        // Egyptological digraph) instead of bare "j" because
+                        // multilingual TTS voices read "j" as /j/ (the "y" sound)
+                        // in German/Dutch-influenced models — causing "deh" to
+                        // be heard as "yeh". "dj" forces the English /dʒ/ sound.
         "l" to "l",    // not standard 24 but appears in some texts
     )
 
@@ -119,6 +142,16 @@ object EgyptianPronunciation {
 
     @Suppress("SpellCheckingInspection")
     private val WORD_MAP: Map<String, String> = mapOf(
+        // ─── Uniliteral vowels & semi-vowels (standard Egyptological reading) ───
+        // Single-character overrides ensure TTS gets a full, unambiguous syllable
+        // rather than a bare phoneme the engine would read as an English letter name.
+        "A" to "ah",                // ꜣ aleph — open "a"
+        "a" to "ah",                // ꜥ ayin — pharyngeal "a"
+        "i" to "ee",                // reed leaf
+        "j" to "ee",                // reed leaf variant
+        "y" to "ee",                // double reed
+        "w" to "oo",                // quail chick
+
         // ─── Gods & divine names ───
         "nTr" to "netjer",          // god
         "nTrt" to "netcheret",      // goddess
@@ -129,7 +162,7 @@ object EgyptianPronunciation {
         "wsjr" to "weseer",         // Osiris
         "Ast" to "aset",            // Isis
         "DHwty" to "djehuti",       // Thoth
-        "ptH" to "petah",           // Ptah
+        "ptH" to "ptah",           // Ptah — Coptic ⲡⲗⲁⲳ confirms /ptah/ (universal spelling: Ptah)
         "stX" to "setekh",          // Seth
         "jtn" to "aten",            // Aten (sun disk)
         "xpri" to "khepri",        // Khepri (scarab god)
@@ -174,7 +207,7 @@ object EgyptianPronunciation {
         "anx" to "ankh",            // life
         "wDA" to "wedja",           // prosperity / flourish
         "snb" to "seneb",           // health
-        "Htp" to "hetep",           // peace / offering
+        "Htp" to "hotep",           // peace / offering — Coptic ⲩⲟⲗⲕ /hotp/ (universal: Amenhotep, Hotepsekhemwy)
         "Dd" to "djed",             // stability / endurance
         "wAs" to "was",             // power / dominion
         "mAat" to "maat",           // truth / justice / cosmic order
@@ -198,23 +231,23 @@ object EgyptianPronunciation {
         "tp" to "tep",              // head / upon
         "xt" to "khet",             // thing / wood / fire
         "Hs" to "hes",              // praise / favor
-        "Hw" to "hu",               // divine utterance
+        "Hw" to "hoo",              // divine utterance — "hu" would be read as "hyoo" in English TTS
         "sjA" to "sia",             // divine perception
         "smA" to "sema",            // to unite
         "Hna" to "hena",            // together / with
-        "mi" to "mi",               // like / as
+        "mi" to "mee",              // like / as — "mi" would be read as "my" (/maɪ/) by English TTS
         "jrj" to "eeri",            // to do / make
         "sDm" to "sedjem",          // to hear / listen
         "mAA" to "maa",             // to see / behold
         "jj" to "ee-ee",            // to come
         "jw" to "eew",              // is / are (particle)
         "nn" to "nen",              // these / this
-        "pw" to "pu",               // this (demonstrative)
+        "pw" to "poo",              // this (demonstrative) — "pu" would be read as "pyoo" in English TTS
 
         // ─── Nature & cosmos ───
         "tA" to "ta",               // land / earth
         "pt" to "pet",              // sky / heaven
-        "mw" to "mu",               // water
+        "mw" to "moo",              // water — "mu" would be read as "myoo" (like Greek letter) in English TTS
         "Hrt" to "heret",           // sky above
         "dwAt" to "duat",           // underworld / Duat
         "wbn" to "weben",           // to rise / shine
@@ -256,7 +289,7 @@ object EgyptianPronunciation {
         // ─── Compound phrases ───
         "di-anx" to "dee-ankh",                  // given life
         "anx-wDA-snb" to "ankh-wedja-seneb",     // life prosperity health
-        "Htp-di-nsw" to "hetep-dee-nesu",         // royal offering formula
+        "Htp-di-nsw" to "hotep-dee-nesu",         // royal offering formula
         "mdw-nTr" to "medu-netjer",               // divine words (hieroglyphs)
     )
 }

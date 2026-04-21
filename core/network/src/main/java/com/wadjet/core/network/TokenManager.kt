@@ -5,6 +5,9 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,6 +28,10 @@ class TokenManager @Inject constructor(
         )
     }
 
+    private val _sessionInvalidated = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    /** Emitted when a token refresh fails — observers should sign out Firebase and clear local data. */
+    val sessionInvalidated: SharedFlow<Unit> = _sessionInvalidated.asSharedFlow()
+
     var accessToken: String?
         get() = prefs.getString(KEY_ACCESS_TOKEN, null)
         set(value) = prefs.edit().putString(KEY_ACCESS_TOKEN, value).apply()
@@ -37,6 +44,12 @@ class TokenManager @Inject constructor(
 
     fun clearAll() {
         prefs.edit().clear().apply()
+    }
+
+    /** Clear tokens and signal session invalidation for refresh failures. */
+    fun invalidateSession() {
+        clearAll()
+        _sessionInvalidated.tryEmit(Unit)
     }
 
     companion object {

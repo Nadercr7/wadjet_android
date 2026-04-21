@@ -7,6 +7,7 @@ import com.wadjet.core.domain.model.SignPage
 import com.wadjet.core.domain.repository.DictionaryRepository
 import com.wadjet.core.domain.repository.UserRepository
 import com.wadjet.core.common.ToastController
+import com.wadjet.core.domain.repository.TtsPreferencesRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -29,6 +30,7 @@ class DictionaryViewModelTest {
 
     private val repository: DictionaryRepository = mockk(relaxed = true)
     private val userRepository: UserRepository = mockk(relaxed = true)
+    private val ttsPreferences: TtsPreferencesRepository = mockk(relaxed = true)
     private val toastController: ToastController = mockk(relaxed = true)
     private lateinit var viewModel: DictionaryViewModel
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -67,7 +69,7 @@ class DictionaryViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel() = DictionaryViewModel(repository, userRepository, toastController).also { viewModel = it }
+    private fun createViewModel() = DictionaryViewModel(repository, userRepository, ttsPreferences, toastController).also { viewModel = it }
 
     @Test
     fun `init loads categories and signs`() = runTest {

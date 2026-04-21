@@ -43,6 +43,7 @@ class IdentifyViewModel @Inject constructor(
     val state: StateFlow<IdentifyUiState> = _state.asStateFlow()
 
     fun onImageCaptured(file: File) {
+        if (_state.value.isLoading) return
         viewModelScope.launch {
             // Check free-tier limits
             userRepository.getLimits().onSuccess { limits ->
@@ -53,9 +54,10 @@ class IdentifyViewModel @Inject constructor(
             }
 
             _state.update { it.copy(cameraActive = false, isLoading = true, error = null) }
-            val compressed = compressImage(file)
+            val compressed = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { compressImage(file) }
             exploreRepository.identifyLandmark(compressed)
                 .onSuccess { result ->
+                    if (compressed !== file) compressed.delete()
                     _state.update { it.copy(result = result, isLoading = false) }
                     autoFetchDetail(result)
                 }

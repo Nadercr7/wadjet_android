@@ -469,7 +469,7 @@ fun ChatScreen(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    items(suggestions) { suggestion ->
+                    items(suggestions, key = { it }) { suggestion ->
                         FilterChip(
                             selected = false,
                             onClick = { onSendMessage(suggestion) },

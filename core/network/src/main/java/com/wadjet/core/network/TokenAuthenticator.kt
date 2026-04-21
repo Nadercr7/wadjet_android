@@ -55,8 +55,8 @@ class TokenAuthenticator @Inject constructor(
                     .header("Authorization", "Bearer $newToken")
                     .build()
             } else {
-                // Refresh failed — clear auth state, return null to propagate 401
-                tokenManager.clearAll()
+                // Refresh failed — invalidate session (signals Firebase signout + local cleanup)
+                tokenManager.invalidateSession()
                 null
             }
         }
@@ -74,10 +74,13 @@ class TokenAuthenticator @Inject constructor(
                 }
                 .build()
 
-            // Use the same connection pool via the response's chain
-            val client = response.request.tag(okhttp3.Call::class.java)
-            val refreshResponse = okhttp3.OkHttpClient.Builder().build()
-                .newCall(refreshRequest).execute()
+            // Build a minimal client sharing connection pool but without auth interceptors
+            val refreshClient = okhttp3.OkHttpClient.Builder()
+                .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
+            val refreshResponse = refreshClient.newCall(refreshRequest).execute()
 
             if (refreshResponse.isSuccessful) {
                 val body = refreshResponse.body?.string()

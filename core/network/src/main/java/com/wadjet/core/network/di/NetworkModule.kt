@@ -10,6 +10,7 @@ import com.wadjet.core.network.api.AudioApiService
 import com.wadjet.core.network.api.ChatApiService
 import com.wadjet.core.network.api.DictionaryApiService
 import com.wadjet.core.network.api.LandmarkApiService
+import com.wadjet.core.network.api.PexelsApiService
 import com.wadjet.core.network.api.ScanApiService
 import com.wadjet.core.network.api.FeedbackApiService
 import com.wadjet.core.network.api.StoriesApiService
@@ -137,4 +138,57 @@ object NetworkModule {
     @Singleton
     fun provideTranslateApiService(retrofit: Retrofit): TranslateApiService =
         retrofit.create(TranslateApiService::class.java)
+
+    // ---- Pexels (image fallback) ----
+    // Separate Retrofit instance with its own OkHttpClient that injects the
+    // Pexels Authorization header. Rotates to a secondary key on HTTP 429
+    // (rate limit) to effectively double the free-tier budget.
+    @Provides
+    @Singleton
+    @Named("pexels")
+    fun providePexelsOkHttpClient(): OkHttpClient {
+        val keys = listOfNotNull(
+            com.wadjet.core.network.BuildConfig.PEXELS_API_KEY.takeIf { it.isNotBlank() },
+            com.wadjet.core.network.BuildConfig.PEXELS_API_KEY_2.takeIf { it.isNotBlank() },
+        )
+        return OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val ua = "Wadjet-Android/${com.wadjet.core.network.BuildConfig.APP_VERSION}"
+                var lastResponse: okhttp3.Response? = null
+                for ((index, key) in keys.withIndex()) {
+                    lastResponse?.close()
+                    val req = chain.request().newBuilder()
+                        .header("Authorization", key)
+                        .header("User-Agent", ua)
+                        .build()
+                    val response = chain.proceed(req)
+                    if (response.code != 429 || index == keys.lastIndex) {
+                        return@addInterceptor response
+                    }
+                    lastResponse = response
+                }
+                // No keys configured — fall through with original request.
+                chain.proceed(chain.request())
+            }
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    @Named("pexels")
+    fun providePexelsRetrofit(
+        @Named("pexels") client: OkHttpClient,
+        json: Json,
+    ): Retrofit = Retrofit.Builder()
+        .baseUrl("https://api.pexels.com/")
+        .client(client)
+        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+        .build()
+
+    @Provides
+    @Singleton
+    fun providePexelsApiService(@Named("pexels") retrofit: Retrofit): PexelsApiService =
+        retrofit.create(PexelsApiService::class.java)
 }

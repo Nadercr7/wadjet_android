@@ -31,7 +31,7 @@ class EgyptianPronunciationTest {
     @Test fun `wsjr produces weseer`() = assertSpeech("weseer", "wsjr")
     @Test fun `Ast produces aset`() = assertSpeech("aset", "Ast")
     @Test fun `DHwty produces djehuti`() = assertSpeech("djehuti", "DHwty")
-    @Test fun `ptH produces petah`() = assertSpeech("petah", "ptH")
+    @Test fun `ptH produces ptah`() = assertSpeech("ptah", "ptH")
     @Test fun `stX produces setekh`() = assertSpeech("setekh", "stX")
     @Test fun `jtn produces aten`() = assertSpeech("aten", "jtn")
     @Test fun `xpri produces khepri`() = assertSpeech("khepri", "xpri")
@@ -79,7 +79,7 @@ class EgyptianPronunciationTest {
     @Test fun `anx produces ankh`() = assertSpeech("ankh", "anx")
     @Test fun `wDA produces wedja`() = assertSpeech("wedja", "wDA")
     @Test fun `snb produces seneb`() = assertSpeech("seneb", "snb")
-    @Test fun `Htp produces hetep`() = assertSpeech("hetep", "Htp")
+    @Test fun `Htp produces hotep`() = assertSpeech("hotep", "Htp")
     @Test fun `Dd produces djed`() = assertSpeech("djed", "Dd")
     @Test fun `wAs produces was`() = assertSpeech("was", "wAs")
     @Test fun `mAat produces maat`() = assertSpeech("maat", "mAat")
@@ -104,24 +104,24 @@ class EgyptianPronunciationTest {
     @Test fun `tp produces tep`() = assertSpeech("tep", "tp")
     @Test fun `xt produces khet`() = assertSpeech("khet", "xt")
     @Test fun `Hs produces hes`() = assertSpeech("hes", "Hs")
-    @Test fun `Hw produces hu`() = assertSpeech("hu", "Hw")
+    @Test fun `Hw produces hoo`() = assertSpeech("hoo", "Hw")
     @Test fun `sjA produces sia`() = assertSpeech("sia", "sjA")
     @Test fun `smA produces sema`() = assertSpeech("sema", "smA")
     @Test fun `Hna produces hena`() = assertSpeech("hena", "Hna")
-    @Test fun `mi produces mi`() = assertSpeech("mi", "mi")
+    @Test fun `mi produces mee`() = assertSpeech("mee", "mi")
     @Test fun `jrj produces eeri`() = assertSpeech("eeri", "jrj")
     @Test fun `sDm produces sedjem`() = assertSpeech("sedjem", "sDm")
     @Test fun `mAA produces maa`() = assertSpeech("maa", "mAA")
     @Test fun `jj produces ee-ee`() = assertSpeech("ee-ee", "jj")
     @Test fun `jw produces eew`() = assertSpeech("eew", "jw")
     @Test fun `nn produces nen`() = assertSpeech("nen", "nn")
-    @Test fun `pw produces pu`() = assertSpeech("pu", "pw")
+    @Test fun `pw produces poo`() = assertSpeech("poo", "pw")
 
     // ─── Nature & cosmos ───
 
     @Test fun `tA produces ta`() = assertSpeech("ta", "tA")
     @Test fun `pt produces pet`() = assertSpeech("pet", "pt")
-    @Test fun `mw produces mu`() = assertSpeech("mu", "mw")
+    @Test fun `mw produces moo`() = assertSpeech("moo", "mw")
     @Test fun `Hrt produces heret`() = assertSpeech("heret", "Hrt")
     @Test fun `dwAt produces duat`() = assertSpeech("duat", "dwAt")
     @Test fun `wbn produces weben`() = assertSpeech("weben", "wbn")
@@ -168,14 +168,14 @@ class EgyptianPronunciationTest {
     @Test fun `di-anx produces dee-ankh`() = assertSpeech("dee-ankh", "di-anx")
     @Test fun `anx-wDA-snb produces ankh-wedja-seneb`() =
         assertSpeech("ankh-wedja-seneb", "anx-wDA-snb")
-    @Test fun `Htp-di-nsw produces hetep-dee-nesu`() =
-        assertSpeech("hetep-dee-nesu", "Htp-di-nsw")
+    @Test fun `Htp-di-nsw produces hotep-dee-nesu`() =
+        assertSpeech("hotep-dee-nesu", "Htp-di-nsw")
     @Test fun `mdw-nTr produces medu-netjer`() = assertSpeech("medu-netjer", "mdw-nTr")
 
     // ─── Multi-word phrases ───
 
     @Test fun `anx nfr Htp as multi-word phrase`() =
-        assertSpeech("ankh nefer hetep", "anx nfr Htp")
+        assertSpeech("ankh nefer hotep", "anx nfr Htp")
 
     @Test fun `nsw-bit nfr produces nesu-beet nefer`() =
         assertSpeech("nesu-beet nefer", "nsw-bit nfr")
@@ -186,39 +186,44 @@ class EgyptianPronunciationTest {
         assertSpeech("ankh", "anx.")
 
     // ══════════════════════════════════════════════════
-    //  T009 — PHONEME_MAP exhaustive verification
+    //  T009 — Single-character (uniliteral) sign pronunciation
     // ══════════════════════════════════════════════════
 
-    // Single-character inputs not in WORD_MAP exercise PHONEME_MAP → convertWord.
-    // A single character never triggers epenthesis, so the output is the mapped sound.
+    // Single-character inputs are the alphabet-sign case. They get:
+    //   • vowel letters (A, a, i, j, y, w) → mapped via WORD_MAP to Egyptological
+    //     syllables (ah, ee, oo)
+    //   • consonant letters → mapped via PHONEME_MAP, then "eh" appended so the
+    //     TTS engine reads "deh" not the English letter name "dee"
+    //   • always repeated twice so the engine produces clear Orus-voice audio
+    //     instead of falling back to a generic voice on too-short content.
 
-    @Test fun `phoneme A maps to a`() = assertSpeech("a", "A")
-    @Test fun `phoneme a maps to a`() = assertSpeech("a", "a")
-    @Test fun `phoneme i maps to ee`() = assertSpeech("ee", "i")
-    @Test fun `phoneme j maps to ee`() = assertSpeech("ee", "j")
-    @Test fun `phoneme y maps to ee`() = assertSpeech("ee", "y")
-    @Test fun `phoneme w maps to oo`() = assertSpeech("oo", "w")
-    @Test fun `phoneme b maps to b`() = assertSpeech("b", "b")
-    @Test fun `phoneme p maps to p`() = assertSpeech("p", "p")
-    @Test fun `phoneme f maps to f`() = assertSpeech("f", "f")
-    @Test fun `phoneme m maps to m`() = assertSpeech("m", "m")
-    @Test fun `phoneme n maps to n`() = assertSpeech("n", "n")
-    @Test fun `phoneme r maps to r`() = assertSpeech("r", "r")
-    @Test fun `phoneme h maps to h`() = assertSpeech("h", "h")
-    @Test fun `phoneme H maps to h`() = assertSpeech("h", "H")
-    @Test fun `phoneme x maps to kh`() = assertSpeech("kh", "x")
-    @Test fun `phoneme X maps to kh`() = assertSpeech("kh", "X")
-    @Test fun `phoneme z maps to z`() = assertSpeech("z", "z")
-    @Test fun `phoneme s maps to s`() = assertSpeech("s", "s")
-    @Test fun `phoneme S maps to sh`() = assertSpeech("sh", "S")
-    @Test fun `phoneme q maps to q`() = assertSpeech("q", "q")
-    @Test fun `phoneme k maps to k`() = assertSpeech("k", "k")
-    @Test fun `phoneme g maps to g`() = assertSpeech("g", "g")
-    @Test fun `phoneme t maps to t`() = assertSpeech("t", "t")
-    @Test fun `phoneme T maps to ch`() = assertSpeech("ch", "T")
-    @Test fun `phoneme d maps to d`() = assertSpeech("d", "d")
-    @Test fun `phoneme D maps to j`() = assertSpeech("j", "D")
-    @Test fun `phoneme l maps to l`() = assertSpeech("l", "l")
+    @Test fun `phoneme A maps to ah repeated`() = assertSpeech("ah. ah.", "A")
+    @Test fun `phoneme a maps to ah repeated`() = assertSpeech("ah. ah.", "a")
+    @Test fun `phoneme i maps to ee repeated`() = assertSpeech("ee. ee.", "i")
+    @Test fun `phoneme j maps to ee repeated`() = assertSpeech("ee. ee.", "j")
+    @Test fun `phoneme y maps to ee repeated`() = assertSpeech("ee. ee.", "y")
+    @Test fun `phoneme w maps to oo repeated`() = assertSpeech("oo. oo.", "w")
+    @Test fun `phoneme b maps to beh repeated`() = assertSpeech("beh. beh.", "b")
+    @Test fun `phoneme p maps to peh repeated`() = assertSpeech("peh. peh.", "p")
+    @Test fun `phoneme f maps to feh repeated`() = assertSpeech("feh. feh.", "f")
+    @Test fun `phoneme m maps to meh repeated`() = assertSpeech("meh. meh.", "m")
+    @Test fun `phoneme n maps to neh repeated`() = assertSpeech("neh. neh.", "n")
+    @Test fun `phoneme r maps to reh repeated`() = assertSpeech("reh. reh.", "r")
+    @Test fun `phoneme h maps to heh repeated`() = assertSpeech("heh. heh.", "h")
+    @Test fun `phoneme H maps to heh repeated`() = assertSpeech("heh. heh.", "H")
+    @Test fun `phoneme x maps to kheh repeated`() = assertSpeech("kheh. kheh.", "x")
+    @Test fun `phoneme X maps to kheh repeated`() = assertSpeech("kheh. kheh.", "X")
+    @Test fun `phoneme z maps to zeh repeated`() = assertSpeech("zeh. zeh.", "z")
+    @Test fun `phoneme s maps to seh repeated`() = assertSpeech("seh. seh.", "s")
+    @Test fun `phoneme S maps to sheh repeated`() = assertSpeech("sheh. sheh.", "S")
+    @Test fun `phoneme q maps to qeh repeated`() = assertSpeech("qeh. qeh.", "q")
+    @Test fun `phoneme k maps to keh repeated`() = assertSpeech("keh. keh.", "k")
+    @Test fun `phoneme g maps to geh repeated`() = assertSpeech("geh. geh.", "g")
+    @Test fun `phoneme t maps to teh repeated`() = assertSpeech("teh. teh.", "t")
+    @Test fun `phoneme T maps to cheh repeated`() = assertSpeech("cheh. cheh.", "T")
+    @Test fun `phoneme d maps to deh repeated`() = assertSpeech("deh. deh.", "d")
+    @Test fun `phoneme D maps to djeh repeated`() = assertSpeech("djeh. djeh.", "D")
+    @Test fun `phoneme l maps to leh repeated`() = assertSpeech("leh. leh.", "l")
 
     // ══════════════════════════════════════════════════
     //  T010 — Vowel epenthesis tests
@@ -246,8 +251,8 @@ class EgyptianPronunciationTest {
         assertSpeech("nefer", "nfr")
     }
 
-    @Test fun `Htp fallback produces hetep`() {
-        assertSpeech("hetep", "Htp")
+    @Test fun `Htp fallback produces hotep`() {
+        assertSpeech("hotep", "Htp")
     }
 
     @Test fun `consonant-vowel-consonant no extra epenthesis`() {
@@ -287,7 +292,12 @@ class EgyptianPronunciationTest {
     }
 
     @Test fun `structural characters stripped`() {
-        assertSpeech("a", "A.")
+        // "A." has its trailing dot stripped at WORD_MAP lookup → becomes "A"
+        // which hits WORD_MAP["A"]="ah". Input length is 2 so no single-char
+        // padding is applied.
+        assertSpeech("ah", "A.")
+        // These retain non-dot structural chars so input length > 1 → no padding,
+        // convertWord strips them and emits the raw phoneme "a".
         assertSpeech("a", "A:")
         assertSpeech("a", "A=")
         assertSpeech("a", "A*")
@@ -335,9 +345,10 @@ class EgyptianPronunciationTest {
     @Test fun `multiple spaces between words`() =
         assertSpeech("ankh nefer", "anx   nfr")
 
-    @Test fun `single unknown character passes through`() {
-        // 'G' is not in PHONEME_MAP → kept as-is
-        assertSpeech("G", "G")
+    @Test fun `single unknown character passes through with padding`() {
+        // 'G' is not in PHONEME_MAP → kept as raw "G" as a single consonant
+        // sound, then "eh" suffix + padding applied per single-char rule.
+        assertSpeech("Geh. Geh.", "G")
     }
 
     // ══════════════════════════════════════════════════

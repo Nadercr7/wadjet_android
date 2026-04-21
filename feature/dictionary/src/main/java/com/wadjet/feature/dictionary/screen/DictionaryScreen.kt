@@ -22,7 +22,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.feature.dictionary.DictionaryViewModel
-import com.wadjet.feature.dictionary.TranslateViewModel
 import com.wadjet.feature.dictionary.WriteViewModel
 import com.wadjet.feature.dictionary.sheet.SignDetailSheet
 import androidx.compose.ui.res.stringResource
@@ -33,7 +32,6 @@ private val TAB_TITLE_RES = listOf(
     R.string.dictionary_tab_browse,
     R.string.dictionary_tab_learn,
     R.string.dictionary_tab_write,
-    R.string.dictionary_tab_translate,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,12 +43,10 @@ fun DictionaryScreen(
     modifier: Modifier = Modifier,
     dictionaryViewModel: DictionaryViewModel = hiltViewModel(),
     writeViewModel: WriteViewModel = hiltViewModel(),
-    translateViewModel: TranslateViewModel = hiltViewModel(),
 ) {
     val browseState by dictionaryViewModel.state.collectAsStateWithLifecycle()
     val alphabetState by dictionaryViewModel.alphabetState.collectAsStateWithLifecycle()
     val writeState by writeViewModel.state.collectAsStateWithLifecycle()
-    val translateState by translateViewModel.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(
         initialPage = initialTab.coerceIn(0, TAB_TITLE_RES.size - 1),
@@ -126,16 +122,7 @@ fun DictionaryScreen(
                     onInputChange = writeViewModel::onInputChange,
                     onConvert = writeViewModel::convert,
                     onClear = writeViewModel::clear,
-                    onAppendGlyph = writeViewModel::appendGlyph,
-                    onModeChanged = writeViewModel::onModeChanged,
                     onSpeak = dictionaryViewModel::speakSign,
-                )
-                3 -> TranslateTab(
-                    state = translateState,
-                    onInputChange = translateViewModel::onInputChange,
-                    onGardinerChange = translateViewModel::onGardinerChange,
-                    onTranslate = translateViewModel::translate,
-                    onClear = translateViewModel::clear,
                 )
             }
         }

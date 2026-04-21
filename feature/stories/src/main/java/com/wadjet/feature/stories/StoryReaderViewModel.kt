@@ -1,7 +1,7 @@
 package com.wadjet.feature.stories
 
+import com.wadjet.core.common.audio.AudioPlaybackManager
 import android.content.SharedPreferences
-import android.media.MediaPlayer
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -58,6 +58,7 @@ data class ReaderUiState(
 class StoryReaderViewModel @Inject constructor(
     private val storiesRepository: StoriesRepository,
     private val toastController: com.wadjet.core.common.ToastController,
+    private val audioPlayer: AudioPlaybackManager,
     private val sharedPreferences: SharedPreferences,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -67,7 +68,6 @@ class StoryReaderViewModel @Inject constructor(
     private val _state = MutableStateFlow(ReaderUiState())
     val state: StateFlow<ReaderUiState> = _state.asStateFlow()
 
-    private var mediaPlayer: MediaPlayer? = null
     private var localTtsDeferred: CompletableDeferred<Unit>? = null
 
     init {
@@ -321,45 +321,22 @@ class StoryReaderViewModel @Inject constructor(
     }
 
     private fun playWavBytesAndWait(bytes: ByteArray, onDone: () -> Unit) {
-        try {
-            val tempFile = File.createTempFile("story_tts_", ".wav")
-            tempFile.writeBytes(bytes)
-            tempFile.deleteOnExit()
-            mediaPlayer = MediaPlayer().apply {
-                setDataSource(tempFile.absolutePath)
-                prepare()
-                setOnCompletionListener {
-                    release()
-                    mediaPlayer = null
-                    tempFile.delete()
-                    onDone()
-                }
-                setOnErrorListener { _, _, _ ->
-                    release()
-                    mediaPlayer = null
-                    tempFile.delete()
-                    onDone()
-                    true
-                }
-                start()
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "MediaPlayer failed")
-            onDone()
-        }
+        audioPlayer.playWavBytes(
+            bytes = bytes,
+            prefix = "story_tts_",
+            onCompletion = onDone,
+            onError = onDone,
+        )
     }
 
     private fun stopSpeaking() {
-        try {
-            mediaPlayer?.apply { if (isPlaying) stop(); release() }
-        } catch (_: Exception) {}
-        mediaPlayer = null
+        audioPlayer.stop()
         _state.update { it.copy(isSpeaking = false) }
     }
 
     override fun onCleared() {
         super.onCleared()
-        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.NonCancellable) {
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO).launch {
             storiesRepository.saveProgress(
                 StoryProgress(
                     storyId = storyId,

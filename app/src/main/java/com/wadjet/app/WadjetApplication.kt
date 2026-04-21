@@ -25,8 +25,6 @@ class WadjetApplication : Application(), SingletonImageLoader.Factory {
     @EntryPoint
     @InstallIn(SingletonComponent::class)
     interface ImageLoaderEntryPoint {
-        fun okHttpClient(): OkHttpClient
-
         @Named("baseUrl")
         fun baseUrl(): String
     }
@@ -36,6 +34,7 @@ class WadjetApplication : Application(), SingletonImageLoader.Factory {
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
+        Timber.tag("Wadjet").i("App started; BuildConfig.DEBUG=${BuildConfig.DEBUG}")
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader {
@@ -44,13 +43,29 @@ class WadjetApplication : Application(), SingletonImageLoader.Factory {
             ImageLoaderEntryPoint::class.java,
         )
         val baseUrl = entryPoint.baseUrl().trimEnd('/')
-        val okHttpClient = entryPoint.okHttpClient()
 
         return ImageLoader.Builder(context)
             .crossfade(true)
             .components {
                 add(BaseUrlInterceptor(baseUrl))
-                add(OkHttpNetworkFetcherFactory(callFactory = { okHttpClient }))
+                // Dedicated OkHttpClient for image loading. Wikimedia (upload.wikimedia.org)
+                // rejects the default "okhttp/..." User-Agent with HTTP 403, so we MUST
+                // send a descriptive UA per their policy:
+                // https://meta.wikimedia.org/wiki/User-Agent_policy
+                val imageClient = OkHttpClient.Builder()
+                    .addInterceptor { chain ->
+                        val req = chain.request().newBuilder()
+                            .header(
+                                "User-Agent",
+                                "WadjetAndroid/${BuildConfig.VERSION_NAME} " +
+                                    "(https://wadjet.app; contact@wadjet.app) " +
+                                    "okhttp/4.12.0",
+                            )
+                            .build()
+                        chain.proceed(req)
+                    }
+                    .build()
+                add(OkHttpNetworkFetcherFactory(callFactory = { imageClient }))
             }
             .memoryCache {
                 MemoryCache.Builder()
@@ -60,7 +75,7 @@ class WadjetApplication : Application(), SingletonImageLoader.Factory {
             .diskCache {
                 DiskCache.Builder()
                     .directory(cacheDir.resolve("coil_cache"))
-                    .maxSizePercent(0.05)
+                    .maxSizePercent(0.10)
                     .build()
             }
             .build()

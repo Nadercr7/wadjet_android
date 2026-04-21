@@ -42,6 +42,7 @@ class ExploreViewModel @Inject constructor(
     val state: StateFlow<ExploreUiState> = _state.asStateFlow()
 
     private var searchJob: Job? = null
+    private var loadJob: Job? = null
 
     init {
         loadLandmarks()
@@ -119,8 +120,9 @@ class ExploreViewModel @Inject constructor(
     }
 
     private fun loadLandmarks() {
+        loadJob?.cancel()
         _state.update { it.copy(isLoading = true, error = null) }
-        viewModelScope.launch {
+        loadJob = viewModelScope.launch {
             val s = _state.value
             exploreRepository.getLandmarks(
                 category = s.selectedCategory.takeIf { it != "All" },

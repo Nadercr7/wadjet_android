@@ -46,6 +46,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -194,41 +199,14 @@ private fun DetailContent(
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
     ) {
-        // Hero image carousel
-        if (detail.images.isNotEmpty()) {
-            ImageCarousel(images = detail.images)
-        } else if (detail.thumbnail != null) {
-            KenBurnsImage(
-                url = detail.thumbnail!!,
-                contentDescription = detail.name,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(240.dp),
-            )
-        } else if (detail.originalImage != null) {
-            KenBurnsImage(
-                url = detail.originalImage!!,
-                contentDescription = detail.name,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(240.dp),
-            )
-        } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(240.dp)
-                    .background(WadjetColors.SurfaceAlt),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(DesignR.drawable.ic_placeholder_landmark),
-                    contentDescription = detail.name,
-                    tint = WadjetColors.Gold.copy(alpha = 0.5f),
-                    modifier = Modifier.size(80.dp),
-                )
-            }
-        }
+        // Hero image carousel — backed by Pexels for consistent quality
+        PexelsImageCarousel(
+            slug = detail.slug,
+            name = detail.name,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(260.dp),
+        )
 
         Column(modifier = Modifier.padding(16.dp)) {
             // Title
@@ -351,7 +329,7 @@ private fun DetailContent(
                     tabOverview -> OverviewTab(detail)
                     tabHistory -> HistoryTab(detail)
                     tabTips -> TipsTab(detail)
-                    tabGallery -> GalleryTab(detail.images)
+                    tabGallery -> GalleryTab(slug = detail.slug, name = detail.name)
                 }
             }
 
@@ -553,7 +531,14 @@ private fun TipsTab(detail: LandmarkDetail) {
 }
 
 @Composable
-private fun GalleryTab(images: List<LandmarkImage>) {
+private fun GalleryTab(slug: String, name: String) {
+    val vm: com.wadjet.feature.explore.image.ThumbnailFallbackViewModel =
+        androidx.hilt.navigation.compose.hiltViewModel(key = "gallery-$slug")
+    val initial = remember(slug) { vm.resolver.cachedMany(slug).orEmpty() }
+    var urls by remember(slug) { mutableStateOf(initial) }
+    LaunchedEffect(slug) {
+        if (urls.isEmpty()) urls = vm.resolver.resolveMany(slug, name, count = 8)
+    }
     FlowRow(
         maxItemsInEachRow = 2,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -562,19 +547,75 @@ private fun GalleryTab(images: List<LandmarkImage>) {
             .fillMaxWidth()
             .padding(4.dp),
     ) {
-        images.forEach { image ->
+        urls.forEach { url ->
             AsyncImage(
-                model = image.url,
-                contentDescription = image.caption,
+                model = url,
+                contentDescription = name,
                 contentScale = ContentScale.Crop,
                 placeholder = painterResource(DesignR.drawable.ic_placeholder_landmark),
-                error = painterResource(DesignR.drawable.ic_placeholder_error),
+                error = painterResource(DesignR.drawable.ic_placeholder_landmark),
                 fallback = painterResource(DesignR.drawable.ic_placeholder_landmark),
                 modifier = Modifier
                     .weight(1f)
                     .aspectRatio(1f)
                     .clip(MaterialTheme.shapes.small),
             )
+        }
+    }
+}
+
+@Composable
+private fun PexelsImageCarousel(slug: String, name: String, modifier: Modifier = Modifier) {
+    val vm: com.wadjet.feature.explore.image.ThumbnailFallbackViewModel =
+        androidx.hilt.navigation.compose.hiltViewModel(key = "carousel-$slug")
+    val initial = remember(slug) { vm.resolver.cachedMany(slug).orEmpty() }
+    var urls by remember(slug) { mutableStateOf(initial) }
+    LaunchedEffect(slug) {
+        if (urls.isEmpty()) urls = vm.resolver.resolveMany(slug, name, count = 6)
+    }
+    if (urls.isEmpty()) {
+        com.wadjet.feature.explore.image.LandmarkThumbnail(
+            slug = slug,
+            name = name,
+            primaryUrl = null,
+            contentDescription = name,
+            modifier = modifier,
+        )
+        return
+    }
+    val pagerState = rememberPagerState(pageCount = { urls.size })
+    Box {
+        HorizontalPager(state = pagerState, modifier = modifier) { page ->
+            AsyncImage(
+                model = urls[page],
+                contentDescription = name,
+                contentScale = ContentScale.Crop,
+                placeholder = painterResource(DesignR.drawable.ic_placeholder_landmark),
+                error = painterResource(DesignR.drawable.ic_placeholder_landmark),
+                fallback = painterResource(DesignR.drawable.ic_placeholder_landmark),
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+        if (urls.size > 1) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 12.dp),
+            ) {
+                repeat(urls.size) { index ->
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 3.dp)
+                            .size(if (index == pagerState.currentPage) 8.dp else 6.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (index == pagerState.currentPage) WadjetColors.Gold
+                                else WadjetColors.Text.copy(alpha = 0.4f),
+                            ),
+                    )
+                }
+            }
         }
     }
 }
@@ -587,7 +628,7 @@ private fun RecommendationsRow(
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        items(recommendations) { rec ->
+        items(recommendations, key = { it.slug }) { rec ->
             Surface(
                 shape = MaterialTheme.shapes.medium,
                 color = WadjetColors.Surface,
@@ -645,7 +686,7 @@ private fun ChildrenRow(
     onTap: (String) -> Unit,
 ) {
     LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        items(children) { child ->
+        items(children, key = { it.slug }) { child ->
             Surface(
                 shape = MaterialTheme.shapes.medium,
                 color = WadjetColors.Surface,
@@ -654,13 +695,11 @@ private fun ChildrenRow(
                     .clickable { onTap(child.slug) },
             ) {
                 Column {
-                    AsyncImage(
-                        model = child.thumbnail,
+                    com.wadjet.feature.explore.image.LandmarkThumbnail(
+                        slug = child.slug,
+                        name = child.name,
+                        primaryUrl = child.thumbnail,
                         contentDescription = child.name,
-                        contentScale = ContentScale.Crop,
-                        placeholder = painterResource(DesignR.drawable.ic_placeholder_landmark),
-                        error = painterResource(DesignR.drawable.ic_placeholder_error),
-                        fallback = painterResource(DesignR.drawable.ic_placeholder_landmark),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(80.dp)

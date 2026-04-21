@@ -45,7 +45,7 @@ class ExploreRepositoryImpl @Inject constructor(
 ) : ExploreRepository {
 
     private val _favorites = MutableStateFlow<Set<String>>(emptySet())
-    private var favoritesLoaded = false
+    private val favoritesLoaded = java.util.concurrent.atomic.AtomicBoolean(false)
 
     override suspend fun getLandmarks(
         category: String?,
@@ -211,12 +211,13 @@ class ExploreRepositoryImpl @Inject constructor(
 
     override fun getFavorites(): Flow<Set<String>> = _favorites
         .onStart {
-            if (!favoritesLoaded) {
+            if (!favoritesLoaded.get()) {
                 loadFavoritesFromApi()
             }
         }
 
     private suspend fun loadFavoritesFromApi() {
+        if (!favoritesLoaded.compareAndSet(false, true)) return
         try {
             val response = userApi.getFavorites()
             if (response.isSuccessful) {
@@ -225,22 +226,40 @@ class ExploreRepositoryImpl @Inject constructor(
                     ?.map { it.itemId }
                     ?.toSet() ?: emptySet()
                 _favorites.value = slugs
-                favoritesLoaded = true
                 // Cache to Room
                 favoriteDao.deleteByType("landmark")
                 favoriteDao.insertAll(slugs.map { FavoriteEntity(itemType = "landmark", itemId = it) })
+            } else {
+                favoritesLoaded.set(false)
             }
         } catch (e: Exception) {
             Timber.w(e, "Failed to load favorites from API, falling back to Room")
             val cached = favoriteDao.getByType("landmark").map { it.itemId }.toSet()
             if (cached.isNotEmpty()) {
                 _favorites.value = cached
-                favoritesLoaded = true
+            } else {
+                favoritesLoaded.set(false)
             }
         }
     }
 
     // --- Mappers ---
+
+    /**
+     * Client-side thumbnail fallbacks for landmarks that the backend returns
+     * with a null thumbnail. Keys are the server slug; values are public
+     * Wikimedia Commons image URLs (same CDN that the backend already uses).
+     * Add to this map if the backend data gap widens for additional landmarks.
+     */
+    private val thumbnailFallbacks: Map<String, String> = mapOf(
+        "pyramids-of-giza-sound-and-light-show" to
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Son_et_lumi%C3%A8re_sound_and_light_show_at_Giza.JPG/600px-Son_et_lumi%C3%A8re_sound_and_light_show_at_Giza.JPG",
+        "tomb-of-meresankh-iii" to
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Tomb_of_Queen_Meresankh_III%2C_wife_of_Khafra%2C_4th_dynasty%2C_ca._2640_BCE%3B_Giza_%2855%29.jpg/600px-Tomb_of_Queen_Meresankh_III%2C_wife_of_Khafra%2C_4th_dynasty%2C_ca._2640_BCE%3B_Giza_%2855%29.jpg",
+    )
+
+    private fun resolvedThumbnail(slug: String, serverThumbnail: String?): String? =
+        serverThumbnail?.takeIf { it.isNotBlank() } ?: thumbnailFallbacks[slug]
 
     private fun LandmarkSummaryDto.toDomain() = Landmark(
         slug = slug,
@@ -249,7 +268,7 @@ class ExploreRepositoryImpl @Inject constructor(
         city = city,
         type = type,
         era = era,
-        thumbnail = thumbnail,
+        thumbnail = resolvedThumbnail(slug, thumbnail),
         featured = featured ?: false,
         popularity = popularity ?: 0,
     )
@@ -261,7 +280,7 @@ class ExploreRepositoryImpl @Inject constructor(
         city = city,
         type = type,
         era = era,
-        thumbnail = thumbnail,
+        thumbnail = resolvedThumbnail(slug, thumbnail),
         featured = featured ?: false,
         popularity = popularity ?: 0,
     )
@@ -273,13 +292,22 @@ class ExploreRepositoryImpl @Inject constructor(
         city = city,
         type = type,
         era = era,
-        thumbnail = thumbnail,
+        thumbnail = resolvedThumbnail(slug, thumbnail),
         featured = featured ?: false,
         popularity = popularity ?: 0,
         detailJson = detailJson,
     )
 
-    private fun LandmarkDetailDto.toDomain() = LandmarkDetail(
+    private fun LandmarkDetailDto.toDomain(): LandmarkDetail {
+        val fallback = resolvedThumbnail(slug, thumbnail)
+        // If the server returned no `images` list AND no thumbnail, seed the
+        // gallery with the curated fallback so the detail carousel has at
+        // least one image to display.
+        val apiImages = images?.map { LandmarkImage(it.url, it.caption) } ?: emptyList()
+        val resolvedImages = if (apiImages.isEmpty() && fallback != null && thumbnail.isNullOrBlank()) {
+            listOf(LandmarkImage(url = fallback, caption = name))
+        } else apiImages
+        return LandmarkDetail(
         slug = slug,
         name = name,
         nameAr = nameAr,
@@ -292,12 +320,12 @@ class ExploreRepositoryImpl @Inject constructor(
         description = description,
         coordinates = coordinates?.let { if (it.size >= 2) Pair(it[0], it[1]) else null },
         mapsUrl = mapsUrl,
-        thumbnail = thumbnail,
-        originalImage = originalImage,
+        thumbnail = fallback,
+        originalImage = originalImage ?: fallback,
         tags = tags ?: emptyList(),
         relatedSites = relatedSites ?: emptyList(),
         featured = featured ?: false,
-        images = images?.map { LandmarkImage(it.url, it.caption) } ?: emptyList(),
+        images = resolvedImages,
         sections = sections?.map { LandmarkSection(it.title, it.content) } ?: emptyList(),
         highlights = highlights,
         visitingTips = visitingTips,
@@ -320,6 +348,7 @@ class ExploreRepositoryImpl @Inject constructor(
             Recommendation(it.slug, it.name, it.score, it.reasons)
         } ?: emptyList(),
     )
+    }
 
     private fun LandmarkEntity.toDomain() = Landmark(
         slug = slug,
@@ -328,7 +357,7 @@ class ExploreRepositoryImpl @Inject constructor(
         city = city,
         type = type,
         era = era,
-        thumbnail = thumbnail,
+        thumbnail = resolvedThumbnail(slug, thumbnail),
         featured = featured,
         popularity = popularity,
     )

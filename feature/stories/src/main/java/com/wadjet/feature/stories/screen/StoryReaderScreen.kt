@@ -90,6 +90,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.wadjet.core.designsystem.animation.FadeUp
+import com.wadjet.core.designsystem.component.WadjetSectionLoader
 import com.wadjet.core.domain.model.GlyphAnnotation
 import com.wadjet.core.domain.model.Interaction
 import com.wadjet.core.domain.model.InteractionResult
@@ -204,14 +205,12 @@ fun StoryReaderScreen(
         modifier = modifier,
     ) { padding ->
         if (state.isLoading || story == null || chapter == null) {
-            Box(
+            WadjetSectionLoader(
+                text = stringResource(R.string.reader_loading),
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(stringResource(R.string.reader_loading), color = WadjetColors.TextMuted)
-            }
+            )
             return@Scaffold
         }
 

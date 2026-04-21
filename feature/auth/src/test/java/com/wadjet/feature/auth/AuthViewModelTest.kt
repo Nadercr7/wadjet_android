@@ -36,6 +36,14 @@ class AuthViewModelTest {
         id = "u1",
         email = "test@example.com",
         displayName = "Test",
+        emailVerified = true,
+    )
+
+    private val unverifiedUser = User(
+        id = "u1",
+        email = "test@example.com",
+        displayName = "Test",
+        emailVerified = false,
     )
 
     @Before
@@ -216,5 +224,106 @@ class AuthViewModelTest {
 
         vm.clearError()
         assertNull(vm.state.value.error)
+    }
+
+    // --- Email verification flow ---
+
+    @Test
+    fun `successful register opens VERIFY_EMAIL sheet and emits VerificationEmailSent`() = runTest {
+        coEvery { authRepository.register(any(), any(), any()) } returns Result.success(unverifiedUser)
+
+        vm.events.test {
+            vm.register("test@example.com", "Password1", "Password1", "Test")
+            advanceUntilIdle()
+
+            assertEquals(AuthEvent.VerificationEmailSent, awaitItem())
+        }
+        assertEquals(AuthSheet.VERIFY_EMAIL, vm.activeSheet.value)
+        assertEquals("test@example.com", vm.state.value.pendingVerificationEmail)
+        assertTrue(vm.state.value.verificationSent)
+    }
+
+    @Test
+    fun `signInWithEmail with unverified user opens VERIFY_EMAIL sheet`() = runTest {
+        coEvery { authRepository.signInWithEmail(any(), any()) } returns Result.success(unverifiedUser)
+
+        vm.signInWithEmail("test@example.com", "Password1")
+        advanceUntilIdle()
+
+        assertEquals(AuthSheet.VERIFY_EMAIL, vm.activeSheet.value)
+        assertEquals("test@example.com", vm.state.value.pendingVerificationEmail)
+    }
+
+    @Test
+    fun `signInWithEmail with verified user emits AuthSuccess and closes sheet`() = runTest {
+        coEvery { authRepository.signInWithEmail(any(), any()) } returns Result.success(fakeUser)
+
+        vm.events.test {
+            vm.signInWithEmail("test@example.com", "Password1")
+            advanceUntilIdle()
+
+            assertEquals(AuthEvent.AuthSuccess, awaitItem())
+        }
+        assertEquals(AuthSheet.NONE, vm.activeSheet.value)
+        assertNull(vm.state.value.pendingVerificationEmail)
+    }
+
+    @Test
+    fun `resendVerification calls repository and sets verificationSent`() = runTest {
+        coEvery { authRepository.sendEmailVerification() } returns Result.success(Unit)
+
+        vm.events.test {
+            vm.resendVerification()
+            advanceUntilIdle()
+
+            assertEquals(AuthEvent.VerificationEmailSent, awaitItem())
+        }
+        assertTrue(vm.state.value.verificationSent)
+        coVerify(exactly = 1) { authRepository.sendEmailVerification() }
+    }
+
+    @Test
+    fun `checkEmailVerified when verified emits EmailVerified and AuthSuccess`() = runTest {
+        coEvery { authRepository.register(any(), any(), any()) } returns Result.success(unverifiedUser)
+        coEvery { authRepository.reloadEmailVerified() } returns Result.success(true)
+
+        vm.register("test@example.com", "Password1", "Password1", null)
+        advanceUntilIdle()
+        assertEquals(AuthSheet.VERIFY_EMAIL, vm.activeSheet.value)
+
+        vm.events.test {
+            vm.checkEmailVerified()
+            advanceUntilIdle()
+
+            assertEquals(AuthEvent.EmailVerified, awaitItem())
+            assertEquals(AuthEvent.AuthSuccess, awaitItem())
+        }
+        assertEquals(AuthSheet.NONE, vm.activeSheet.value)
+        assertNull(vm.state.value.pendingVerificationEmail)
+        assertTrue(vm.state.value.user?.emailVerified == true)
+    }
+
+    @Test
+    fun `checkEmailVerified when still not verified sets verificationCheckFailed`() = runTest {
+        coEvery { authRepository.reloadEmailVerified() } returns Result.success(false)
+
+        vm.checkEmailVerified()
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.verificationCheckFailed)
+        assertFalse(vm.state.value.isLoading)
+    }
+
+    @Test
+    fun `cancelVerification signs out and resets state`() = runTest {
+        coEvery { authRepository.signOut() } returns Unit
+
+        vm.cancelVerification()
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { authRepository.signOut() }
+        assertEquals(AuthSheet.NONE, vm.activeSheet.value)
+        assertNull(vm.state.value.user)
+        assertNull(vm.state.value.pendingVerificationEmail)
     }
 }

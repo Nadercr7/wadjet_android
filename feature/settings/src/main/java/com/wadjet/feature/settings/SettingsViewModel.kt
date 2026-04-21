@@ -55,7 +55,7 @@ class SettingsViewModel @Inject constructor(
 
     fun saveName() {
         val name = _state.value.editName.trim()
-        if (name.isBlank()) return
+        if (name.isBlank() || _state.value.isSaving) return
         _state.update { it.copy(isSaving = true) }
         viewModelScope.launch {
             userRepository.updateProfile(displayName = name, preferredLang = null)
@@ -121,7 +121,11 @@ class SettingsViewModel @Inject constructor(
         _state.update { it.copy(cacheSizeMb = sizeBytes / (1024 * 1024)) }
     }
 
+    private var isSigningOut = false
+
     fun signOut() {
+        if (isSigningOut) return
+        isSigningOut = true
         viewModelScope.launch {
             try {
                 authRepository.signOut()
@@ -129,6 +133,8 @@ class SettingsViewModel @Inject constructor(
             } catch (e: Exception) {
                 Timber.e(e, "Sign out failed")
                 _state.update { it.copy(message = e.message ?: "Sign out failed") }
+            } finally {
+                isSigningOut = false
             }
         }
     }

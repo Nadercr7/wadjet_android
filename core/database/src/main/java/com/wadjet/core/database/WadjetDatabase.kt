@@ -28,7 +28,7 @@ import com.wadjet.core.database.entity.StoryProgressEntity
         StoryProgressEntity::class,
         FavoriteEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
 )
 abstract class WadjetDatabase : RoomDatabase() {
@@ -60,12 +60,12 @@ abstract class WadjetDatabase : RoomDatabase() {
 
         val MIGRATION_5_6 = object : Migration(5, 6) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // Upgrade FTS4 → FTS5 with unicode61 tokenizer for diacritic/Unicode support + BM25
+                // Recreate FTS4 with unicode61 tokenizer for diacritic/Unicode support
                 db.execSQL("DROP TABLE IF EXISTS signs_fts")
                 db.execSQL(
-                    "CREATE VIRTUAL TABLE IF NOT EXISTS signs_fts USING fts5(" +
+                    "CREATE VIRTUAL TABLE IF NOT EXISTS signs_fts USING fts4(" +
                         "code, glyph, transliteration, description, category_name, reading, type_name, " +
-                        "content='signs', content_rowid='rowid', tokenize='unicode61')"
+                        "content=`signs`, tokenize=unicode61)"
                 )
 
                 // Create categories table for offline caching
@@ -97,24 +97,24 @@ abstract class WadjetDatabase : RoomDatabase() {
                         "PRIMARY KEY(item_type, item_id))"
                 )
 
-                // Repopulate FTS5 from existing signs data
+                // Repopulate FTS from existing signs data
                 db.execSQL(
                     "INSERT INTO signs_fts(signs_fts) VALUES('rebuild')"
                 )
             }
         }
 
-        /**
-         * Callback to replace Room-generated FTS4 table with FTS5 on fresh installs.
-         * Room generates FTS4 from the @Fts4 annotation; we drop and recreate as FTS5.
-         */
-        val FTS5_CALLBACK = object : Callback() {
-            override fun onCreate(db: SupportSQLiteDatabase) {
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Fix: replace FTS5 table (unsupported on some devices) with FTS4
                 db.execSQL("DROP TABLE IF EXISTS signs_fts")
                 db.execSQL(
-                    "CREATE VIRTUAL TABLE IF NOT EXISTS signs_fts USING fts5(" +
+                    "CREATE VIRTUAL TABLE IF NOT EXISTS signs_fts USING fts4(" +
                         "code, glyph, transliteration, description, category_name, reading, type_name, " +
-                        "content='signs', content_rowid='rowid', tokenize='unicode61')"
+                        "content=`signs`, tokenize=unicode61)"
+                )
+                db.execSQL(
+                    "INSERT INTO signs_fts(signs_fts) VALUES('rebuild')"
                 )
             }
         }

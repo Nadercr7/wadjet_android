@@ -9,7 +9,7 @@
     <string name="landing_path_hiero_title">Hieroglyphs</string>
     <string name="landing_path_hiero_subtitle">Decode Ancient Egypt</string>
     <string name="landing_feature_scan">Scan &amp; Identify — detect glyphs from photos</string>
-    <string name="landing_feature_translate">Translate — English &amp; Arabic translation</string>
+    <string name="landing_feature_translate">Transliterate — read ancient Egyptian aloud</string>
     <string name="landing_feature_dictionary">Dictionary — 1,000+ Gardiner signs</string>
     <string name="landing_feature_write">Write — compose in hieroglyphs</string>
     <string name="landing_start_scanning">Start Scanning</string>

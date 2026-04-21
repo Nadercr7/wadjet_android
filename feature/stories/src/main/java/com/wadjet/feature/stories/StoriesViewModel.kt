@@ -50,7 +50,10 @@ class StoriesViewModel @Inject constructor(
         loadFavorites()
     }
 
+    private val togglingFavorites = mutableSetOf<String>()
+
     fun toggleStoryFavorite(storyId: String) {
+        if (!togglingFavorites.add(storyId)) return
         val isFav = storyId in _state.value.favorites
         viewModelScope.launch {
             if (isFav) {
@@ -64,6 +67,7 @@ class StoriesViewModel @Inject constructor(
                     _state.update { it.copy(favorites = it.favorites - storyId) }
                 }
             }
+            togglingFavorites.remove(storyId)
         }
     }
 

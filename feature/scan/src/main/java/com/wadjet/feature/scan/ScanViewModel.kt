@@ -127,6 +127,7 @@ class ScanViewModel @Inject constructor(
     }
 
     fun onImageCaptured(file: File) {
+        if (_state.value.isLoading) return
         viewModelScope.launch {
             // Check free-tier limits
             userRepository.getLimits().onSuccess { limits ->
@@ -139,8 +140,8 @@ class ScanViewModel @Inject constructor(
 
             _state.update { it.copy(cameraActive = false, isLoading = true, error = null, scanStep = ScanStep.DETECTING) }
 
-            // Compress image
-            val compressed = compressImage(file)
+            // Compress image on IO thread to avoid ANR
+            val compressed = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { compressImage(file) }
 
             // Animate through steps
             _state.update { it.copy(scanStep = ScanStep.CLASSIFYING) }

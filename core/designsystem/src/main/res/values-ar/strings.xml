@@ -45,6 +45,6 @@
 
     <!-- Shared branding -->
     <string name="app_name_display">WADJET</string>
-    <string name="footer_credit">Built by Mr Robot</string>
+    <string name="footer_credit">Made By Mr Robot</string>
 </resources>
 

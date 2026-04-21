@@ -6,11 +6,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.domain.model.Sign
 import com.wadjet.core.domain.repository.DictionaryRepository
+import com.wadjet.core.domain.repository.TtsPreferencesRepository
 import com.wadjet.core.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -29,6 +31,7 @@ class SignDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: DictionaryRepository,
     private val userRepository: UserRepository,
+    private val ttsPreferences: TtsPreferencesRepository,
     private val toastController: com.wadjet.core.common.ToastController,
 ) : ViewModel() {
 
@@ -53,9 +56,13 @@ class SignDetailViewModel @Inject constructor(
         }
     }
 
+    private var isTogglingFavorite = false
+
     fun toggleFavorite() {
+        if (isTogglingFavorite) return
         val sign = _state.value.sign ?: return
         val isFav = _state.value.isFavorite
+        isTogglingFavorite = true
         viewModelScope.launch {
             _state.update { it.copy(isFavorite = !isFav) }
             val result = if (isFav) {
@@ -66,6 +73,7 @@ class SignDetailViewModel @Inject constructor(
             result.onFailure {
                 _state.update { it.copy(isFavorite = isFav) }
             }
+            isTogglingFavorite = false
         }
     }
 
@@ -84,6 +92,11 @@ class SignDetailViewModel @Inject constructor(
 
     fun speakSign(text: String) {
         viewModelScope.launch {
+            if (!ttsPreferences.ttsEnabled.first()) {
+                _state.update { it.copy(error = "TTS is disabled in settings") }
+                return@launch
+            }
+            val speed = ttsPreferences.ttsSpeed.first()
             toastController.info("Generating pronunciation…")
             repository.speakPhonetic(text).onSuccess { bytes ->
                 if (bytes != null) {
@@ -94,6 +107,7 @@ class SignDetailViewModel @Inject constructor(
                         mediaPlayer = MediaPlayer().apply {
                             setDataSource(tmp.absolutePath)
                             prepare()
+                            playbackParams = playbackParams.setSpeed(speed)
                             start()
                             setOnCompletionListener { tmp.delete() }
                         }

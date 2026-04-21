@@ -25,10 +25,29 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(System.getenv("KEYSTORE_PATH") ?: "../wadjet-release.jks")
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
-            keyAlias = System.getenv("KEY_ALIAS") ?: "wadjet-app"
-            keyPassword = System.getenv("KEY_PASSWORD") ?: ""
+            // Load from signing.properties at project root (gitignored), fall back to env vars.
+            val signingPropsFile = rootProject.file("signing.properties")
+            val signingProps = mutableMapOf<String, String>()
+            if (signingPropsFile.exists()) {
+                signingPropsFile.readLines().forEach { raw ->
+                    val line = raw.trim()
+                    if (line.isNotEmpty() && !line.startsWith("#")) {
+                        val idx = line.indexOf('=')
+                        if (idx > 0) {
+                            signingProps[line.substring(0, idx).trim()] =
+                                line.substring(idx + 1).trim()
+                        }
+                    }
+                }
+            }
+            fun prop(key: String, default: String = ""): String =
+                signingProps[key] ?: System.getenv(key) ?: default
+
+            val keystorePath = prop("KEYSTORE_PATH", "${rootProject.projectDir}/wadjet-release.jks")
+            storeFile = file(keystorePath)
+            storePassword = prop("KEYSTORE_PASSWORD")
+            keyAlias = prop("KEY_ALIAS", "wadjet")
+            keyPassword = prop("KEY_PASSWORD")
         }
     }
 
@@ -123,6 +142,7 @@ dependencies {
     // Coil (for SingletonImageLoader.Factory in Application)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+    implementation(libs.okhttp)
 
     // Timber
     implementation(libs.timber)

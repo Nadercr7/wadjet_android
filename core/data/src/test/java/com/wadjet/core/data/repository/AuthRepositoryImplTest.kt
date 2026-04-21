@@ -1,6 +1,8 @@
 package com.wadjet.core.data.repository
 
 import com.google.firebase.auth.FirebaseUser
+import com.wadjet.core.data.datastore.UserPreferencesDataStore
+import com.wadjet.core.database.WadjetDatabase
 import com.wadjet.core.firebase.FirebaseAuthManager
 import com.wadjet.core.network.TokenManager
 import com.wadjet.core.network.api.AuthApiService
@@ -11,6 +13,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -27,6 +30,8 @@ class AuthRepositoryImplTest {
     private lateinit var authApi: AuthApiService
     private lateinit var tokenManager: TokenManager
     private lateinit var json: Json
+    private lateinit var database: WadjetDatabase
+    private lateinit var preferencesDataStore: UserPreferencesDataStore
     private lateinit var repo: AuthRepositoryImpl
 
     private val fakeFirebaseUser = mockk<FirebaseUser>(relaxed = true) {
@@ -45,9 +50,12 @@ class AuthRepositoryImplTest {
         firebaseAuth = mockk(relaxed = true)
         authApi = mockk(relaxed = true)
         tokenManager = mockk(relaxed = true)
+        every { tokenManager.sessionInvalidated } returns MutableSharedFlow<Unit>()
         json = Json { ignoreUnknownKeys = true }
+        database = mockk(relaxed = true)
+        preferencesDataStore = mockk(relaxed = true)
 
-        repo = AuthRepositoryImpl(firebaseAuth, authApi, tokenManager, json)
+        repo = AuthRepositoryImpl(firebaseAuth, authApi, tokenManager, json, database, preferencesDataStore)
     }
 
     // --- signInWithGoogle ---

@@ -44,7 +44,6 @@ import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.common.EgyptianPronunciation
 import com.wadjet.core.designsystem.component.WadjetTextField
-import com.wadjet.core.domain.model.PaletteSign
 import androidx.compose.ui.res.stringResource
 import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.feature.dictionary.R
@@ -56,8 +55,6 @@ fun WriteTab(
     onInputChange: (String) -> Unit,
     onConvert: () -> Unit,
     onClear: () -> Unit,
-    onAppendGlyph: (PaletteSign) -> Unit,
-    onModeChanged: (String) -> Unit,
     onSpeak: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -83,29 +80,6 @@ fun WriteTab(
 
         Spacer(Modifier.height(12.dp))
 
-        // Mode selector
-        val modes = listOf("smart" to stringResource(R.string.write_mode_smart), "phonetic" to stringResource(R.string.write_mode_phonetic), "gardiner" to stringResource(R.string.write_mode_gardiner))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            modes.forEach { (key, label) ->
-                val selected = state.selectedMode == key
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(if (selected) WadjetColors.Gold else WadjetColors.Surface)
-                        .clickable { onModeChanged(key) }
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                ) {
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (selected) WadjetColors.Night else WadjetColors.TextMuted,
-                    )
-                }
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
-
         // Convert button (full width, no palette)
         WadjetButton(
             text = stringResource(R.string.write_convert_button),
@@ -123,25 +97,6 @@ fun WriteTab(
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = 8.dp),
             )
-        }
-
-        // Glyph palette — tap to append to input
-        if (state.palette.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            Text(
-                stringResource(R.string.write_palette_label),
-                style = MaterialTheme.typography.labelMedium,
-                color = WadjetColors.Gold,
-            )
-            Spacer(Modifier.height(4.dp))
-            androidx.compose.foundation.layout.FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                state.palette.forEach { sign ->
-                    PaletteItem(sign = sign, onClick = { onAppendGlyph(sign) })
-                }
-            }
         }
 
         // Result — only shown after Convert tap
@@ -195,14 +150,16 @@ fun WriteTab(
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
                 IconButton(onClick = {
-                    // Build TTS text: join transliterations as words, then map
-                    // Egyptological ASCII conventions to pronounceable English
+                    // Build TTS text from ONLY the reconstructed Ancient Egyptian
+                    // pronunciation — never the English input word. The server uses
+                    // the hieroglyph_pronunciation context + Orus voice + scribe style,
+                    // so we must send pure Egyptological sounds for authentic output.
+                    // EgyptianPronunciation.toSpeech handles short-input padding
+                    // internally for consistent voice/quality across all callers.
                     val transliterationText = result.glyphs
                         .mapNotNull { it.transliteration?.takeIf(String::isNotBlank) }
                         .joinToString(" ")
-                    val ttsText = EgyptianPronunciation.toSpeech(transliterationText).ifBlank {
-                        result.glyphs.mapNotNull { it.description }.joinToString(", ")
-                    }
+                    val ttsText = EgyptianPronunciation.toSpeech(transliterationText)
                     if (ttsText.isNotBlank()) onSpeak(ttsText)
                 }) {
                     Icon(Icons.Default.VolumeUp, stringResource(R.string.write_read_aloud_desc), tint = WadjetColors.Gold, modifier = Modifier.size(28.dp))
@@ -225,20 +182,5 @@ fun WriteTab(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun PaletteItem(sign: PaletteSign, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .clip(MaterialTheme.shapes.small)
-            .background(WadjetColors.Surface)
-            .clickable(onClick = onClick)
-            .padding(6.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(sign.glyph, style = HieroglyphStyle.copy(fontSize = 22.sp))
-        Text(sign.code, style = GardinerCodeStyle.copy(fontSize = 8.sp))
     }
 }

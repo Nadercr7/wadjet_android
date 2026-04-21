@@ -33,6 +33,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -93,6 +95,7 @@ fun LearnTab(
                         style = MaterialTheme.typography.titleMedium,
                         color = WadjetColors.Gold,
                         fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { heading() },
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -150,13 +153,13 @@ fun LearnTab(
                             if (!ttsText.isNullOrBlank()) {
                                 IconButton(
                                     onClick = { onSpeak(ttsText) },
-                                    modifier = Modifier.size(24.dp),
+                                    modifier = Modifier.size(48.dp),
                                 ) {
                                     Icon(
                                         Icons.Default.VolumeUp,
-                                        contentDescription = null,
+                                        contentDescription = stringResource(R.string.lesson_speak),
                                         tint = WadjetColors.Gold.copy(alpha = 0.7f),
-                                        modifier = Modifier.size(16.dp),
+                                        modifier = Modifier.size(20.dp),
                                     )
                                 }
                             }
@@ -171,6 +174,7 @@ fun LearnTab(
                     style = MaterialTheme.typography.titleMedium,
                     color = WadjetColors.Gold,
                     fontWeight = FontWeight.Bold,
+                    modifier = Modifier.semantics { heading() },
                 )
             }
         }

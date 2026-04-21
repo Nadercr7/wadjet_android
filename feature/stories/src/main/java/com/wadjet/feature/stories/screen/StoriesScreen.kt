@@ -45,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
@@ -129,7 +130,7 @@ fun StoriesScreen(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    items(DIFFICULTY_FILTERS) { difficulty ->
+                    items(DIFFICULTY_FILTERS, key = { it }) { difficulty ->
                         val selected = state.selectedDifficulty == difficulty
                         val bgColor = animateColorAsState(
                             if (selected) WadjetColors.Gold else WadjetColors.Surface,
@@ -240,6 +241,7 @@ private fun StoryCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .semantics(mergeDescendants = true) {}
             .clip(MaterialTheme.shapes.medium)
             .background(WadjetColors.Surface)
             .clickable(enabled = !isLocked, onClick = onClick)

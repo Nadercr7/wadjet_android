@@ -45,6 +45,23 @@ class FirebaseAuthManager @Inject constructor(
         firebaseAuth.sendPasswordResetEmail(email).await()
     }
 
+    /** Sends a verification email to the currently signed-in Firebase user. */
+    suspend fun sendEmailVerification() {
+        val user = firebaseAuth.currentUser
+            ?: throw IllegalStateException("No Firebase user signed in to send verification")
+        user.sendEmailVerification().await()
+    }
+
+    /**
+     * Reloads the current Firebase user from the server and returns whether the
+     * email is now verified. Returns false if no user is signed in.
+     */
+    suspend fun reloadAndIsEmailVerified(): Boolean {
+        val user = firebaseAuth.currentUser ?: return false
+        user.reload().await()
+        return firebaseAuth.currentUser?.isEmailVerified == true
+    }
+
     fun signOut() {
         firebaseAuth.signOut()
     }

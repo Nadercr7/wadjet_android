@@ -335,7 +335,7 @@ private fun HubCard(
             ) {
                 Icon(
                     imageVector = icon,
-                    contentDescription = null,
+                    contentDescription = title,
                     tint = WadjetColors.Gold,
                     modifier = Modifier
                         .padding(12.dp)

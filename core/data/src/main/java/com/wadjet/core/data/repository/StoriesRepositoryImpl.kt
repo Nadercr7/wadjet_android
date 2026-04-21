@@ -24,9 +24,12 @@ import com.wadjet.core.network.model.SaveProgressRequest
 import com.wadjet.core.network.model.SpeakRequest
 import com.wadjet.core.database.dao.StoryProgressDao
 import com.wadjet.core.database.entity.StoryProgressEntity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import javax.inject.Inject
@@ -181,8 +184,10 @@ class StoriesRepositoryImpl @Inject constructor(
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     Timber.w(error, "Story progress listen failed, falling back to Room")
-                    kotlinx.coroutines.runBlocking {
-                        trySend(storyProgressDao.getByStoryId(storyId)?.toDomain())
+                    val dao = storyProgressDao
+                    val sid = storyId
+                    CoroutineScope(Dispatchers.IO).launch {
+                        trySend(dao.getByStoryId(sid)?.toDomain())
                     }
                     return@addSnapshotListener
                 }
@@ -216,8 +221,9 @@ class StoriesRepositoryImpl @Inject constructor(
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     Timber.w(error, "All progress listen failed, falling back to Room")
-                    kotlinx.coroutines.runBlocking {
-                        trySend(storyProgressDao.getAll().associate { it.storyId to it.toDomain() })
+                    val dao = storyProgressDao
+                    CoroutineScope(Dispatchers.IO).launch {
+                        trySend(dao.getAll().associate { it.storyId to it.toDomain() })
                     }
                     return@addSnapshotListener
                 }

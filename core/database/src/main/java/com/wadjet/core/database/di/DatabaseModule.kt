@@ -24,8 +24,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): WadjetDatabase =
         Room.databaseBuilder(context, WadjetDatabase::class.java, "wadjet.db")
-            .addMigrations(WadjetDatabase.MIGRATION_4_5, WadjetDatabase.MIGRATION_5_6)
-            .addCallback(WadjetDatabase.FTS5_CALLBACK)
+            .addMigrations(WadjetDatabase.MIGRATION_4_5, WadjetDatabase.MIGRATION_5_6, WadjetDatabase.MIGRATION_6_7)
             .fallbackToDestructiveMigration()
             .build()
 

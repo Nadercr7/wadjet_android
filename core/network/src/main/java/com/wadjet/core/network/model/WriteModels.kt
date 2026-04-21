@@ -39,6 +39,8 @@ data class PaletteGroupsDto(
     val biliteral: List<PaletteSignDto> = emptyList(),
     val triliteral: List<PaletteSignDto> = emptyList(),
     val logogram: List<PaletteSignDto> = emptyList(),
+    val number: List<PaletteSignDto> = emptyList(),
+    val determinative: List<PaletteSignDto> = emptyList(),
 )
 
 @Serializable

@@ -60,6 +60,8 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.core.designsystem.WadjetColors
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.wadjet.core.designsystem.animation.goldPulse
@@ -115,11 +117,22 @@ fun ExploreScreen(
                 }
             },
             actions = {
-                IconButton(
+                androidx.compose.material3.TextButton(
                     onClick = onIdentify,
                     modifier = Modifier.goldPulse(),
                 ) {
-                    Icon(Icons.Default.FileUpload, stringResource(R.string.explore_identify_desc), tint = WadjetColors.Gold)
+                    Icon(
+                        Icons.Default.FileUpload,
+                        contentDescription = null,
+                        tint = WadjetColors.Gold,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.explore_identify_desc),
+                        color = WadjetColors.Gold,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = WadjetColors.Night),
@@ -199,6 +212,7 @@ fun ExploreScreen(
                                 style = MaterialTheme.typography.titleMedium,
                                 color = WadjetColors.Gold,
                                 fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.semantics { heading() },
                             )
                         }
                         item(key = "featured_carousel") {
@@ -219,7 +233,7 @@ fun ExploreScreen(
                                 style = MaterialTheme.typography.titleMedium,
                                 color = WadjetColors.Gold,
                                 fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(top = 8.dp),
+                                modifier = Modifier.semantics { heading() }.padding(top = 8.dp),
                             )
                         }
                     }
@@ -275,7 +289,7 @@ private fun CategoryChips(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.padding(vertical = 4.dp),
     ) {
-        items(categories) { category ->
+        items(categories, key = { "cat_$it" }) { category ->
             FilterChip(
                 selected = category == selected,
                 onClick = { onSelect(category) },
@@ -315,7 +329,7 @@ private fun CityFilter(
                 ),
             )
         }
-        items(cities) { city ->
+        items(cities, key = { "city_$it" }) { city ->
             FilterChip(
                 selected = city == selected,
                 onClick = { onSelect(city) },
@@ -348,6 +362,7 @@ private fun LandmarkCard(
         color = WadjetColors.Surface,
         modifier = Modifier
             .fillMaxWidth()
+            .semantics(mergeDescendants = true) {}
             .sharedBounds(
                 sharedContentState = rememberSharedContentState(key = "landmark-${landmark.slug}"),
                 animatedVisibilityScope = animatedVisibilityScope,
@@ -362,13 +377,11 @@ private fun LandmarkCard(
                     .fillMaxWidth()
                     .height(180.dp),
             ) {
-                AsyncImage(
-                    model = landmark.thumbnail,
+                com.wadjet.feature.explore.image.LandmarkThumbnail(
+                    slug = landmark.slug,
+                    name = landmark.name,
+                    primaryUrl = landmark.thumbnail,
                     contentDescription = landmark.name,
-                    contentScale = ContentScale.Crop,
-                    placeholder = painterResource(DesignR.drawable.ic_placeholder_landmark),
-                    error = painterResource(DesignR.drawable.ic_placeholder_error),
-                    fallback = painterResource(DesignR.drawable.ic_placeholder_landmark),
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
@@ -461,13 +474,11 @@ private fun FeaturedCard(
             .clickable(onClick = onClick),
     ) {
         Column {
-            AsyncImage(
-                model = landmark.thumbnail,
+            com.wadjet.feature.explore.image.LandmarkThumbnail(
+                slug = landmark.slug,
+                name = landmark.name,
+                primaryUrl = landmark.thumbnail,
                 contentDescription = landmark.name,
-                contentScale = ContentScale.Crop,
-                placeholder = painterResource(DesignR.drawable.ic_placeholder_landmark),
-                error = painterResource(DesignR.drawable.ic_placeholder_error),
-                fallback = painterResource(DesignR.drawable.ic_placeholder_landmark),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)

@@ -1,6 +1,8 @@
 package com.wadjet.core.data.repository
 
 import com.wadjet.core.common.suspendRunCatching
+import com.wadjet.core.data.datastore.UserPreferencesDataStore
+import com.wadjet.core.database.WadjetDatabase
 import com.wadjet.core.domain.model.User
 import com.wadjet.core.domain.repository.AuthRepository
 import com.wadjet.core.firebase.FirebaseAuthManager
@@ -11,8 +13,12 @@ import com.wadjet.core.network.model.LoginRequest
 import com.wadjet.core.network.model.ForgotPasswordRequest
 import com.wadjet.core.network.model.RegisterRequest
 import com.wadjet.core.network.model.UserResponse
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -26,7 +32,21 @@ class AuthRepositoryImpl @Inject constructor(
     private val authApi: AuthApiService,
     private val tokenManager: TokenManager,
     private val json: Json,
+    private val database: WadjetDatabase,
+    private val preferencesDataStore: UserPreferencesDataStore,
 ) : AuthRepository {
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    init {
+        // When token refresh fails, sign out Firebase to prevent split-brain state
+        scope.launch {
+            tokenManager.sessionInvalidated.collect {
+                try { database.clearAllTables() } catch (e: Exception) { Timber.w(e, "Clear Room DB on session invalidation failed") }
+                firebaseAuth.signOut()
+            }
+        }
+    }
 
     override val currentUser: Flow<User?> = firebaseAuth.authStateFlow.map { firebaseUser ->
         if (firebaseUser != null && tokenManager.isLoggedIn) {
@@ -42,7 +62,7 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override val isLoggedIn: Boolean
-        get() = firebaseAuth.currentUser != null && tokenManager.isLoggedIn
+        get() = tokenManager.isLoggedIn
 
     override suspend fun signInWithGoogle(idToken: String): Result<User> = suspendRunCatching {
         // 1. Firebase sign-in
@@ -99,6 +119,14 @@ class AuthRepositoryImpl @Inject constructor(
         if (response.isSuccessful) {
             val body = response.body()!!
             tokenManager.accessToken = body.accessToken
+
+            // 3. Send email verification (best-effort — registration still succeeds if this fails)
+            try {
+                firebaseAuth.sendEmailVerification()
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to send verification email")
+            }
+
             body.user?.toDomain() ?: firebaseUser.toDomain()
         } else {
             // Backend failed — sign out Firebase to prevent split-brain state
@@ -118,9 +146,18 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun sendEmailVerification(): Result<Unit> = suspendRunCatching {
+        firebaseAuth.sendEmailVerification()
+    }
+
+    override suspend fun reloadEmailVerified(): Result<Boolean> = suspendRunCatching {
+        firebaseAuth.reloadAndIsEmailVerified()
+    }
+
     override suspend fun signOut() {
         try { authApi.logout() } catch (e: Exception) { Timber.w(e, "Backend logout failed") }
         tokenManager.clearAll()
+        try { database.clearAllTables() } catch (e: Exception) { Timber.w(e, "Clear Room DB failed") }
         firebaseAuth.signOut()
     }
 

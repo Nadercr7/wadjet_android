@@ -59,6 +59,8 @@ data class LandmarkDetailDto(
     @SerialName("wikipedia_url") val wikipediaUrl: String? = null,
     val children: List<LandmarkChildDto>? = null,
     val parent: LandmarkParentDto? = null,
+    @SerialName("children_slugs") val childrenSlugs: List<String>? = null,
+    @SerialName("parent_slug") val parentSlug: String? = null,
     val recommendations: List<RecommendationDto>? = null,
 )
 

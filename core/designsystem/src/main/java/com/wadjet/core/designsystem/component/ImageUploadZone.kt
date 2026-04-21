@@ -51,6 +51,8 @@ fun ImageUploadZone(
     analyzeButtonText: String = "Analyze",
     isAnalyzing: Boolean = false,
     onAnalyze: (() -> Unit)? = null,
+    icon: @Composable (() -> Unit)? = null,
+    browseButtonProminent: Boolean = false,
 ) {
     var localUri by remember { mutableStateOf(selectedImageUri) }
     LaunchedEffect(selectedImageUri) {
@@ -154,13 +156,17 @@ fun ImageUploadZone(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            // Hieroglyph icon
-            Text(
-                text = "\uD80C\uDC80", // 𓂀 Eye of Horus
-                fontSize = 48.sp,
-                color = WadjetColors.Gold,
-                fontFamily = NotoSansEgyptianHieroglyphs,
-            )
+            // Icon (customizable or default Eye of Horus)
+            if (icon != null) {
+                icon()
+            } else {
+                Text(
+                    text = "\uD80C\uDC80", // 𓂀 Eye of Horus
+                    fontSize = 48.sp,
+                    color = WadjetColors.Gold,
+                    fontFamily = NotoSansEgyptianHieroglyphs,
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -183,14 +189,26 @@ fun ImageUploadZone(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            WadjetGhostButton(
-                text = stringResource(R.string.upload_browse_gallery),
-                onClick = {
-                    photoPicker.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
-                    )
-                },
-            )
+            if (browseButtonProminent) {
+                WadjetButton(
+                    text = stringResource(R.string.upload_browse_gallery),
+                    onClick = {
+                        photoPicker.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            } else {
+                WadjetGhostButton(
+                    text = stringResource(R.string.upload_browse_gallery),
+                    onClick = {
+                        photoPicker.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                        )
+                    },
+                )
+            }
         }
     }
 }

@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,6 +59,7 @@ import com.wadjet.feature.auth.AuthViewModel
 import com.wadjet.feature.auth.sheet.ForgotPasswordSheet
 import com.wadjet.feature.auth.sheet.LoginSheet
 import com.wadjet.feature.auth.sheet.RegisterSheet
+import com.wadjet.feature.auth.sheet.VerifyEmailSheet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -107,6 +110,7 @@ fun WelcomeScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -269,6 +273,12 @@ fun WelcomeScreen(
                     onSendReset = { email -> viewModel.forgotPassword(email) },
                     onBackToLogin = { viewModel.showSheet(AuthSheet.LOGIN) },
                 )
+                AuthSheet.VERIFY_EMAIL -> VerifyEmailSheet(
+                    state = state,
+                    onCheckVerified = { viewModel.checkEmailVerified() },
+                    onResend = { viewModel.resendVerification() },
+                    onCancel = { viewModel.cancelVerification() },
+                )
                 AuthSheet.NONE -> {}
             }
         }
@@ -304,30 +314,44 @@ private suspend fun performGoogleSignIn(
     onSuccess: (String) -> Unit,
     onError: (String) -> Unit,
 ) {
-    try {
-        val nonce = java.util.UUID.randomUUID().toString()
-        val googleIdOption = GetGoogleIdOption.Builder()
-            .setServerClientId(webClientId)
-            .setFilterByAuthorizedAccounts(false)
-            .setNonce(nonce)
-            .build()
-        val request = GetCredentialRequest.Builder()
-            .addCredentialOption(googleIdOption)
-            .build()
-        val result = credentialManager.getCredential(
-            context as Activity,
-            request,
-        )
-        val idToken = GoogleIdTokenCredential
-            .createFrom(result.credential.data)
-            .idToken
-        onSuccess(idToken)
-    } catch (e: GetCredentialCancellationException) {
-        Timber.d("Google sign-in cancelled by user")
-    } catch (e: NoCredentialException) {
-        onError(context.getString(R.string.error_no_google_accounts))
-    } catch (e: Exception) {
-        Timber.e(e, "Google sign-in failed")
-        onError(e.message ?: context.getString(R.string.error_google_sign_in_failed))
+    // Retry once on transient NoCredentialException — CredentialManager occasionally
+    // fails to enumerate accounts on the first call right after the app launches.
+    repeat(2) { attempt ->
+        try {
+            val nonce = java.util.UUID.randomUUID().toString()
+            val googleIdOption = GetGoogleIdOption.Builder()
+                .setServerClientId(webClientId)
+                .setFilterByAuthorizedAccounts(false)
+                .setAutoSelectEnabled(false)
+                .setNonce(nonce)
+                .build()
+            val request = GetCredentialRequest.Builder()
+                .addCredentialOption(googleIdOption)
+                .build()
+            val result = credentialManager.getCredential(
+                context as Activity,
+                request,
+            )
+            val idToken = GoogleIdTokenCredential
+                .createFrom(result.credential.data)
+                .idToken
+            onSuccess(idToken)
+            return
+        } catch (e: GetCredentialCancellationException) {
+            Timber.d("Google sign-in cancelled by user")
+            return
+        } catch (e: NoCredentialException) {
+            if (attempt == 0) {
+                Timber.w(e, "NoCredentialException on first attempt — retrying")
+                delay(400L)
+                return@repeat
+            }
+            onError(context.getString(R.string.error_no_google_accounts))
+            return
+        } catch (e: Exception) {
+            Timber.e(e, "Google sign-in failed")
+            onError(e.message ?: context.getString(R.string.error_google_sign_in_failed))
+            return
+        }
     }
 }

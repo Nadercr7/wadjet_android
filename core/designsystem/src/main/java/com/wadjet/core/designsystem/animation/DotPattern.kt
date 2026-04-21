@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.wadjet.core.designsystem.WadjetColors
@@ -31,10 +32,11 @@ fun DotPattern(
     glowAlpha: Float = 0.18f,
     durationMs: Int = 3000,
 ) {
+    val reduceMotion = isReducedMotionEnabled()
     val transition = rememberInfiniteTransition(label = "dotPattern")
     val alpha by transition.animateFloat(
-        initialValue = baseAlpha,
-        targetValue = glowAlpha,
+        initialValue = if (reduceMotion) baseAlpha else baseAlpha,
+        targetValue = if (reduceMotion) baseAlpha else glowAlpha,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMs, easing = EaseInOut),
             repeatMode = RepeatMode.Reverse,
@@ -48,14 +50,18 @@ fun DotPattern(
         val cols = (size.width / spacingPx).toInt() + 1
         val rows = (size.height / spacingPx).toInt() + 1
 
-        for (row in 0..rows) {
-            for (col in 0..cols) {
-                drawCircle(
-                    color = dotColor.copy(alpha = alpha),
-                    radius = dotRadiusPx,
-                    center = Offset(col * spacingPx, row * spacingPx),
-                )
+        val points = buildList(cols * rows) {
+            for (row in 0..rows) {
+                for (col in 0..cols) {
+                    add(Offset(col * spacingPx, row * spacingPx))
+                }
             }
         }
+        drawPoints(
+            points = points,
+            pointMode = PointMode.Points,
+            color = dotColor.copy(alpha = alpha),
+            strokeWidth = dotRadiusPx * 2,
+        )
     }
 }

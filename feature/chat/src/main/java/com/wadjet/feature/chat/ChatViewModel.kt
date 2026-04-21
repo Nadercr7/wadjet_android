@@ -1,6 +1,6 @@
 package com.wadjet.feature.chat
 
-import android.media.MediaPlayer
+import com.wadjet.core.common.audio.AudioPlaybackManager
 import android.speech.SpeechRecognizer
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -9,6 +9,7 @@ import androidx.navigation.toRoute
 import com.wadjet.core.domain.model.ChatMessage
 import com.wadjet.core.domain.model.ChatMessage.Role
 import com.wadjet.core.domain.repository.ChatRepository
+import com.wadjet.core.domain.repository.TtsPreferencesRepository
 import com.wadjet.core.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -46,6 +48,8 @@ class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
     private val userRepository: UserRepository,
     private val chatHistoryStore: ChatHistoryStore,
+    private val ttsPreferences: TtsPreferencesRepository,
+    private val audioPlayer: AudioPlaybackManager,
     private val toastController: com.wadjet.core.common.ToastController,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -55,7 +59,6 @@ class ChatViewModel @Inject constructor(
 
     private var sessionId: String
     private var streamJob: Job? = null
-    private var mediaPlayer: MediaPlayer? = null
     private var lastSentMessage: String? = null
 
     companion object {
@@ -75,7 +78,15 @@ class ChatViewModel @Inject constructor(
             sessionId = UUID.randomUUID().toString()
             chatHistoryStore.storeSessionId(sessionId)
             _state.update { it.copy(landmarkSlug = landmarkSlug) }
-            sendMessage("Tell me about this landmark")
+            // Name the landmark explicitly so Thoth never confuses it with another result.
+            // slug "pyramids-of-giza" -> "Pyramids Of Giza"
+            val displayName = landmarkSlug
+                .split('-', '_')
+                .filter { it.isNotBlank() }
+                .joinToString(" ") { word ->
+                    word.replaceFirstChar { c -> c.uppercaseChar() }
+                }
+            sendMessage("Tell me about $displayName.")
         } else {
             // Try to resume an existing session
             val activeId = chatHistoryStore.getActiveSessionId()
@@ -234,15 +245,14 @@ class ChatViewModel @Inject constructor(
                     .collect { chunk ->
                         contentBuilder.append(chunk)
                         _state.update { state ->
-                            state.copy(
-                                messages = state.messages.map { msg ->
-                                    if (msg.id == botMessageId) {
-                                        msg.copy(content = contentBuilder.toString())
-                                    } else {
-                                        msg
-                                    }
-                                },
-                            )
+                            val idx = state.messages.indexOfLast { it.id == botMessageId }
+                            if (idx >= 0) {
+                                val updated = state.messages.toMutableList()
+                                updated[idx] = updated[idx].copy(content = contentBuilder.toString())
+                                state.copy(messages = updated)
+                            } else {
+                                state
+                            }
                         }
                     }
             }
@@ -296,15 +306,20 @@ class ChatViewModel @Inject constructor(
         }
         stopSpeaking()
 
-        _state.update { it.copy(isSpeaking = true, isLoadingTts = true, speakingMessageId = message.id) }
-
-        toastController.info("Generating audio\u2026")
-
         viewModelScope.launch {
+            if (!ttsPreferences.ttsEnabled.first()) {
+                _state.update { it.copy(localTtsText = message.content) }
+                return@launch
+            }
+
+            _state.update { it.copy(isSpeaking = true, isLoadingTts = true, speakingMessageId = message.id) }
+
+            toastController.info("Generating audio\u2026")
             chatRepository.speak(message.content).onSuccess { bytes ->
                 if (bytes != null) {
                     _state.update { it.copy(isLoadingTts = false) }
-                    playWavBytes(bytes, message.id)
+                    val speed = ttsPreferences.ttsSpeed.first()
+                    playWavBytes(bytes, message.id, speed)
                 } else {
                     // 204 → signal UI to use local TTS
                     _state.update {
@@ -330,45 +345,22 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    private fun playWavBytes(bytes: ByteArray, messageId: String) {
-        try {
-            val tempFile = File.createTempFile("tts_", ".wav")
-            tempFile.writeBytes(bytes)
-            tempFile.deleteOnExit()
-
-            mediaPlayer = MediaPlayer().apply {
-                setDataSource(tempFile.absolutePath)
-                prepare()
-                setOnCompletionListener {
-                    _state.update { it.copy(isSpeaking = false, speakingMessageId = null) }
-                    release()
-                    mediaPlayer = null
-                    tempFile.delete()
-                }
-                setOnErrorListener { _, _, _ ->
-                    _state.update { it.copy(isSpeaking = false, speakingMessageId = null) }
-                    release()
-                    mediaPlayer = null
-                    tempFile.delete()
-                    true
-                }
-                start()
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "MediaPlayer failed")
-            _state.update { it.copy(isSpeaking = false, speakingMessageId = null) }
-        }
+    private fun playWavBytes(bytes: ByteArray, messageId: String, speed: Float = 1.0f) {
+        audioPlayer.playWavBytes(
+            bytes = bytes,
+            prefix = "tts_",
+            speed = speed,
+            onCompletion = {
+                _state.update { it.copy(isSpeaking = false, speakingMessageId = null) }
+            },
+            onError = {
+                _state.update { it.copy(isSpeaking = false, speakingMessageId = null) }
+            },
+        )
     }
 
     fun stopSpeaking() {
-        try {
-            mediaPlayer?.apply {
-                if (isPlaying) stop()
-                release()
-            }
-        } catch (_: Exception) {
-        }
-        mediaPlayer = null
+        audioPlayer.stop()
         _state.update { it.copy(isSpeaking = false, isLoadingTts = false, speakingMessageId = null) }
     }
 
@@ -477,10 +469,9 @@ class ChatViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         streamJob?.cancel()
-        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.NonCancellable) {
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO).launch {
             saveCurrentConversation()
         }
-        mediaPlayer?.release()
-        mediaPlayer = null
+        audioPlayer.stop()
     }
 }

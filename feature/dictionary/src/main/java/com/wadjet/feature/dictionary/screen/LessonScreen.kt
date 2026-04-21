@@ -146,7 +146,7 @@ fun LessonScreen(
                                 ((lesson.signs.size + 3) / 4 * 80).coerceAtMost(240).dp,
                             ),
                         ) {
-                            items(lesson.signs) { sign ->
+                            items(lesson.signs, key = { it.code }) { sign ->
                                 TeachingSignItem(sign, onSpeak)
                             }
                         }
@@ -158,7 +158,7 @@ fun LessonScreen(
                     item {
                         Text(stringResource(R.string.lesson_examples_label), style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
                     }
-                    items(lesson.exampleWords.size) { index ->
+                    items(lesson.exampleWords.size, key = { "ex_$it" }) { index ->
                         ExampleWordItem(lesson.exampleWords[index], onSpeak)
                     }
                 }
@@ -168,7 +168,7 @@ fun LessonScreen(
                     item {
                         Text(stringResource(R.string.lesson_practice_label), style = MaterialTheme.typography.labelMedium, color = WadjetColors.Gold)
                     }
-                    items(lesson.practiceWords.size) { index ->
+                    items(lesson.practiceWords.size, key = { "pr_$it" }) { index ->
                         PracticeWordItem(lesson.practiceWords[index], onSpeak)
                     }
                 }
@@ -209,13 +209,13 @@ private fun TeachingSignItem(sign: Sign, onSpeak: (String) -> Unit) {
         if (!ttsText.isNullOrBlank()) {
             IconButton(
                 onClick = { onSpeak(ttsText) },
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(48.dp),
             ) {
                 Icon(
                     Icons.Default.VolumeUp,
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.lesson_speak),
                     tint = WadjetColors.Gold.copy(alpha = 0.7f),
-                    modifier = Modifier.size(14.dp),
+                    modifier = Modifier.size(20.dp),
                 )
             }
         }
@@ -242,11 +242,11 @@ private fun ExampleWordItem(word: ExampleWord, onSpeak: (String) -> Unit) {
         if (ttsText.isNotBlank()) {
             IconButton(
                 onClick = { onSpeak(ttsText) },
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(48.dp),
             ) {
                 Icon(
                     Icons.Default.VolumeUp,
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.lesson_speak),
                     tint = WadjetColors.Gold,
                     modifier = Modifier.size(20.dp),
                 )
@@ -274,11 +274,11 @@ private fun PracticeWordItem(word: PracticeWord, onSpeak: (String) -> Unit) {
             if (ttsText.isNotBlank()) {
                 IconButton(
                     onClick = { onSpeak(ttsText) },
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(48.dp),
                 ) {
                     Icon(
                         Icons.Default.VolumeUp,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.lesson_speak),
                         tint = WadjetColors.Gold,
                         modifier = Modifier.size(20.dp),
                     )

@@ -88,7 +88,7 @@ class TokenAuthenticatorTest {
 
         // Should propagate 401
         assertEquals(401, response.code)
-        verify { tokenManager.clearAll() }
+        verify { tokenManager.invalidateSession() }
     }
 
     @Test

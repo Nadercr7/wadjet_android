@@ -24,6 +24,9 @@ fun Modifier.shineSweep(
     durationMs: Int = 3000,
     shineWidth: Float = 0.15f,
 ): Modifier = composed {
+    val reduceMotion = isReducedMotionEnabled()
+    if (reduceMotion) return@composed this
+
     val transition = rememberInfiniteTransition(label = "shineSweep")
     val progress by transition.animateFloat(
         initialValue = -shineWidth,

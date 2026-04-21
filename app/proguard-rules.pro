@@ -67,4 +67,4 @@
     public static ** valueOf(java.lang.String);
 }
 
-#-renamesourcefileattribute SourceFile
+-renamesourcefileattribute SourceFile
