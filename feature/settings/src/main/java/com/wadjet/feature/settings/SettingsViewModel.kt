@@ -22,6 +22,7 @@ data class SettingsUiState(
     val isEditingName: Boolean = false,
     val ttsEnabled: Boolean = true,
     val ttsSpeed: Float = 1.0f,
+    val prefetchStoriesOnWifi: Boolean = true,
     val cacheSizeMb: Long = 0L,
     val currentPassword: String = "",
     val newPassword: String = "",
@@ -119,6 +120,12 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { preferencesDataStore.setTtsSpeed(speed) }
     }
 
+    /** E-P1: Wi-Fi story prefetch toggle (scheduling reacts in WadjetApplication). */
+    fun setPrefetchStoriesOnWifi(enabled: Boolean) {
+        _state.update { it.copy(prefetchStoriesOnWifi = enabled) }
+        viewModelScope.launch { preferencesDataStore.setPrefetchStoriesOnWifi(enabled) }
+    }
+
     fun setCacheSize(sizeBytes: Long) {
         _state.update { it.copy(cacheSizeMb = sizeBytes / (1024 * 1024)) }
     }
@@ -162,6 +169,11 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             preferencesDataStore.ttsSpeed.collect { speed ->
                 _state.update { it.copy(ttsSpeed = speed) }
+            }
+        }
+        viewModelScope.launch {
+            preferencesDataStore.prefetchStoriesOnWifi.collect { enabled ->
+                _state.update { it.copy(prefetchStoriesOnWifi = enabled) }
             }
         }
     }

@@ -22,10 +22,15 @@ class UserPreferencesDataStore @Inject constructor(
     private object Keys {
         val TTS_ENABLED = booleanPreferencesKey("tts_enabled")
         val TTS_SPEED = floatPreferencesKey("tts_speed")
+        val PREFETCH_STORIES_WIFI = booleanPreferencesKey("prefetch_stories_wifi")
     }
 
     val ttsEnabled: Flow<Boolean> = context.dataStore.data.map { it[Keys.TTS_ENABLED] ?: true }
     val ttsSpeed: Flow<Float> = context.dataStore.data.map { it[Keys.TTS_SPEED] ?: 1.0f }
+
+    /** E-P1: prefetch story content on unmetered Wi-Fi for offline reading (default on). */
+    val prefetchStoriesOnWifi: Flow<Boolean> =
+        context.dataStore.data.map { it[Keys.PREFETCH_STORIES_WIFI] ?: true }
 
     suspend fun setTtsEnabled(enabled: Boolean) {
         context.dataStore.edit { it[Keys.TTS_ENABLED] = enabled }
@@ -33,5 +38,9 @@ class UserPreferencesDataStore @Inject constructor(
 
     suspend fun setTtsSpeed(speed: Float) {
         context.dataStore.edit { it[Keys.TTS_SPEED] = speed }
+    }
+
+    suspend fun setPrefetchStoriesOnWifi(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.PREFETCH_STORIES_WIFI] = enabled }
     }
 }

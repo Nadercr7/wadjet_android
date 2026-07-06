@@ -55,6 +55,19 @@
                 android:value="true" />
         </service>
 
+        <!-- E-P1: WorkManager is initialized on demand via Configuration.Provider
+             (Hilt worker factory) — remove only its default startup initializer. -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
         <service
             android:name="com.wadjet.core.firebase.WadjetFirebaseMessaging"
             android:exported="false">

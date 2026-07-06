@@ -77,6 +77,7 @@ fun SettingsScreen(
     onChangePassword: () -> Unit,
     onTtsEnabledChanged: (Boolean) -> Unit,
     onTtsSpeedChanged: (Float) -> Unit,
+    onPrefetchStoriesChanged: (Boolean) -> Unit,
     onClearCache: () -> Unit,
     onSignOut: () -> Unit,
     onFeedback: () -> Unit,
@@ -173,6 +174,15 @@ fun SettingsScreen(
                     speed = state.ttsSpeed,
                     onEnabledChanged = onTtsEnabledChanged,
                     onSpeedChanged = onTtsSpeedChanged,
+                )
+            }
+
+            // ── Offline (E-P1) ──
+            item { SectionHeader(stringResource(R.string.settings_section_offline)) }
+            item {
+                PrefetchSection(
+                    enabled = state.prefetchStoriesOnWifi,
+                    onEnabledChanged = onPrefetchStoriesChanged,
                 )
             }
 
@@ -435,6 +445,40 @@ private fun TtsSection(
                 )
             }
         }
+    }
+}
+
+/** E-P1: daily Wi-Fi story prefetch toggle. */
+@Composable
+private fun PrefetchSection(
+    enabled: Boolean,
+    onEnabledChanged: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SettingsCard(modifier = modifier) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(stringResource(R.string.settings_prefetch_stories), color = WadjetColors.Text, style = MaterialTheme.typography.bodyMedium)
+            Switch(
+                checked = enabled,
+                onCheckedChange = onEnabledChanged,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = WadjetColors.Gold,
+                    checkedTrackColor = WadjetColors.Gold.copy(alpha = 0.3f),
+                    uncheckedThumbColor = WadjetColors.TextMuted,
+                    uncheckedTrackColor = WadjetColors.Surface,
+                ),
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = stringResource(R.string.settings_prefetch_stories_sub),
+            color = WadjetColors.TextMuted,
+            style = MaterialTheme.typography.bodySmall,
+        )
     }
 }
 

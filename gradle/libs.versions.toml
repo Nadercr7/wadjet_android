@@ -53,6 +53,8 @@ turbine = "1.2.0"
 securityCrypto = "1.1.0-alpha06"
 
 # Other
+workManager = "2.10.0"
+hiltExt = "1.2.0"
 timber = "5.0.1"
 splashscreen = "1.0.1"
 lottie = "6.6.2"
@@ -151,6 +153,9 @@ kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutine
 
 # Other
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workManager" }
+hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltExt" }
+hilt-ext-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltExt" }
 core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "splashscreen" }
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie" }
 maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }

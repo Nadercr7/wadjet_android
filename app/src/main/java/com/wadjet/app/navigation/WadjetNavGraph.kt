@@ -486,6 +486,7 @@ fun WadjetNavGraph(
                 onChangePassword = viewModel::changePassword,
                 onTtsEnabledChanged = viewModel::setTtsEnabled,
                 onTtsSpeedChanged = viewModel::setTtsSpeed,
+                onPrefetchStoriesChanged = viewModel::setPrefetchStoriesOnWifi,
                 onClearCache = {
                     coroutineScope.launch {
                         val imageLoader = coil3.SingletonImageLoader.get(context)

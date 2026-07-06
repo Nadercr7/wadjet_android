@@ -8,6 +8,10 @@
     <string name="settings_section_profile">الملف الشخصي</string>
     <string name="settings_section_password">كلمة المرور</string>
     <string name="settings_section_tts">النطق الصوتي</string>
+    <!-- E-P1 -->
+    <string name="settings_section_offline">دون اتصال</string>
+    <string name="settings_prefetch_stories">تنزيل الحكايات عبر Wi-Fi</string>
+    <string name="settings_prefetch_stories_sub">مرة واحدة يوميًا عبر شبكة Wi-Fi غير محدودة، تُحفظ جميع الحكايات للقراءة دون اتصال. لا تُستخدم بيانات الهاتف أبدًا.</string>
     <string name="settings_section_storage">التخزين</string>
     <string name="settings_cache_label">الذاكرة المؤقتة</string>
     <string name="settings_cache_size">%1$d ميجابايت</string>
