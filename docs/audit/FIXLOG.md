@@ -1,0 +1,322 @@
+# FIXLOG.md — Wadjet-Android (append-only)
+
+Every finding, every change, and its verification result. Format:
+
+```text
+## [ID] <title>
+- Date:
+- Severity: blocker | major | minor
+- Area: A-build | B-parity | C-nav | D-network | E-db | F-ml | G-i18n | H-audio | I-perf | J-security | K-a11y | L-ui | M-offline | N-firebase | O-debt
+- Evidence: file:line + note
+- Expected (web) behaviour:
+- Status: OPEN | FIXED (commit sha) | WONT-FIX | NEEDS-DECISION
+- Verification:
+```
+
+---
+_Phase 1 findings are appended below once the audit sweep completes._
+
+## [F-01] EXIF orientation stripped before upload → rotated photos degrade scan accuracy
+- Date: 2026-07-06
+- Severity: major
+- Area: F-ml
+- Evidence: `feature/scan/.../ScanViewModel.kt:229-248` (`compressImage` uses `BitmapFactory.decodeFile`, ignores EXIF, re-encodes JPEG q85 with no EXIF); identical copy in `feature/explore/.../IdentifyViewModel.kt:118-137`. Always called (`ScanViewModel.kt:144`).
+- Expected (web) behaviour: server `app/api/scan.py:70-92` relies on `ImageOps.exif_transpose` — needs the EXIF tag the client destroys. Web browser uploads preserve EXIF.
+- Status: OPEN
+- Verification: code-read only (no device).
+
+## [F-02] 16.6 MB unused ONNX models + unused onnxruntime-android dependency (pure APK bloat)
+- Date: 2026-07-06
+- Severity: major
+- Area: F-ml / I-perf
+- Evidence: `app/src/main/assets/models/**` (3 .onnx, byte-identical to web repo, never referenced by any Kotlin code); `core/ml` module is an empty stub (`Placeholder.kt`); `core/ml/build.gradle.kts:27` pulls onnxruntime-android native .so libs for nothing.
+- Expected: either on-device inference wired up, or assets+dependency removed. All inference is server-side (`POST api/scan`) — matches web, so removal is safe.
+- Status: OPEN (NEEDS-DECISION: remove vs wire on-device offline inference)
+- Verification: grep across all .kt = zero ONNX references; asset md5s match web.
+
+## [F-03] Dead camera code: CameraX disabled, unused PermissionDeniedContent + onImageCaptured plumbing
+- Date: 2026-07-06
+- Severity: minor
+- Area: F-ml / O-debt
+- Evidence: `feature/scan/.../ScanScreen.kt:143-255` commented-out CameraX blocks; live-but-unreferenced `PermissionDeniedContent` at `ScanScreen.kt:419-446`; CAMERA permission commented in manifest. Image input = Photo Picker (`core/designsystem/.../ImageUploadZone.kt:62-69`, no permission needed).
+- Expected: camera capture is a web-parity question (web is upload-only too) → currently by-design; dead code should be cleaned.
+- Status: OPEN
+- Verification: code-read.
+
+## [F-04] Scan progress overlay is fake (fixed delays, mislabeled stages)
+- Date: 2026-07-06
+- Severity: minor
+- Area: F-ml / L-ui
+- Evidence: `ScanScreen.kt:257-417` + `ScanViewModel.kt:151-156` hard-coded `delay(400/400/300)`; server `timing`/`detection_source` ignored (often `ai_vision`, not ONNX).
+- Expected: progress reflecting real state, or at least honest labels.
+- Status: OPEN
+- Verification: code-read.
+
+## [E-01] fallbackToDestructiveMigration() enabled → silent wipe of scan history/progress/favorites
+- Date: 2026-07-06 | Severity: major | Area: E-db
+- Evidence: `core/database/.../DatabaseModule.kt:28`. DB v7, migrations only 4→5, 5→6, 6→7; any other path (incl. downgrade) drops the DB.
+- Expected: explicit migrations only, or `fallbackToDestructiveMigrationOnDowngrade()`.
+- Status: OPEN | Verification: code-read.
+
+## [E-02] Story content never cached → stories unusable offline
+- Date: 2026-07-06 | Severity: major | Area: E-db / M-offline
+- Evidence: `core/data/.../StoriesRepositoryImpl.kt:48-116` — only `story_progress` persisted; list/reader fail offline.
+- Expected: cache story summaries/content in Room like signs/landmarks.
+- Status: OPEN | Verification: code-read.
+
+## [E-03] No @Index on queried columns (signs.category/type, landmarks.type/city, scan_results.firestore_id)
+- Date: 2026-07-06 | Severity: major | Area: E-db / I-perf
+- Evidence: all entities in `core/database` lack `indices`; DAOs filter on these columns → full-table scans.
+- Status: OPEN | Verification: code-read.
+
+## [E-04] No seed data → fresh install offline = completely empty dictionary/explore/stories
+- Date: 2026-07-06 | Severity: major | Area: E-db / M-offline
+- Evidence: no `createFromAsset`/bundled DB; assets contain only (unused) ML models.
+- Expected: prepopulated signs/landmarks DB or first-run seed import.
+- Status: OPEN (NEEDS-DECISION: is offline-first-install in scope?) | Verification: code-read.
+
+## [E-05] Minor DB/offline gaps (bundle)
+- Date: 2026-07-06 | Severity: minor | Area: E-db / M-offline
+- Items: (a) `getSigns` cache fallback only on IOException, not ApiException (`DictionaryRepositoryImpl.kt:64-65` vs `:109-111`); (b) explore `getCategories` no offline fallback (`ExploreRepositoryImpl.kt:171`); (c) dashboard recentScans ignores local `scan_results` table (`DashboardViewModel.kt:86-102`); (d) hand-rolled glyph JSON parse (`StoriesRepositoryImpl.kt:334-346`); (e) `isOffline` variable actually holds isOnline (`MainActivity.kt:124/261`); (f) schema 4.json not exported, no migration tests; (g) no migrations 1→4 (legacy installs hit destructive fallback).
+- Status: OPEN | Verification: code-read.
+
+## [J-01] Pexels API keys compiled into BuildConfig → extractable from release APK
+- Date: 2026-07-06 | Severity: major | Area: J-security
+- Evidence: `core/network/build.gradle.kts:28-29` → `NetworkModule.kt:151-152,161` (sent as Authorization header). Keys sourced from local.properties (untracked — no git leak).
+- Expected: proxy Pexels via own backend, or accept + rotate.
+- Status: OPEN (NEEDS-DECISION) | Verification: code-read + `git ls-files`/`git grep` clean.
+
+## [J-02] Firestore security rules unverifiable from this repo (client writes users/{uid}/story_progress)
+- Date: 2026-07-06 | Severity: major (external verification needed) | Area: J-security / N-firebase
+- Evidence: `StoriesRepositoryImpl.kt:182,219,260`. Rules live server-side, not in repo.
+- Expected: rules restrict `users/{uid}/**` to `request.auth.uid == uid`.
+- Status: NEEDS-DECISION | Verification: not possible locally.
+
+## [J-03] allowBackup=true backs up Room DB + plaintext prefs to cloud
+- Date: 2026-07-06 | Severity: minor | Area: J-security
+- Evidence: `app/src/main/AndroidManifest.xml:17`; backup rules exclude only `wadjet_secure_prefs`.
+- Status: OPEN | Verification: code-read.
+- Note: security posture otherwise strong — EncryptedSharedPreferences for tokens, EncryptedFile for chat history, debug-gated logging, FLAG_IMMUTABLE PendingIntents, no WebView, no cleartext (NSC allows only localhost/10.0.2.2), R8 + sane rules, no secrets tracked in git. Keystore+passwords sit untracked in working tree (minor local-disk exposure).
+
+## [I-01] SubcomposeAsyncImage used as universal list image component
+- Date: 2026-07-06 | Severity: major | Area: I-perf
+- Evidence: `core/designsystem/.../WadjetAsyncImage.kt:25` — used in Explore/Dictionary/Dashboard/Stories list cells; Coil discourages in lists (per-image subcomposition).
+- Expected: `AsyncImage` with explicit size for list cells.
+- Status: OPEN | Verification: code-read.
+
+## [I-02] MediaPlayer.prepare() (blocking) on main thread at 6 sites
+- Date: 2026-07-06 | Severity: major | Area: I-perf / H-audio
+- Evidence: `DictionaryViewModel.kt:203`, `LessonViewModel.kt:70`, `SignDetailViewModel.kt:109`, `ScanViewModel.kt:102`, `ScanResultViewModel.kt:105`, `AudioPlaybackManager.kt:35`.
+- Expected: `prepareAsync()` + listener, or `withContext(Dispatchers.IO)`.
+- Status: OPEN | Verification: code-read.
+
+## [I-03] onCleared() fire-and-forget CoroutineScope for persisting chat/story state → data-loss risk
+- Date: 2026-07-06 | Severity: major | Area: I-perf / C-state
+- Evidence: `ChatViewModel.kt:472`, `StoryReaderViewModel.kt:339` — unstructured `CoroutineScope(SupervisorJob()+IO).launch` at teardown.
+- Expected: persist via singleton/application scope or WorkManager.
+- Status: OPEN | Verification: code-read.
+
+## [I-04] rememberBase64Bitmap decodes full bitmap in composition on main thread
+- Date: 2026-07-06 | Severity: major | Area: I-perf
+- Evidence: `feature/scan/.../util/ImageUtil.kt:11-21`.
+- Expected: decode off-main with inSampleSize, or hand bytes to Coil.
+- Status: OPEN | Verification: code-read.
+
+## [I-05] Minor perf/debt (bundle)
+- Date: 2026-07-06 | Severity: minor | Area: I-perf / O-debt
+- Items: (a) `filtered.indexOf(story)` O(n²) `StoriesScreen.kt:200`; (b) inline `.filter{it.featured}` each recomposition `ExploreScreen.kt:200`; (c) missing LazyColumn keys `BrowseTab.kt:104,120`, `LearnTab.kt:182` (bounded lists); (d) stories list unpaged (`StoriesViewModel.kt:86-98`); (e) `SignDetailViewModel.kt:128-131` per-play MediaPlayer lingers until onCleared; (f) `MainActivity.kt:79` synchronous `isLoggedIn` read pre-setContent — confirm not blocking I/O; (g) unstructured scopes in `StoriesRepositoryImpl.kt:189,225` callbackFlow; (h) hardcoded Dispatchers vs injectable `DispatchersModule`; (i) 3 TODOs (`WadjetFirebaseMessaging.kt:56` placeholder notif icon; `DashboardScreen.kt:355,468` hardcoded values); (j) empty `:core:ml`/`:core:ui` modules wired into app; (k) versionCode/Name unbumped.
+- Status: OPEN | Verification: code-read. Positives: clean Application.onCreate, Timber debug-only, collectAsStateWithLifecycle everywhere, debounced+paged dictionary/explore search, no runBlocking/GlobalScope, resources mostly released.
+
+## [A-01] Historical K2 compiler OOM crashes; gradle.properties memory likely under-provisioned
+- Date: 2026-07-06 | Severity: major (build stability) | Area: A-build
+- Evidence: 8× `hs_err_pid*.log` + `replay_pid25100.log` in repo root (UNTRACKED, verified `git ls-files`) — headers show K2JVMCompiler native OOM while compiling `feature:dashboard`. `gradle.properties`: `-Xmx2048m`, `kotlin.compiler.execution.strategy=in-process`, `workers.max=2` (stability-over-speed mitigations; 2 GB may still be tight).
+- Expected: raise `org.gradle.jvmargs`, gitignore `hs_err_*`/`replay_*`, delete logs; confirm baseline build reproducible.
+- Status: OPEN | Verification: baseline assembleDebug in progress.
+
+## [A-02] BLOCKER (build): assembleDebug fails at HEAD — poisoned Gradle build cache entry for :core:network javac
+- Date: 2026-07-06 | Severity: blocker (build) | Area: A-build
+- Evidence: both incremental and `clean assembleDebug` fail at `:app:hiltJavaCompileDebug` with 14× `[Dagger/MissingBinding]` (every `core:network` binding). Diagnosis: `:core:network:compileDebugJavaWithJavac` output restored FROM-CACHE contained ONLY `BuildConfig.class` — none of the KSP-generated Hilt factories or `hilt_aggregated_deps/_com_wadjet_core_network_di_NetworkModule` (compare `core:data`, which has them). Re-running that task with `--no-build-cache --rerun-tasks` compiles all factories correctly → the code is fine; the local Gradle build cache (`~/.gradle/caches/build-cache-1`, migrated from the old laptop) holds a corrupt entry.
+- Expected: `assembleDebug` green. Remediation (Phase 2): purge the poisoned build-cache entry (or temporarily build with `--no-build-cache`); consider `org.gradle.caching=false` until cache is regenerated.
+- Status: OPEN (diagnosed; remediation = purge cache entry, Phase 2)
+- Verification: `assembleDebug --no-build-cache` → **BUILD SUCCESSFUL** (1m13s); APK produced. Task-level rerun produced `NetworkModule_Provide*Factory.class` on disk. Code at HEAD is sound; only the local build cache is corrupt.
+
+## [H-01] BLOCKER: Arabic story narration unreachable — lang hardcoded "en", always narrates textEn
+- Date: 2026-07-06 | Severity: blocker (Arabic UX) | Area: H-audio / G-i18n
+- Evidence: `StoriesRepositoryImpl.kt:165-166` + `StoryReaderViewModel.kt:180` — `textAr` fetched/rendered but never narrated; local fallback receives English text so Arabic branch (`StoryReaderScreen.kt:134`) unreachable.
+- Expected (web): `story_reader.html:603` passes real `lang`.
+- Status: OPEN | Verification: code-read.
+
+## [H-02] Wrong TTS voice: Android context "hieroglyph_pronunciation" unknown to server → falls back to default voice
+- Date: 2026-07-06 | Severity: major | Area: H-audio
+- Evidence: `EgyptianPronunciation.kt:27` + `DictionaryRepositoryImpl.kt:230-243`; server `tts_service.py:29-91` VOICE_PRESETS has no such key → "Charon" default, empty director notes. Also `ScanResultViewModel.kt:78`.
+- Expected (web): context `pronunciation` → voice `Rasalgethi` + "say clearly and slowly" note.
+- Status: OPEN | Verification: cross-repo code-read.
+
+## [H-03] Dead voice/style request fields — server ignores them (Pydantic drops extras)
+- Date: 2026-07-06 | Severity: major (masks H-02) | Area: H-audio / D-network
+- Evidence: `WriteModels.kt:56-62` SpeakRequest adds `voice`("Orus")/`style`; server `SpeakRequest` = text/lang/context only (`audio.py:120-163`). Intended voice never applied anywhere.
+- Expected: drop dead fields; align context strings to server presets.
+- Status: OPEN | Verification: cross-repo code-read.
+
+## [H-04] Arabic lang never passed for dictionary/chat TTS; on-device ar fallback unchecked
+- Date: 2026-07-06 | Severity: major | Area: H-audio / G-i18n
+- Evidence: `DictionaryRepositoryImpl.kt:230-233` lang="en" hardcoded; `ChatViewModel.kt:318`/`ChatRepositoryImpl.kt:112` default "en" even for Arabic replies (web sends chatLang, `chat.html:264`); `ChatScreen.kt:163`/`StoryReaderScreen.kt:135` ignore `setLanguage` result → silent failure when device lacks ar voice; uses `ar` not `ar-EG`.
+- Status: OPEN | Verification: cross-repo code-read.
+
+## [H-05] TTS fallback gaps: story narration stops silently on network error; Lesson TTS fails silently; SignDetail no local fallback
+- Date: 2026-07-06 | Severity: major | Area: H-audio / M-offline
+- Evidence: `StoryReaderViewModel.kt:198-221` (.onFailure → false → loop breaks, no fallback/toast); `LessonViewModel.kt:61-84` (no ttsEnabled check, no fallback, no error); `SignDetailViewModel.kt:118-124` (error string only).
+- Expected (web): always degrades to browser SpeechSynthesis.
+- Status: OPEN | Verification: code-read.
+
+## [H-06] No audio focus + fragmented MediaPlayers → concurrent playback possible
+- Date: 2026-07-06 | Severity: major | Area: H-audio
+- Evidence: no `requestAudioFocus`/`setAudioAttributes` anywhere; `AudioPlaybackManager` singleton only injected in Chat/StoryReader; Dictionary/SignDetail/Lesson/ScanResult each own private MediaPlayers.
+- Expected: single playback manager + audio focus handling.
+- Status: OPEN | Verification: code-read.
+
+## [H-07] No audio caching client-side (no OkHttp Cache; temp WAVs deleted after playback)
+- Date: 2026-07-06 | Severity: major (cost/latency) | Area: H-audio / D-network
+- Evidence: `NetworkModule.kt:47-73` no Cache; server sends `Cache-Control: max-age=86400` (ignored). Web keeps in-memory blob cache (`app.js:465-494`).
+- Expected: OkHttp Cache and/or keyed audio file cache.
+- Status: OPEN | Verification: cross-repo code-read.
+
+## [H-08] Minor audio issues (bundle)
+- Date: 2026-07-06 | Severity: minor | Area: H-audio
+- Items: (a) temp WAV files not deleted on exception paths (`SignDetailViewModel.kt:114`, also Dictionary/Lesson; bare `File.createTempFile` in system tmp); (b) SignDetail has no playing/loading state, can't stop playback; (c) main-thread `prepare()` jank (see I-02). Positive: `ScanResultViewModel` per-key TtsState is the model to copy; format parity OK (24 kHz WAV played untranscoded).
+- Status: OPEN | Verification: code-read.
+
+## [G-01] BLOCKER: No in-app language switcher — no per-app locale mechanism exists at all
+- Date: 2026-07-06 | Severity: blocker | Area: G-i18n / B-parity
+- Evidence: zero hits for `setApplicationLocales`/`LocaleManager`/`LocaleListCompat`; no `locales_config.xml`/`android:localeConfig`; no locale key in `UserPreferencesDataStore.kt`; `MainActivity` extends `ComponentActivity` (`MainActivity.kt:68`) so the pre-13 AppCompat API isn't even available; Settings has no language row (`SettingsScreen.kt:140-247`). Orphaned strings `quick_settings_language/english/arabic` defined but never referenced. `User.preferredLang` fetched from backend but never applied (`SettingsViewModel.kt:61` passes null).
+- Expected (web): prominent EN↔AR toggle (`partials/nav.html:42-45,84`).
+- Status: OPEN | Verification: exhaustive grep.
+
+## [G-02] MAJOR: values-ar files in 10 of 12 modules are ENGLISH placeholders, not Arabic
+- Date: 2026-07-06 | Severity: major (blocker for Arabic DoD) | Area: G-i18n
+- Evidence: only `app` (24/24) and `feature:chat` (34/35) contain real Arabic script. auth ~19% translated; designsystem/dashboard/dictionary/explore/feedback/landing/scan/settings/stories = 0 Arabic values, English copies wrapped in `tools:ignore="MissingTranslation"`. Overall Arabic completeness ~15-20%.
+- Note: refines supervisor ground truth — files exist, translations mostly don't.
+- Status: OPEN | Verification: per-module key/value comparison (table in agent report; summarized here).
+
+## [G-03] 5 ar keys missing entirely in feature:dictionary + mojibake in placeholder ar files
+- Date: 2026-07-06 | Severity: major | Area: G-i18n
+- Evidence: `feature/dictionary/values-ar/strings.xml` lacks `lesson_speak`, `write_mode_gardiner`, `write_mode_phonetic`, `write_mode_smart`, `write_palette_label`. Encoding corruption (â™¡/âœ“/Â·/â€¦/�) in dashboard:11,19,21, settings:26, auth `forgot_back_to_login`, stories `reader_prev_chapter`.
+- Status: OPEN | Verification: file reads.
+
+## [G-04] ~45 hardcoded user-facing strings in ViewModels (errors/snackbars/toasts stay English)
+- Date: 2026-07-06 | Severity: major | Area: G-i18n
+- Evidence: AuthViewModel (~11), SettingsViewModel:63,87,100,135, FeedbackViewModel:57,61, DashboardViewModel:94-115, ChatViewModel:162-414, StoryReaderViewModel:151-270, Dictionary/Lesson/SignDetail "Generating pronunciation…", ScanViewModel:135-199, IdentifyViewModel:51-105.
+- Expected: string resources (ViewModels emit resource IDs or use a resource provider).
+- Status: OPEN | Verification: grep sweep.
+
+## [G-05] Minor i18n/RTL issues (bundle)
+- Date: 2026-07-06 | Severity: minor | Area: G-i18n
+- Items: (a) directional arrows baked into strings (`reader_next_chapter` "Next →", `reader_prev_chapter`, `detail_read_wikipedia`) won't mirror in RTL; (b) `String.format("%.1f")` without Locale (`SettingsScreen.kt:417`).
+- Positives: supportsRtl=true; start/end used throughout, zero left/right leaks; all directional icons `Icons.AutoMirrored.*` (24 sites); Cairo font correctly wired for Arabic via `wadjetTypographyForLang` (no tofu); intentional RTL force for Arabic block in `ScanResultScreen.kt:359-373`.
+- Status: OPEN | Verification: grep + file reads.
+
+## [B-01] No deep links anywhere (email verify/reset links + FCM notifications can't open the app/content)
+- Date: 2026-07-06 | Severity: major | Area: B-parity / C-nav
+- Evidence: no `navDeepLink` in `WadjetNavGraph.kt`; launcher activity has only MAIN/LAUNCHER (`AndroidManifest.xml:27-37`); backend email links (`auth.py:354,393`) open web only; FCM extras never consumed by MainActivity.
+- Expected (web): fully URL-addressable routes.
+- Status: OPEN | Verification: code-read.
+
+## [B-02] Password reset / email verification complete on web only
+- Date: 2026-07-06 | Severity: minor (given B-01) | Area: B-parity
+- Evidence: `ForgotPasswordSheet.kt` sends email; reset token flow not handled in-app. Firebase-based verify flow present (`VerifyEmailSheet.kt`).
+- Status: OPEN (depends on B-01) | Verification: code-read.
+
+## [C-01] Duplicate/racing sign-out navigation
+- Date: 2026-07-06 | Severity: major | Area: C-nav
+- Evidence: both `WadjetNavGraph.kt:471-477` (SettingsScreen signedOut effect) and `MainActivity.kt:130-137` (isAuthenticated observer) navigate to Welcome with popUpTo inclusive, no launchSingleTop.
+- Expected: single source of truth (global auth observer).
+- Status: OPEN | Verification: code-read.
+
+## [C-02] UI state lost on rotation: showArabic, selectedGlyph, aiNotesExpanded, selectedAnnotation use remember (not rememberSaveable)
+- Date: 2026-07-06 | Severity: minor | Area: C-nav / C-state
+- Evidence: `ScanResultScreen.kt:94,95,394`; `StoryReaderScreen.kt:514`; `LearnTab.kt:79`; activity not orientation-locked.
+- Status: OPEN | Verification: code-read.
+
+## [C-03] Search/filter/pagination state not in SavedStateHandle (lost on process death)
+- Date: 2026-07-06 | Severity: minor | Area: C-state
+- Evidence: DictionaryViewModel / ExploreViewModel / StoriesViewModel hold query/filters/paging in plain MutableStateFlow.
+- Status: OPEN | Verification: code-read.
+
+## [C-04] Minor nav issues (bundle)
+- Date: 2026-07-06 | Severity: minor | Area: C-nav / O-debt
+- Items: (a) dead `Route.Splash` registered with empty body (`WadjetNavGraph.kt:102-104`, `Route.kt:6`); (b) landmark-chat slug failure silently degrades to generic chat (`ChatViewModel.kt:70-80`); (c) unused Translate data-layer wiring (`TranslateApiService.kt` + repo, DI-only).
+- Positives: all 20 routes registered/reachable; saveState/restoreState multi-back-stack; anti-double-tap `lifecycleIsResumed()`; detail VMs use SavedStateHandle args (process-death safe).
+- Status: OPEN | Verification: code-read.
+
+## [D-01] BLOCKER: STT endpoint path wrong — voice input always 404s
+- Date: 2026-07-06 | Severity: blocker | Area: D-network
+- Evidence: `AudioApiService.kt:20-24` `@POST("api/audio/stt")`; backend real path is `/api/stt` (`audio.py:16` prefix `/api` + `:57` `@router.post("/stt")`). Sibling `speak` path IS correct.
+- Expected: Android calls `api/stt` (or backend moves route).
+- Status: OPEN | Verification: cross-repo code-read.
+
+## [D-02] Save story progress 422s on every call — glyphs_learned type mismatch (list vs JSON string)
+- Date: 2026-07-06 | Severity: major | Area: D-network
+- Evidence: `UserModels.kt:99-105` sends `List<String>`; backend `schemas.py:107` expects `str` (JSON-encoded). Pydantic v2 won't coerce → 422. Read side is consistent (string).
+- Status: OPEN | Verification: cross-repo code-read.
+
+## [D-03] Scan glyph count always 0 — DTO expects `glyph_count`, backend emits `num_detections`
+- Date: 2026-07-06 | Severity: major | Area: D-network
+- Evidence: `ScanModels.kt:8` vs `hieroglyph_pipeline.py:86`. (Backend `scan.py:923` has the same self-bug persisting history glyph_count=0.)
+- Status: OPEN | Verification: cross-repo code-read.
+
+## [D-04] Logout never revokes server refresh token
+- Date: 2026-07-06 | Severity: major | Area: D-network / J-security
+- Evidence: `AuthInterceptor.kt:50-59` attaches `wadjet_refresh` cookie only on `/auth/refresh`; no CookieJar; backend `auth.py:216` reads the cookie to delete the token → deletes nothing. Token stays valid up to 7 days after sign-out.
+- Expected: send refresh cookie on `/auth/logout` too.
+- Status: OPEN | Verification: cross-repo code-read.
+
+## [D-05] Dual Firebase+backend auth: account must exist in BOTH stores; verify/reset handled only via Firebase
+- Date: 2026-07-06 | Severity: major (architectural) | Area: D-network / B-parity
+- Evidence: `AuthRepositoryImpl.kt:51-137` — Firebase first, then backend; `currentUser` requires both. Backend verify/reset endpoints (`auth.py:320-418`) unused → states can diverge. Web-only accounts can't log in on Android.
+- Status: NEEDS-DECISION (product call on auth architecture) | Verification: cross-repo code-read.
+
+## [D-06] Landmark pagination metadata missing — totalPages always 1
+- Date: 2026-07-06 | Severity: major | Area: D-network
+- Evidence: `LandmarkModels.kt:7-13` expects `per_page`/`total_pages`; backend `explore.py:954-960` returns `total/page/has_more` instead. Any paging keyed off totalPages stops at page 1.
+- Status: OPEN | Verification: cross-repo code-read. (Check ExploreViewModel loadMore logic during fix.)
+
+## [D-07] Minor network issues (bundle)
+- Date: 2026-07-06 | Severity: minor | Area: D-network
+- Items: (a) landmark list `lang`/`featured` query params ignored by backend (`explore.py:901-913`) — featured filter never applied server-side; (b) saveProgress response shape differs from OkResponse DTO (harmless with defaults); (c) debug builds default to production base URL (overridable via `debug.base.url`); (d) backend endpoints never called: `/api/detect`, `/api/read`, non-streaming `/api/chat`, backend verify/reset, single-chapter stories, `/api/health`.
+- Positives: robust Json config (ignoreUnknownKeys+coerceInputValues); sound error handling (`bodyOrThrow`, `suspendRunCatching` rethrows CancellationException); sane timeouts (SSE-tolerant read 60s); 401→TokenAuthenticator single-retry refresh; tokens in EncryptedSharedPreferences.
+- Status: OPEN | Verification: cross-repo code-read.
+
+## [L-01] Status/nav bar icons invisible in system light mode — enableEdgeToEdge() with auto style on forced-dark app
+- Date: 2026-07-06 | Severity: major | Area: L-ui
+- Evidence: `MainActivity.kt:80` no-arg `enableEdgeToEdge()` → SystemBarStyle.auto follows SYSTEM theme; app forces dark UI → dark icons on near-black background in light mode.
+- Expected: explicit `SystemBarStyle.dark(...)` for both bars.
+- Status: OPEN | Verification: code-read (runtime confirm pending device).
+
+## [L-02] Double top bars on Explore/Stories/Chat tabs (incl. back arrow on root destinations)
+- Date: 2026-07-06 | Severity: major | Area: L-ui / C-nav
+- Evidence: global TopAppBar for top-level routes (`MainActivity.kt:222-256`) + own TopAppBars in `ExploreScreen.kt:112`, `StoriesScreen.kt:88`, `ChatScreen.kt:265`; Landing/Hub correctly rely on global bar (inconsistent).
+- Expected: one app bar per screen; no back button on bottom-nav roots.
+- Status: OPEN | Verification: code-read (visual confirm pending device).
+
+## [L-03] Hardcoded "Chapter X of Y" in LandingScreen
+- Date: 2026-07-06 | Severity: major (i18n) | Area: L-ui / G-i18n
+- Evidence: `LandingScreen.kt:462`.
+- Status: OPEN | Verification: code-read.
+
+## [K-01] Touch targets below 48dp (chat edit pencil worst at ~14dp)
+- Date: 2026-07-06 | Severity: major | Area: K-a11y
+- Evidence: `ChatScreen.kt:665-673` raw 14dp Icon with .clickable; `ChatScreen.kt:694-697` retry Text; `StoriesScreen.kt:369-374` favorite IconButton forced 36dp; `DashboardScreen.kt:428-430` Remove text; `SettingsScreen.kt:200-239` clickable rows without Role.Button/min height.
+- Expected: IconButton / sizeIn(min 48dp) + Role semantics.
+- Status: OPEN | Verification: code-read.
+
+## [K-02] Contrast: Dust #8B7355 (~3.8:1 on Night) used for small text
+- Date: 2026-07-06 | Severity: minor | Area: K-a11y
+- Evidence: `LandingScreen.kt:273`, ContinueStoryCard, badges; alpha-0.15 same-hue badges `ExploreScreen.kt:509-520`.
+- Expected: reserve Dust for large/decorative text; TextMuted (~5.7:1) is fine.
+- Status: OPEN | Verification: code-read.
+
+## [L-04] Minor UI issues (bundle)
+- Date: 2026-07-06 | Severity: minor | Area: L-ui
+- Items: (a) dark-only theme is a product decision but themes.xml parent is framework Material.NoActionBar (non-idiomatic); (b) fixed-height FeatureCard 120dp may clip at large font scale (`WelcomeScreen.kt:291`); (c) WadjetButton hardcodes height 48dp (prefer heightIn); (d) `errorContainer` hex inline in `WadjetTheme.kt:32`.
+- Positives: palette matches web CSS exactly (gold #D4AF37 family, Night #0A0A0A); no dynamic color override; zero hardcoded hex in feature modules; loading/empty/error states consistently implemented (shimmer, ErrorState w/ retry, OfflineIndicator); no LazyColumn-in-Column crash patterns; sp/dp used correctly; headings have semantics.
+- Status: OPEN | Verification: code-read.
