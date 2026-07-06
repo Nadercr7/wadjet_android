@@ -13,4 +13,8 @@
     <string name="feedback_button">إرسال الملاحظة</string>
     <string name="feedback_success_title">شكرًا لك!</string>
     <string name="feedback_success_message">ملاحظتك تساعدنا في تحسين واجِت.</string>
+
+    <!-- ViewModel messages (G-04) -->
+    <string name="feedback_error_category">اختر نوع الملاحظة</string>
+    <string name="feedback_error_min_chars">يجب ألا تقل الرسالة عن ١٠ أحرف</string>
 </resources>

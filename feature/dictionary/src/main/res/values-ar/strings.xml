@@ -60,4 +60,7 @@
     <string name="sign_share_chooser">مشاركة العلامة</string>
     <string name="sign_practice_writing">تدرّب على الكتابة</string>
     <string name="lesson_speak">انطق</string>
+
+    <!-- ViewModel messages (G-04) -->
+    <string name="dict_generating_pronunciation">جاري توليد النطق…</string>
 </resources>

@@ -59,4 +59,12 @@
     <string name="identify_agreement_uncertain">غير مؤكد</string>
     <string name="identify_agreement_single">مصدر واحد</string>
     <string name="identify_agreement_best_guess">أفضل تخمين</string>
+
+    <!-- ViewModel messages (G-04) -->
+    <string name="explore_error_landmark">تعذر تحميل المعلم</string>
+    <string name="explore_error_landmarks">تعذر تحميل المعالم</string>
+    <string name="identify_error_daily_limit">تم بلوغ الحد اليومي للفحص (%1$d). حاول مجددًا غدًا.</string>
+    <string name="identify_error_failed">فشل التعرف</string>
+    <string name="identify_error_read_image">تعذر قراءة الصورة المختارة</string>
+    <string name="identify_error_process_image">تعذر معالجة الصورة</string>
 </resources>

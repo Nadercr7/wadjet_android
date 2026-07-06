@@ -62,4 +62,17 @@
     <string name="verify_checking">جاري التحقق…</string>
     <string name="verify_resend">إعادة إرسال بريد التحقق</string>
     <string name="verify_cancel">إلغاء وتسجيل الخروج</string>
+
+    <!-- ViewModel messages (G-04) -->
+    <string name="auth_error_invalid_email_password">أدخل بريدًا إلكترونيًا وكلمة مرور صحيحين</string>
+    <string name="auth_error_login_failed">فشل تسجيل الدخول</string>
+    <string name="auth_error_invalid_email">أدخل بريدًا إلكترونيًا صحيحًا</string>
+    <string name="auth_error_registration_failed">فشل إنشاء الحساب</string>
+    <string name="auth_error_send_verification">تعذر إرسال بريد التحقق</string>
+    <string name="auth_error_check_verification">تعذر التحقق من حالة البريد</string>
+    <string name="auth_error_send_reset">تعذر إرسال رابط إعادة التعيين</string>
+    <string name="auth_error_password_length">يجب أن تكون كلمة المرور ٨ أحرف على الأقل</string>
+    <string name="auth_error_password_uppercase">يجب أن تحتوي كلمة المرور على حرف كبير</string>
+    <string name="auth_error_password_lowercase">يجب أن تحتوي كلمة المرور على حرف صغير</string>
+    <string name="auth_error_password_digit">يجب أن تحتوي كلمة المرور على رقم</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.wadjet.feature.explore
 
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.domain.model.Landmark
 import com.wadjet.core.domain.model.LandmarkPage
@@ -36,6 +37,7 @@ data class ExploreUiState(
 @HiltViewModel
 class ExploreViewModel @Inject constructor(
     private val exploreRepository: ExploreRepository,
+    private val strings: StringResolver,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ExploreUiState())
@@ -153,7 +155,7 @@ class ExploreViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         landmarks = cached.ifEmpty { it.landmarks },
-                        error = error.message ?: "Failed to load landmarks",
+                        error = error.message ?: strings.get(R.string.explore_error_landmarks),
                         isLoading = false,
                         isRefreshing = false,
                     )

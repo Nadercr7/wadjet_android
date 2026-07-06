@@ -3,6 +3,7 @@ package com.wadjet.feature.dictionary
 import com.wadjet.core.common.audio.AudioPlaybackManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.common.ToastController
 import com.wadjet.core.domain.model.Lesson
@@ -31,6 +32,7 @@ class LessonViewModel @Inject constructor(
     private val toastController: ToastController,
     private val audioPlayer: AudioPlaybackManager,
     private val ttsPreferences: TtsPreferencesRepository,
+    private val strings: StringResolver,
 ) : ViewModel() {
 
     private val level: Int = savedStateHandle["level"] ?: 1
@@ -68,7 +70,7 @@ class LessonViewModel @Inject constructor(
                 audioPlayer.speakLocal(text, speed)
                 return@launch
             }
-            toastController.info("Generating pronunciation…")
+            toastController.info(strings.get(R.string.dict_generating_pronunciation))
             repository.speakPhonetic(text).onSuccess { bytes ->
                 if (bytes != null) {
                     audioPlayer.playWavBytes(

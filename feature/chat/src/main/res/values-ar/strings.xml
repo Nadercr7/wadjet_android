@@ -40,4 +40,16 @@
     <string name="time_minutes_ago">منذ %1$d دقائق</string>
     <string name="time_hours_ago">منذ %1$d ساعات</string>
     <string name="time_yesterday">أمس</string>
+
+    <!-- ViewModel messages (G-04) -->
+    <string name="chat_error_daily_limit">تم بلوغ الحد اليومي للرسائل (%1$d). حاول مجددًا غدًا.</string>
+    <string name="chat_error_send_failed">فشل إرسال الرسالة</string>
+    <string name="chat_error_generic_reply">عذرًا، حدث خطأ. حاول مرة أخرى.</string>
+    <string name="chat_error_timeout_reply">انتهت مهلة الاتصال. حاول مرة أخرى.</string>
+    <string name="chat_error_timeout">انتهت مهلة الاتصال</string>
+    <string name="chat_generating_audio">جاري توليد الصوت…</string>
+    <string name="chat_error_stt_unavailable">التحويل الصوتي غير متاح على الخادم. اضغط زر الميكروفون لاستخدام التعرف على الكلام في الجهاز.</string>
+    <string name="chat_cleared_toast">تم مسح المحادثة</string>
+    <string name="chat_cleared_message">تم مسح المحادثة. كيف أساعدك؟</string>
+    <string name="chat_tell_me_about">أخبرني عن %1$s.</string>
 </resources>

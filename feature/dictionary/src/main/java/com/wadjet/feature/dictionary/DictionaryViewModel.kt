@@ -2,6 +2,7 @@ package com.wadjet.feature.dictionary
 
 import com.wadjet.core.common.audio.AudioPlaybackManager
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.domain.model.Category
 import com.wadjet.core.domain.model.Sign
@@ -52,6 +53,7 @@ class DictionaryViewModel @Inject constructor(
     private val ttsPreferences: TtsPreferencesRepository,
     private val toastController: com.wadjet.core.common.ToastController,
     private val audioPlayer: AudioPlaybackManager,
+    private val strings: StringResolver,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(BrowseUiState())
@@ -185,7 +187,7 @@ class DictionaryViewModel @Inject constructor(
                 isSpeaking = false
                 return@launch
             }
-            toastController.info("Generating pronunciation\u2026")
+            toastController.info(strings.get(R.string.dict_generating_pronunciation))
             repository.speakPhonetic(text).onSuccess { bytes ->
                 if (bytes != null) {
                     audioPlayer.playWavBytes(

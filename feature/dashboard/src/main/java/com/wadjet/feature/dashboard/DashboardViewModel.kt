@@ -1,6 +1,7 @@
 package com.wadjet.feature.dashboard
 
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.domain.model.DashboardStoryProgress
 import com.wadjet.core.domain.model.FavoriteItem
@@ -40,6 +41,7 @@ val FAV_TABS = listOf("landmark", "glyph", "story")
 class DashboardViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val authRepository: AuthRepository,
+    private val strings: StringResolver,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DashboardUiState())
@@ -91,28 +93,28 @@ class DashboardViewModel @Inject constructor(
                 .onSuccess { stats -> _state.update { it.copy(stats = stats) } }
                 .onFailure { e ->
                     Timber.w(e, "Stats load failed")
-                    _state.update { it.copy(error = e.message ?: "Failed to load stats") }
+                    _state.update { it.copy(error = e.message ?: strings.get(R.string.dashboard_error_stats)) }
                 }
 
             scansDeferred.await()
                 .onSuccess { scans -> _state.update { it.copy(recentScans = scans) } }
                 .onFailure { e ->
                     Timber.w(e, "Scan history load failed")
-                    _state.update { it.copy(error = e.message ?: "Failed to load scan history") }
+                    _state.update { it.copy(error = e.message ?: strings.get(R.string.dashboard_error_scans)) }
                 }
 
             favsDeferred.await()
                 .onSuccess { favs -> _state.update { it.copy(favorites = favs) } }
                 .onFailure { e ->
                     Timber.w(e, "Favorites load failed")
-                    _state.update { it.copy(error = e.message ?: "Failed to load favorites") }
+                    _state.update { it.copy(error = e.message ?: strings.get(R.string.dashboard_error_favorites)) }
                 }
 
             progressDeferred.await()
                 .onSuccess { progress -> _state.update { it.copy(storyProgress = progress) } }
                 .onFailure { e ->
                     Timber.w(e, "Story progress load failed")
-                    _state.update { it.copy(error = e.message ?: "Failed to load story progress") }
+                    _state.update { it.copy(error = e.message ?: strings.get(R.string.dashboard_error_progress)) }
                 }
 
             _state.update { it.copy(isLoading = false) }

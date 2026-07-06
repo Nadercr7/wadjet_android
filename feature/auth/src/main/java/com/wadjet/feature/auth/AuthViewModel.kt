@@ -1,6 +1,7 @@
 package com.wadjet.feature.auth
 
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import android.util.Patterns
 import com.wadjet.core.domain.repository.AuthRepository
@@ -18,6 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val strings: StringResolver,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AuthUiState())
@@ -50,8 +52,8 @@ class AuthViewModel @Inject constructor(
                     _events.emit(AuthEvent.AuthSuccess)
                 }
                 .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, error = e.message ?: "Google sign-in failed") }
-                    _events.emit(AuthEvent.AuthError(e.message ?: "Google sign-in failed"))
+                    _state.update { it.copy(isLoading = false, error = e.message ?: strings.get(R.string.error_google_sign_in_failed)) }
+                    _events.emit(AuthEvent.AuthError(e.message ?: strings.get(R.string.error_google_sign_in_failed)))
                 }
         }
     }
@@ -62,7 +64,7 @@ class AuthViewModel @Inject constructor(
 
     fun signInWithEmail(email: String, password: String) {
         if (!validateEmail(email) || password.isBlank()) {
-            _state.update { it.copy(error = "Please enter a valid email and password") }
+            _state.update { it.copy(error = strings.get(R.string.auth_error_invalid_email_password)) }
             return
         }
         if (_state.value.isLoading) return
@@ -87,7 +89,7 @@ class AuthViewModel @Inject constructor(
                     }
                 }
                 .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, error = e.message ?: "Login failed") }
+                    _state.update { it.copy(isLoading = false, error = e.message ?: strings.get(R.string.auth_error_login_failed)) }
                 }
         }
     }
@@ -99,11 +101,11 @@ class AuthViewModel @Inject constructor(
         }
         val pwError = validatePassword(password)
         if (pwError != null) {
-            _state.update { it.copy(error = pwError) }
+            _state.update { it.copy(error = strings.get(pwError)) }
             return
         }
         if (password != confirmPassword) {
-            _state.update { it.copy(error = "Passwords do not match") }
+            _state.update { it.copy(error = strings.get(R.string.register_password_mismatch)) }
             return
         }
         if (_state.value.isLoading) return
@@ -124,7 +126,7 @@ class AuthViewModel @Inject constructor(
                     _events.emit(AuthEvent.VerificationEmailSent)
                 }
                 .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, error = e.message ?: "Registration failed") }
+                    _state.update { it.copy(isLoading = false, error = e.message ?: strings.get(R.string.auth_error_registration_failed)) }
                 }
         }
     }
@@ -139,7 +141,7 @@ class AuthViewModel @Inject constructor(
                     _events.emit(AuthEvent.VerificationEmailSent)
                 }
                 .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, error = e.message ?: "Failed to send verification email") }
+                    _state.update { it.copy(isLoading = false, error = e.message ?: strings.get(R.string.auth_error_send_verification)) }
                 }
         }
     }
@@ -168,7 +170,7 @@ class AuthViewModel @Inject constructor(
                     }
                 }
                 .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, error = e.message ?: "Failed to check verification") }
+                    _state.update { it.copy(isLoading = false, error = e.message ?: strings.get(R.string.auth_error_check_verification)) }
                 }
         }
     }
@@ -198,7 +200,7 @@ class AuthViewModel @Inject constructor(
                     _events.emit(AuthEvent.ForgotPasswordSent)
                 }
                 .onFailure { e ->
-                    _state.update { it.copy(isLoading = false, error = e.message ?: "Failed to send reset email") }
+                    _state.update { it.copy(isLoading = false, error = e.message ?: strings.get(R.string.auth_error_send_reset)) }
                 }
         }
     }
@@ -212,11 +214,12 @@ class AuthViewModel @Inject constructor(
             return Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
         }
 
-        fun validatePassword(password: String): String? {
-            if (password.length < 8) return "Password must be at least 8 characters"
-            if (!password.any { it.isUpperCase() }) return "Password must contain an uppercase letter"
-            if (!password.any { it.isLowerCase() }) return "Password must contain a lowercase letter"
-            if (!password.any { it.isDigit() }) return "Password must contain a digit"
+        /** @return a string resource id describing the violated rule, or null when valid (G-04). */
+        fun validatePassword(password: String): Int? {
+            if (password.length < 8) return R.string.auth_error_password_length
+            if (!password.any { it.isUpperCase() }) return R.string.auth_error_password_uppercase
+            if (!password.any { it.isLowerCase() }) return R.string.auth_error_password_lowercase
+            if (!password.any { it.isDigit() }) return R.string.auth_error_password_digit
             return null
         }
 

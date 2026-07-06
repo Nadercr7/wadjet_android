@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.domain.model.IdentifyMatch
 import com.wadjet.core.domain.model.IdentifyResult
@@ -36,6 +37,7 @@ data class IdentifyUiState(
 class IdentifyViewModel @Inject constructor(
     private val exploreRepository: ExploreRepository,
     private val userRepository: UserRepository,
+    private val strings: StringResolver,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -48,7 +50,7 @@ class IdentifyViewModel @Inject constructor(
             // Check free-tier limits
             userRepository.getLimits().onSuccess { limits ->
                 if (limits.scansToday >= limits.scansPerDay) {
-                    _state.update { it.copy(error = "Daily scan limit reached (${limits.scansPerDay}). Try again tomorrow.") }
+                    _state.update { it.copy(error = strings.get(R.string.identify_error_daily_limit, limits.scansPerDay)) }
                     return@launch
                 }
             }
@@ -66,7 +68,7 @@ class IdentifyViewModel @Inject constructor(
                     if (compressed !== file) compressed.delete()
                     _state.update {
                         it.copy(
-                            error = error.message ?: "Identification failed",
+                            error = error.message ?: strings.get(R.string.identify_error_failed),
                             isLoading = false,
                             cameraActive = true,
                         )
@@ -98,11 +100,11 @@ class IdentifyViewModel @Inject constructor(
                 if (file != null) {
                     onImageCaptured(file)
                 } else {
-                    _state.update { it.copy(error = "Failed to read selected image") }
+                    _state.update { it.copy(error = strings.get(R.string.identify_error_read_image)) }
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to process selected image")
-                _state.update { it.copy(error = "Failed to process image") }
+                _state.update { it.copy(error = strings.get(R.string.identify_error_process_image)) }
             }
         }
     }

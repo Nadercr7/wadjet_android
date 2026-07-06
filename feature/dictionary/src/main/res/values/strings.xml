@@ -60,4 +60,7 @@
     <string name="sign_share_chooser">Share Sign</string>
     <string name="sign_practice_writing">Practice Writing</string>
     <string name="lesson_speak">Speak</string>
+
+    <!-- ViewModel messages (G-04) -->
+    <string name="dict_generating_pronunciation">Generating pronunciation…</string>
 </resources>

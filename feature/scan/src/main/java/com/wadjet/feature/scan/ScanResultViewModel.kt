@@ -3,6 +3,7 @@ package com.wadjet.feature.scan
 import com.wadjet.core.common.audio.AudioPlaybackManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.common.EgyptianPronunciation
 import com.wadjet.core.designsystem.component.TtsState
@@ -29,6 +30,7 @@ class ScanResultViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val scanRepository: ScanRepository,
     private val audioPlayer: AudioPlaybackManager,
+    private val strings: StringResolver,
 ) : ViewModel() {
 
     private val scanId: String = savedStateHandle.get<String>("scanId") ?: ""
@@ -43,7 +45,7 @@ class ScanResultViewModel @Inject constructor(
     private fun loadResult() {
         val id = scanId.toIntOrNull()
         if (id == null) {
-            _state.update { it.copy(isLoading = false, error = "Invalid scan ID") }
+            _state.update { it.copy(isLoading = false, error = strings.get(R.string.scan_error_invalid_id)) }
             return
         }
         viewModelScope.launch {

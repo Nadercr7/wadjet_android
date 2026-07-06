@@ -25,6 +25,9 @@ android {
 }
 
 dependencies {
+    // AppCompat (per-app locale lookup for StringResolver, G-04)
+    implementation(libs.androidx.appcompat)
+
     // Timber
     api(libs.timber)
 

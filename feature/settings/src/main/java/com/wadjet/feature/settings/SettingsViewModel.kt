@@ -1,6 +1,7 @@
 package com.wadjet.feature.settings
 
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.data.datastore.UserPreferencesDataStore
 import com.wadjet.core.domain.model.User
@@ -35,6 +36,7 @@ class SettingsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
     private val preferencesDataStore: UserPreferencesDataStore,
+    private val strings: StringResolver,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsUiState())
@@ -60,7 +62,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             userRepository.updateProfile(displayName = name, preferredLang = null)
                 .onSuccess {
-                    _state.update { it.copy(isEditingName = false, isSaving = false, message = "Name updated") }
+                    _state.update { it.copy(isEditingName = false, isSaving = false, message = strings.get(R.string.settings_msg_name_updated)) }
                 }
                 .onFailure { error ->
                     _state.update { it.copy(isSaving = false, message = error.message) }
@@ -84,7 +86,7 @@ class SettingsViewModel @Inject constructor(
         val current = _state.value.currentPassword
         val new = _state.value.newPassword
         if (current.isBlank() || new.length < 8) {
-            _state.update { it.copy(message = "New password must be at least 8 characters") }
+            _state.update { it.copy(message = strings.get(R.string.settings_msg_password_length)) }
             return
         }
         if (_state.value.isChangingPassword) return
@@ -97,7 +99,7 @@ class SettingsViewModel @Inject constructor(
                             isChangingPassword = false,
                             currentPassword = "",
                             newPassword = "",
-                            message = "Password changed",
+                            message = strings.get(R.string.settings_msg_password_changed),
                         )
                     }
                 }
@@ -132,7 +134,7 @@ class SettingsViewModel @Inject constructor(
                 _state.update { it.copy(signedOut = true) }
             } catch (e: Exception) {
                 Timber.e(e, "Sign out failed")
-                _state.update { it.copy(message = e.message ?: "Sign out failed") }
+                _state.update { it.copy(message = e.message ?: strings.get(R.string.settings_msg_sign_out_failed)) }
             } finally {
                 isSigningOut = false
             }

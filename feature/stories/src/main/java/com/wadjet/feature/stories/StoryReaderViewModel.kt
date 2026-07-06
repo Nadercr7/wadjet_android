@@ -4,6 +4,7 @@ import com.wadjet.core.common.audio.AudioPlaybackManager
 import android.content.SharedPreferences
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.domain.model.Chapter
 import com.wadjet.core.domain.model.Interaction
@@ -59,6 +60,7 @@ class StoryReaderViewModel @Inject constructor(
     private val storiesRepository: StoriesRepository,
     private val toastController: com.wadjet.core.common.ToastController,
     private val audioPlayer: AudioPlaybackManager,
+    private val strings: StringResolver,
     private val sharedPreferences: SharedPreferences,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -148,7 +150,7 @@ class StoryReaderViewModel @Inject constructor(
             }.onFailure { error ->
                 Timber.e(error, "Interaction failed")
                 _state.update { it.copy(error = error.message) }
-                toastController.error(error.message ?: "Interaction failed")
+                toastController.error(error.message ?: strings.get(R.string.reader_error_interaction))
             }
         }
     }
@@ -171,7 +173,7 @@ class StoryReaderViewModel @Inject constructor(
         if (paragraphs.isEmpty()) return
 
         _state.update { it.copy(isNarrating = true, isSpeaking = true, narratingParagraphIndex = 0) }
-        toastController.info("Generating narration\u2026")
+        toastController.info(strings.get(R.string.reader_generating_narration))
         narrationJob = viewModelScope.launch {
             for ((idx, paragraph) in paragraphs.withIndex()) {
                 if (!_state.value.isNarrating) break
@@ -253,7 +255,7 @@ class StoryReaderViewModel @Inject constructor(
                 .onFailure { error ->
                     Timber.e(error, "Failed to load story")
                     _state.update { it.copy(isLoading = false, error = error.message) }
-                    toastController.error(error.message ?: "Failed to load story")
+                    toastController.error(error.message ?: strings.get(R.string.reader_error_load))
                 }
         }
     }
@@ -277,7 +279,7 @@ class StoryReaderViewModel @Inject constructor(
 
         // 3. Generate on-demand via POST
         _state.update { it.copy(isLoadingImage = true, imageLoadFailed = false) }
-        toastController.info("Generating scene image\u2026")
+        toastController.info(strings.get(R.string.reader_generating_scene))
         viewModelScope.launch {
             storiesRepository.generateChapterImage(storyId, chapterIdx)
                 .onSuccess { url ->

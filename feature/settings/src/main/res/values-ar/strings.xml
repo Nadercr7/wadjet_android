@@ -35,4 +35,10 @@
     <string name="quick_settings_english">English</string>
     <string name="quick_settings_arabic">العربية</string>
     <string name="quick_settings_full_settings">كل الإعدادات</string>
+
+    <!-- ViewModel messages (G-04) -->
+    <string name="settings_msg_name_updated">تم تحديث الاسم</string>
+    <string name="settings_msg_password_length">كلمة المرور الجديدة يجب ألا تقل عن ٨ أحرف</string>
+    <string name="settings_msg_password_changed">تم تغيير كلمة المرور</string>
+    <string name="settings_msg_sign_out_failed">فشل تسجيل الخروج</string>
 </resources>

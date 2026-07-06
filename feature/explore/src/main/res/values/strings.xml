@@ -59,4 +59,12 @@
     <string name="identify_agreement_uncertain">Uncertain</string>
     <string name="identify_agreement_single">Single Source</string>
     <string name="identify_agreement_best_guess">Best Guess</string>
+
+    <!-- ViewModel messages (G-04) -->
+    <string name="explore_error_landmark">Failed to load landmark</string>
+    <string name="explore_error_landmarks">Failed to load landmarks</string>
+    <string name="identify_error_daily_limit">Daily scan limit reached (%1$d). Try again tomorrow.</string>
+    <string name="identify_error_failed">Identification failed</string>
+    <string name="identify_error_read_image">Failed to read selected image</string>
+    <string name="identify_error_process_image">Failed to process image</string>
 </resources>

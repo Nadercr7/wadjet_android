@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import com.wadjet.core.common.audio.AudioPlaybackManager
 import android.net.Uri
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.common.EgyptianPronunciation
 import com.wadjet.core.designsystem.component.TtsState
@@ -49,6 +50,7 @@ class ScanViewModel @Inject constructor(
     private val scanRepository: ScanRepository,
     private val userRepository: UserRepository,
     private val audioPlayer: AudioPlaybackManager,
+    private val strings: StringResolver,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -110,8 +112,8 @@ class ScanViewModel @Inject constructor(
             // Check free-tier limits
             userRepository.getLimits().onSuccess { limits ->
                 if (limits.scansToday >= limits.scansPerDay) {
-                    _state.update { it.copy(error = "Daily scan limit reached (${limits.scansPerDay}). Try again tomorrow.") }
-                    _events.emit(ScanEvent.ShowToast("Daily scan limit reached"))
+                    _state.update { it.copy(error = strings.get(R.string.scan_error_daily_limit, limits.scansPerDay)) }
+                    _events.emit(ScanEvent.ShowToast(strings.get(R.string.scan_toast_daily_limit)))
                     return@launch
                 }
             }
@@ -153,12 +155,12 @@ class ScanViewModel @Inject constructor(
                     Timber.e(error, "Scan failed")
                     _state.update {
                         it.copy(
-                            error = error.message ?: "Scan failed",
+                            error = error.message ?: strings.get(R.string.scan_error_failed),
                             isLoading = false,
                             scanStep = ScanStep.IDLE,
                         )
                     }
-                    _events.emit(ScanEvent.ShowToast(error.message ?: "Scan failed"))
+                    _events.emit(ScanEvent.ShowToast(error.message ?: strings.get(R.string.scan_error_failed)))
                 }
         }
     }
@@ -170,11 +172,11 @@ class ScanViewModel @Inject constructor(
                 if (file != null) {
                     onImageCaptured(file)
                 } else {
-                    _state.update { it.copy(error = "Failed to read selected image") }
+                    _state.update { it.copy(error = strings.get(R.string.scan_error_read_image)) }
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to process selected image")
-                _state.update { it.copy(error = "Failed to process image") }
+                _state.update { it.copy(error = strings.get(R.string.scan_error_process_image)) }
             }
         }
     }

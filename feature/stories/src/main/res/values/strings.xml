@@ -34,4 +34,10 @@
     <string name="reader_write_placeholder">e.g. %1$s</string>
     <string name="reader_correct">Correct!</string>
     <string name="reader_incorrect">Not quite — try again</string>
+
+    <!-- ViewModel messages (G-04) -->
+    <string name="reader_error_interaction">Interaction failed</string>
+    <string name="reader_generating_narration">Generating narration…</string>
+    <string name="reader_error_load">Failed to load story</string>
+    <string name="reader_generating_scene">Generating scene image…</string>
 </resources>

@@ -34,4 +34,10 @@
     <string name="reader_write_placeholder">مثال: %1$s</string>
     <string name="reader_correct">صحيح!</string>
     <string name="reader_incorrect">ليست الإجابة الصحيحة — حاول مرة أخرى</string>
+
+    <!-- ViewModel messages (G-04) -->
+    <string name="reader_error_interaction">فشل التفاعل</string>
+    <string name="reader_generating_narration">جاري توليد السرد…</string>
+    <string name="reader_error_load">تعذر تحميل القصة</string>
+    <string name="reader_generating_scene">جاري إنشاء المشهد…</string>
 </resources>
