@@ -370,6 +370,7 @@ fun WadjetNavGraph(
                 onDismissError = viewModel::dismissError,
                 onDismissLocalTts = viewModel::dismissLocalTts,
                 onBack = { navController.popBackStack() },
+                showBack = false, // L-02: root bottom-nav tab
             )
         }
         composable<Route.ChatLandmark> {

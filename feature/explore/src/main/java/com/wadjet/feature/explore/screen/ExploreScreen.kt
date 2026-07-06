@@ -110,12 +110,8 @@ fun ExploreScreen(
     ) {
         // Top bar
         TopAppBar(
+            // L-02: root bottom-nav destination — no back arrow.
             title = { Text(stringResource(R.string.explore_title), color = WadjetColors.Text) },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(DesignR.string.action_back), tint = WadjetColors.Gold)
-                }
-            },
             actions = {
                 androidx.compose.material3.TextButton(
                     onClick = onIdentify,

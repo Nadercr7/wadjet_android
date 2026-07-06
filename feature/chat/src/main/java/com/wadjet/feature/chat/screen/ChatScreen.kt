@@ -137,6 +137,8 @@ fun ChatScreen(
     onDismissLocalTts: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    // L-02: false for the root Thoth tab; true when pushed (landmark chat).
+    showBack: Boolean = true,
 ) {
     val context = LocalContext.current
     val listState = rememberLazyListState()
@@ -265,12 +267,14 @@ fun ChatScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(DesignR.string.action_back),
-                            tint = WadjetColors.Text,
-                        )
+                    if (showBack) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(DesignR.string.action_back),
+                                tint = WadjetColors.Text,
+                            )
+                        }
                     }
                 },
                 actions = {

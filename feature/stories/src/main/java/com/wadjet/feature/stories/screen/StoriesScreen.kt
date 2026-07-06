@@ -86,21 +86,13 @@ fun StoriesScreen(
         containerColor = WadjetColors.Night,
         topBar = {
             TopAppBar(
+                // L-02: root bottom-nav destination — no back arrow.
                 title = {
                     Text(
                         text = stringResource(R.string.stories_title),
                         color = WadjetColors.Gold,
                         style = MaterialTheme.typography.titleLarge,
                     )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(DesignR.string.action_back),
-                            tint = WadjetColors.Text,
-                        )
-                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = WadjetColors.Surface),
             )

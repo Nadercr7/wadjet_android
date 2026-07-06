@@ -161,6 +161,12 @@ private fun WadjetApp(
         currentDestination?.hasRoute(dest.route::class) == true
     }
 
+    // L-02: Explore/Stories/Chat draw their own TopAppBar (with screen-specific
+    // actions) — showing the global bar too produced stacked double bars.
+    val hasOwnTopBar = currentDestination?.hasRoute(Route.Explore::class) == true ||
+        currentDestination?.hasRoute(Route.Stories::class) == true ||
+        currentDestination?.hasRoute(Route.Chat::class) == true
+
     // Adapt layout based on window size class
     val layoutType = if (!showNav) {
         NavigationSuiteType.None
@@ -239,7 +245,7 @@ private fun WadjetApp(
         Scaffold(
             containerColor = WadjetColors.Night,
             topBar = {
-                if (showNav) {
+                if (showNav && !hasOwnTopBar) {
                     TopAppBar(
                         title = {
                             Text(
