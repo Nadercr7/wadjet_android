@@ -217,9 +217,14 @@ class StoryReaderViewModel @Inject constructor(
                             if (cont.isActive) cont.resume(true)
                         }
                     }
-                    .onFailure {
-                        Timber.e(it, "Narration TTS failed for paragraph")
-                        if (cont.isActive) cont.resume(false)
+                    .onFailure { e ->
+                        // H-05: degrade to on-device narration instead of stopping silently
+                        Timber.e(e, "Narration TTS failed; falling back to local TTS")
+                        localTtsDeferred = CompletableDeferred()
+                        _state.update { it.copy(localTtsText = text) }
+                        localTtsDeferred?.await()
+                        localTtsDeferred = null
+                        if (cont.isActive) cont.resume(true)
                     }
             }
         }

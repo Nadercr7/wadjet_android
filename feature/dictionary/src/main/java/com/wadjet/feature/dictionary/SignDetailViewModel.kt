@@ -90,11 +90,12 @@ class SignDetailViewModel @Inject constructor(
 
     fun speakSign(text: String) {
         viewModelScope.launch {
+            val speed = ttsPreferences.ttsSpeed.first()
+            // H-05: server TTS disabled or unavailable -> on-device voice (web parity)
             if (!ttsPreferences.ttsEnabled.first()) {
-                _state.update { it.copy(error = "TTS is disabled in settings") }
+                audioPlayer.speakLocal(text, speed)
                 return@launch
             }
-            val speed = ttsPreferences.ttsSpeed.first()
             toastController.info("Generating pronunciation…")
             repository.speakPhonetic(text).onSuccess { bytes ->
                 if (bytes != null) {
@@ -102,14 +103,14 @@ class SignDetailViewModel @Inject constructor(
                         bytes = bytes,
                         prefix = "sign_tts_",
                         speed = speed,
-                        onError = { _state.update { it.copy(error = "TTS playback failed") } },
+                        onError = { audioPlayer.speakLocal(text, speed) },
                     )
                 } else {
-                    _state.update { it.copy(error = "TTS not available") }
+                    audioPlayer.speakLocal(text, speed)
                 }
             }.onFailure { e ->
-                Timber.e(e, "Sign TTS failed")
-                _state.update { it.copy(error = "TTS failed: ${e.message}") }
+                Timber.e(e, "Sign TTS failed; falling back to local voice")
+                audioPlayer.speakLocal(text, speed)
             }
         }
     }

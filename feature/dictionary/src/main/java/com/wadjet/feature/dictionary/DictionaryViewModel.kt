@@ -40,7 +40,6 @@ data class BrowseUiState(
     val error: String? = null,
     val selectedSign: Sign? = null,
     val favorites: Set<String> = emptySet(),
-    val localTtsText: String? = null,
     val isOfflineData: Boolean = false,
 )
 
@@ -171,10 +170,6 @@ class DictionaryViewModel @Inject constructor(
         _state.update { it.copy(error = null) }
     }
 
-    fun dismissLocalTts() {
-        _state.update { it.copy(localTtsText = null) }
-    }
-
     fun showToast(message: String) {
         toastController.success(message)
     }
@@ -183,13 +178,13 @@ class DictionaryViewModel @Inject constructor(
         if (isSpeaking) return
         isSpeaking = true
         viewModelScope.launch {
-            // Respect TTS settings from DataStore
+            val speed = ttsPreferences.ttsSpeed.first()
+            // H-05: server TTS disabled or unavailable -> on-device voice (web parity)
             if (!ttsPreferences.ttsEnabled.first()) {
-                _state.update { it.copy(localTtsText = text) }
+                audioPlayer.speakLocal(text, speed)
                 isSpeaking = false
                 return@launch
             }
-            val speed = ttsPreferences.ttsSpeed.first()
             toastController.info("Generating pronunciation\u2026")
             repository.speakPhonetic(text).onSuccess { bytes ->
                 if (bytes != null) {
@@ -197,14 +192,14 @@ class DictionaryViewModel @Inject constructor(
                         bytes = bytes,
                         prefix = "dict_tts_",
                         speed = speed,
-                        onError = { _state.update { it.copy(localTtsText = text) } },
+                        onError = { audioPlayer.speakLocal(text, speed) },
                     )
                 } else {
-                    _state.update { it.copy(localTtsText = text) }
+                    audioPlayer.speakLocal(text, speed)
                 }
             }.onFailure {
-                Timber.e(it, "Dictionary TTS failed")
-                _state.update { it.copy(localTtsText = text) }
+                Timber.e(it, "Dictionary TTS failed; falling back to local voice")
+                audioPlayer.speakLocal(text, speed)
             }
             isSpeaking = false
         }

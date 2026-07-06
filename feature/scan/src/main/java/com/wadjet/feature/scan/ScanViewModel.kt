@@ -37,8 +37,6 @@ data class ScanUiState(
     val error: String? = null,
     val isLoading: Boolean = false,
     val ttsStates: Map<String, TtsState> = emptyMap(),
-    val localTtsText: String? = null,
-    val localTtsLang: String? = null,
 )
 
 sealed class ScanEvent {
@@ -75,18 +73,11 @@ class ScanViewModel @Inject constructor(
                 if (bytes != null) {
                     playWavBytes(key, bytes)
                 } else {
-                    // 204 — signal local TTS fallback
-                    _state.update {
-                        it.copy(
-                            ttsStates = it.ttsStates + (key to TtsState.IDLE),
-                            localTtsText = text,
-                            localTtsLang = lang,
-                        )
-                    }
+                    speakLocally(key, text)
                 }
             }.onFailure {
-                Timber.e(it, "Scan TTS failed for key=$key")
-                _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) }
+                Timber.e(it, "Scan TTS failed for key=$key; falling back to local voice")
+                speakLocally(key, text)
             }
         }
     }
@@ -103,6 +94,14 @@ class ScanViewModel @Inject constructor(
     private fun stopTts(key: String) {
         audioPlayer.stop()
         _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.IDLE)) }
+    }
+
+    // H-05: degrade to the on-device voice when server TTS is unavailable
+    private fun speakLocally(key: String, text: String) {
+        _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.PLAYING)) }
+        audioPlayer.speakLocal(text) {
+            _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) }
+        }
     }
 
     fun onImageCaptured(file: File) {
@@ -188,10 +187,6 @@ class ScanViewModel @Inject constructor(
 
     fun dismissError() {
         _state.update { it.copy(error = null) }
-    }
-
-    fun dismissLocalTts() {
-        _state.update { it.copy(localTtsText = null, localTtsLang = null) }
     }
 
     override fun onCleared() {

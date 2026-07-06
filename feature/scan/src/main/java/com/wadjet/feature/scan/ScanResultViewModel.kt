@@ -22,8 +22,6 @@ data class ScanResultUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val ttsStates: Map<String, TtsState> = emptyMap(),
-    val localTtsText: String? = null,
-    val localTtsLang: String? = null,
 )
 
 @HiltViewModel
@@ -75,17 +73,11 @@ class ScanResultViewModel @Inject constructor(
                 if (bytes != null) {
                     playWavBytes(key, bytes)
                 } else {
-                    _state.update {
-                        it.copy(
-                            ttsStates = it.ttsStates + (key to TtsState.IDLE),
-                            localTtsText = text,
-                            localTtsLang = lang,
-                        )
-                    }
+                    speakLocally(key, text)
                 }
             }.onFailure {
-                Timber.e(it, "TTS failed for key=$key")
-                _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) }
+                Timber.e(it, "TTS failed for key=$key; falling back to local voice")
+                speakLocally(key, text)
             }
         }
     }
@@ -104,8 +96,12 @@ class ScanResultViewModel @Inject constructor(
         _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.IDLE)) }
     }
 
-    fun dismissLocalTts() {
-        _state.update { it.copy(localTtsText = null, localTtsLang = null) }
+    // H-05: degrade to the on-device voice when server TTS is unavailable
+    private fun speakLocally(key: String, text: String) {
+        _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.PLAYING)) }
+        audioPlayer.speakLocal(text) {
+            _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) }
+        }
     }
 
     override fun onCleared() {
