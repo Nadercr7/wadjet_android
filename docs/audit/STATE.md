@@ -247,3 +247,40 @@ Humanization SKIPPED per supervisor (no local skill); existing copy untouched.
   App Links auto-verify goes live; drop the debug fingerprint for production-only.
 - §7 Option A: service-account (`GOOGLE_APPLICATION_CREDENTIALS`) + rules deploy → real push E2E
   via `POST /api/push/send`.
+
+---
+
+# PHASE 5 — live production verification (2026-07-07)
+
+Supervisor deployed everything (rules, backend→master→HF Space, Firebase env, Crashlytics).
+Re-verified the production-URL build on the emulator against live prod. Raw logs:
+`docs/audit/PHASE5_LIVE_LOGS.md`. Verify-only; no code changes needed (nothing regressed).
+
+## DoD scorecard — PENDING items resolved
+
+| Item | Phase 3/4 status | Phase 5 verdict | Proof |
+|---|---|---|---|
+| A1 auth vs PROD | code-verified vs local | **PASS** | `login` event + Landing; POST /api/auth/firebase 200 on prod; session persists cold restart |
+| J-02 Firestore progress mirror | PASS(code)/PENDING deploy | **PASS** | rules live: chapter advance wrote progress (Room row completed=1), zero PERMISSION_DENIED |
+| A3 FCM token registry | PASS(code)/PENDING deploy | **PASS** | `FCM token registered for user 0nYKZA…`, no write-failure, no PERMISSION_DENIED |
+| A3 notification permission | PASS | **PASS** | runtime prompt on first sign-in AND on logged-in launch; granted → token flow |
+| A4 Analytics events | PASS(code)/PENDING console | **PASS** | login, screen_view, story_completed, scan_completed all emitted (FA verbose) |
+| A4 Crashlytics | PASS(code)/PENDING console | **PASS** (supervisor: 100% crash-free release) | + this session: 0 FATAL across full tour |
+| E-P7/J-01 Pexels proxy | PASS(code) | **PASS** | thumbnails resolved via /api/images/pexels-search; 0 key literals in APK |
+| E-P8 App Links (assetlinks) | PENDING deploy | **PASS (served) + NEEDS-RELEASE-BUILD (auto-verify)** | prod serves correct statement w/ release cert; debug build correctly not auto-verified; https link opens in-app reader |
+| E-P8/B-02 in-app link routing | CLOSED | **PASS** | `https://…/stories/osiris-myth` → in-app StoryReader |
+| C2 offline scan fallback | PASS | **PASS** | airplane: on-device ONNX, Detected(6), source on_device_onnx |
+| E-P1 offline story read | PASS | **PASS** | airplane: cached Osiris reader rendered |
+| Google Sign-In runtime | PENDING-USER-CONSOLE | **NEEDS-PHYSICAL-DEVICE** | Credential Manager flow launches correctly (GetGoogleIdOperation started); no Google account on emulator + release-signing needed to complete — can't be faked |
+
+## Single remaining known-pending item
+
+**E-P9 real FCM push delivery** — the sender + admin endpoint are live (`POST /api/push/send` → 401 unauth on prod), but sending needs `GOOGLE_APPLICATION_CREDENTIALS` (service account) which the supervisor confirms is STILL NOT set. To close: FIREBASE_RUNBOOK §7 Option A — generate a service-account key (Firebase console → Project settings → Service accounts), set `GOOGLE_APPLICATION_CREDENTIALS` to its path on the Space, then `POST /api/push/send` as the admin account delivers to the registered `fcm_tokens` (which we confirmed are now being written).
+
+## Surprises
+
+None that required a fix. Two non-defects worth noting: (1) App Links auto-verify correctly
+fails for the debug-signed emulator build because prod assetlinks lists only the release cert
+(security model working; a Play build verifies); (2) my first App-Links test used a wrong story
+slug (`the-osiris-myth`) — routing was correct, the URL was mine; the real slug `osiris-myth`
+opened the reader.
