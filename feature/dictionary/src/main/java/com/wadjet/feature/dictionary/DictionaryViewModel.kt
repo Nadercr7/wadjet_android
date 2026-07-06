@@ -65,7 +65,7 @@ class DictionaryViewModel @Inject constructor(
     private var searchJob: Job? = null
     private var loadSignsJob: Job? = null
     private var isSpeaking = false
-    private val lang: String get() = if (java.util.Locale.getDefault().language == "ar") "ar" else "en"
+    private val lang: String get() = com.wadjet.core.common.AppLanguage.current()
 
     init {
         loadCategories()

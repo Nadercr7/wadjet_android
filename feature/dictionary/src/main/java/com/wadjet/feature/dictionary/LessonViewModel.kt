@@ -45,7 +45,7 @@ class LessonViewModel @Inject constructor(
     }
 
     private fun loadLesson() {
-        val lang = if (java.util.Locale.getDefault().language == "ar") "ar" else "en"
+        val lang = com.wadjet.core.common.AppLanguage.current()
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             repository.getLesson(level, lang = lang)

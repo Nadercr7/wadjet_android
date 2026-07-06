@@ -61,6 +61,7 @@ class ExploreRepositoryImpl @Inject constructor(
                 search = search,
                 page = page,
                 perPage = perPage,
+                lang = com.wadjet.core.common.AppLanguage.current(),
             )
             if (response.isSuccessful) {
                 val body = response.body()!!
@@ -105,7 +106,7 @@ class ExploreRepositoryImpl @Inject constructor(
 
     override suspend fun getLandmarkDetail(slug: String): Result<LandmarkDetail> = suspendRunCatching {
         try {
-            val response = landmarkApi.getLandmarkDetail(slug)
+            val response = landmarkApi.getLandmarkDetail(slug, lang = com.wadjet.core.common.AppLanguage.current())
             if (response.isSuccessful) {
                 val dto = response.body()!!
                 // Cache detail JSON

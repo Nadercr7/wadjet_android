@@ -180,7 +180,7 @@ class StoryReaderViewModel @Inject constructor(
                 _state.update { it.copy(narratingParagraphIndex = idx) }
 
                 // H-01: narrate in the app language — Arabic text when the app is in Arabic.
-                val isArabic = java.util.Locale.getDefault().language.startsWith("ar")
+                val isArabic = com.wadjet.core.common.AppLanguage.isArabic()
                 val narrationText =
                     if (isArabic && paragraph.textAr.isNotBlank()) paragraph.textAr else paragraph.textEn
                 val narrationLang = if (isArabic && paragraph.textAr.isNotBlank()) "ar" else "en"
