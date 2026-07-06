@@ -461,7 +461,7 @@ private fun ContinueStoryCard(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = "Chapter ${chapter + 1} of ${story.chapterCount}",
+                text = stringResource(R.string.landing_chapter_progress, chapter + 1, story.chapterCount),
                 style = MaterialTheme.typography.bodySmall,
                 color = WadjetColors.TextMuted,
             )
