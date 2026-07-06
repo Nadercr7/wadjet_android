@@ -78,10 +78,6 @@ class AudioPlaybackManager @Inject constructor(
             mediaPlayer = MediaPlayer().apply {
                 setAudioAttributes(playbackAttributes)
                 setDataSource(tempFile.absolutePath)
-                prepare()
-                if (speed != 1.0f) {
-                    playbackParams = playbackParams.setSpeed(speed)
-                }
                 setOnCompletionListener {
                     release()
                     mediaPlayer = null
@@ -97,7 +93,14 @@ class AudioPlaybackManager @Inject constructor(
                     onError()
                     true
                 }
-                start()
+                // I-02: prepare() blocks the main thread; prepareAsync keeps UI responsive.
+                setOnPreparedListener { player ->
+                    if (speed != 1.0f) {
+                        player.playbackParams = player.playbackParams.setSpeed(speed)
+                    }
+                    player.start()
+                }
+                prepareAsync()
             }
         } catch (e: Exception) {
             Timber.e(e, "MediaPlayer failed")
