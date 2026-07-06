@@ -2,6 +2,7 @@ package com.wadjet.app
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
@@ -79,7 +80,12 @@ class MainActivity : AppCompatActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         val isLoggedIn = authRepository.isLoggedIn
-        enableEdgeToEdge()
+        // L-01: the app is forced-dark; auto style would follow the SYSTEM theme
+        // and paint dark icons on the near-black background in light mode.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+        )
         setContent {
             val windowSizeClass = calculateWindowSizeClass(this)
             WadjetTheme {
