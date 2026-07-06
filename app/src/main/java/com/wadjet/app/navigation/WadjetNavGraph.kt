@@ -99,10 +99,6 @@ fun WadjetNavGraph(
                 fadeOut(tween(150))
         },
     ) {
-        composable<Route.Splash> {
-            // Splash handled by SplashViewModel in MainActivity — this is a fallback
-        }
-
         composable<Route.Welcome> {
             WelcomeScreen(
                 webClientId = webClientId,
