@@ -126,7 +126,8 @@ class IdentifyViewModel @Inject constructor(
         }
 
         val decodeOptions = BitmapFactory.Options().apply { inSampleSize = sampleSize }
-        val bitmap = BitmapFactory.decodeFile(file.absolutePath, decodeOptions) ?: return file
+        val decoded = BitmapFactory.decodeFile(file.absolutePath, decodeOptions) ?: return file
+        val bitmap = uprightBitmap(decoded, file)
 
         val outFile = File(context.cacheDir, "identify_${System.currentTimeMillis()}.jpg")
         FileOutputStream(outFile).use { out ->
@@ -135,6 +136,34 @@ class IdentifyViewModel @Inject constructor(
         bitmap.recycle()
         return outFile
     }
+
+    /**
+     * F-01: BitmapFactory ignores the EXIF Orientation tag and the re-encoded JPEG
+     * carries none, so portrait phone photos reached the server sideways and
+     * degraded detection. Bake the rotation into the pixels before upload.
+     */
+    private fun uprightBitmap(source: android.graphics.Bitmap, sourceFile: File): android.graphics.Bitmap {
+        val orientation = androidx.exifinterface.media.ExifInterface(sourceFile.absolutePath)
+            .getAttributeInt(
+                androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION,
+                androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL,
+            )
+        val matrix = android.graphics.Matrix()
+        when (orientation) {
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.preScale(-1f, 1f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.preScale(1f, -1f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_TRANSPOSE -> { matrix.postRotate(90f); matrix.preScale(-1f, 1f) }
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_TRANSVERSE -> { matrix.postRotate(270f); matrix.preScale(-1f, 1f) }
+            else -> return source
+        }
+        val rotated = android.graphics.Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
+        if (rotated != source) source.recycle()
+        return rotated
+    }
+
 
     private fun uriToFile(uri: Uri): File? {
         return try {

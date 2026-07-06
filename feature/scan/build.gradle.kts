@@ -30,6 +30,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.exifinterface)
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
     implementation(project(":core:ui"))
