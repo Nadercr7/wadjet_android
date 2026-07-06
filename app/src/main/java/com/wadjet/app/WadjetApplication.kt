@@ -16,11 +16,15 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.HiltAndroidApp
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Named
 
 @HiltAndroidApp
 class WadjetApplication : Application(), SingletonImageLoader.Factory {
+
+    @javax.inject.Inject lateinit var seedImporter: dagger.Lazy<com.wadjet.core.data.seed.SeedImporter>
+    @javax.inject.Inject @com.wadjet.core.common.di.ApplicationScope lateinit var appScope: kotlinx.coroutines.CoroutineScope
 
     @EntryPoint
     @InstallIn(SingletonComponent::class)
@@ -35,6 +39,8 @@ class WadjetApplication : Application(), SingletonImageLoader.Factory {
             Timber.plant(Timber.DebugTree())
         }
         Timber.tag("Wadjet").i("App started; BuildConfig.DEBUG=${BuildConfig.DEBUG}")
+        // E-04: populate signs/categories/landmarks from bundled seed on first run
+        appScope.launch { seedImporter.get().seedIfEmpty() }
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader {
