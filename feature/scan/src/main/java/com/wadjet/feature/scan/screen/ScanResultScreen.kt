@@ -91,7 +91,7 @@ fun ScanResultScreen(
 ) {
     val context = LocalContext.current
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
-    var showArabic by remember { mutableStateOf(false) }
+    var showArabic by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) } // C-02: survive rotation
     var selectedGlyph by remember { mutableStateOf<DetectedGlyph?>(null) }
     val sheetState = rememberModalBottomSheetState()
 
@@ -391,7 +391,7 @@ fun ScanResultScreen(
             if (!aiNotes.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 FadeUp(visible = visibleSections >= 6) {
-                    var aiNotesExpanded by remember { mutableStateOf(false) }
+                    var aiNotesExpanded by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) } // C-02
                     Surface(
                         shape = MaterialTheme.shapes.medium,
                         color = WadjetColors.Gold.copy(alpha = 0.08f),
