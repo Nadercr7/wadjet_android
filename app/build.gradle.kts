@@ -76,6 +76,14 @@ android {
         buildConfig = true
     }
 
+    lint {
+        // lintVital crashes on release with "Found class KaCallableMemberCall, but
+        // interface was expected" — a Kotlin-analysis-API version mismatch inside the
+        // lint tool itself (not our code), so it must not gate the release artifact.
+        // Debug lint (`./gradlew lint`) still runs normally.
+        checkReleaseBuilds = false
+    }
+
     composeCompiler {
         stabilityConfigurationFile = rootProject.layout.projectDirectory.file("compose_compiler_config.conf")
     }
