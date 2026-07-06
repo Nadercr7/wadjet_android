@@ -358,8 +358,8 @@ class EgyptianPronunciationTest {
     @Test fun `VOICE constant is Orus`() =
         assertEquals("Orus", EgyptianPronunciation.VOICE)
 
-    @Test fun `CONTEXT constant is hieroglyph_pronunciation`() =
-        assertEquals("hieroglyph_pronunciation", EgyptianPronunciation.CONTEXT)
+    @Test fun `CONTEXT constant is a valid server voice preset`() =
+        assertEquals("pronunciation", EgyptianPronunciation.CONTEXT)
 
     @Test fun `STYLE is non-empty`() {
         assert(EgyptianPronunciation.STYLE.isNotBlank())

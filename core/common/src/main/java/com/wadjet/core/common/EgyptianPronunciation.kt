@@ -23,8 +23,13 @@ object EgyptianPronunciation {
             "Pronounce each word with quiet reverence and weight, " +
             "unhurried, as if sharing timeless wisdom passed down through millennia."
 
-    /** Server context tag signaling hieroglyphic pronunciation mode. */
-    const val CONTEXT = "hieroglyph_pronunciation"
+    /**
+     * Server context tag signaling hieroglyphic pronunciation mode.
+     * Must be a key of the backend's VOICE_PRESETS (tts_service.py) —
+     * "pronunciation" maps to the Rasalgethi voice with the
+     * "say this sound clearly and slowly" director note (H-02).
+     */
+    const val CONTEXT = "pronunciation"
 
     /**
      * Converts MdC transliteration to TTS-ready pronounceable text.
