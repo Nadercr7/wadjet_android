@@ -55,5 +55,11 @@
     <string name="sign_pronounce_desc">Pronounce</string>
     <string name="sign_share_chooser">Share Sign</string>
     <string name="sign_practice_writing">Practice Writing</string>
+    <!-- G-03: keys previously missing from the ar locale entirely -->
+    <string name="write_palette_label">لوحة الرموز</string>
+    <string name="write_mode_smart">ذكي</string>
+    <string name="write_mode_phonetic">صوتي</string>
+    <string name="write_mode_gardiner">جاردينر</string>
+    <string name="lesson_speak">انطق</string>
 </resources>
 
