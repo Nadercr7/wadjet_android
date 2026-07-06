@@ -270,7 +270,7 @@ fun LandingScreen(
                 Text(
                     text = stringResource(DesignR.string.footer_credit),
                     style = MaterialTheme.typography.bodySmall,
-                    color = WadjetColors.Dust,
+                    color = WadjetColors.TextMuted, // K-02: Dust is ~3.8:1 on Night — below AA for small text
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),

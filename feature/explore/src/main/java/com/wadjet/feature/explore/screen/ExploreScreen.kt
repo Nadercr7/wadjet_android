@@ -448,7 +448,7 @@ private fun LandmarkCard(
                         Badge(text = type, color = WadjetColors.Sand)
                     }
                     landmark.era?.let { era ->
-                        Badge(text = era, color = WadjetColors.Dust)
+                        Badge(text = era, color = WadjetColors.TextMuted) // K-02: contrast for small badge text
                     }
                 }
             }
