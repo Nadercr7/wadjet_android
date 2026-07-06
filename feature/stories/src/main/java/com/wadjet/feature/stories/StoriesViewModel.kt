@@ -39,9 +39,13 @@ private val DIFFICULTY_ORDER = mapOf("beginner" to 0, "intermediate" to 1, "adva
 class StoriesViewModel @Inject constructor(
     private val storiesRepository: StoriesRepository,
     private val userRepository: UserRepository,
+    private val savedState: androidx.lifecycle.SavedStateHandle,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(StoriesUiState())
+    // C-03: filter survives process death
+    private val _state = MutableStateFlow(
+        StoriesUiState(selectedDifficulty = savedState[KEY_DIFFICULTY] ?: "All"),
+    )
     val state: StateFlow<StoriesUiState> = _state.asStateFlow()
 
     init {
@@ -72,6 +76,7 @@ class StoriesViewModel @Inject constructor(
     }
 
     fun selectDifficulty(difficulty: String) {
+        savedState[KEY_DIFFICULTY] = difficulty
         _state.update { it.copy(selectedDifficulty = difficulty) }
     }
 
@@ -116,5 +121,9 @@ class StoriesViewModel @Inject constructor(
                     Timber.w(e, "Failed to load favorites")
                 }
         }
+    }
+
+    private companion object {
+        const val KEY_DIFFICULTY = "difficulty"
     }
 }

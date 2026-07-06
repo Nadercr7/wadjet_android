@@ -38,9 +38,17 @@ data class ExploreUiState(
 class ExploreViewModel @Inject constructor(
     private val exploreRepository: ExploreRepository,
     private val strings: StringResolver,
+    private val savedState: androidx.lifecycle.SavedStateHandle,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(ExploreUiState())
+    // C-03: search/filter state survives process death
+    private val _state = MutableStateFlow(
+        ExploreUiState(
+            selectedCategory = savedState[KEY_CATEGORY] ?: "All",
+            selectedCity = savedState[KEY_CITY],
+            searchQuery = savedState[KEY_QUERY] ?: "",
+        ),
+    )
     val state: StateFlow<ExploreUiState> = _state.asStateFlow()
 
     private var searchJob: Job? = null
@@ -53,16 +61,19 @@ class ExploreViewModel @Inject constructor(
     }
 
     fun selectCategory(category: String) {
+        savedState[KEY_CATEGORY] = category
         _state.update { it.copy(selectedCategory = category, currentPage = 1, landmarks = emptyList()) }
         loadLandmarks()
     }
 
     fun selectCity(city: String?) {
+        savedState[KEY_CITY] = city
         _state.update { it.copy(selectedCity = city, currentPage = 1, landmarks = emptyList()) }
         loadLandmarks()
     }
 
     fun updateSearch(query: String) {
+        savedState[KEY_QUERY] = query
         _state.update { it.copy(searchQuery = query, currentPage = 1) }
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
@@ -190,5 +201,11 @@ class ExploreViewModel @Inject constructor(
                 _state.update { it.copy(favorites = favs) }
             }
         }
+    }
+
+    private companion object {
+        const val KEY_CATEGORY = "category"
+        const val KEY_CITY = "city"
+        const val KEY_QUERY = "query"
     }
 }

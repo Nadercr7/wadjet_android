@@ -54,9 +54,17 @@ class DictionaryViewModel @Inject constructor(
     private val toastController: com.wadjet.core.common.ToastController,
     private val audioPlayer: AudioPlaybackManager,
     private val strings: StringResolver,
+    private val savedState: androidx.lifecycle.SavedStateHandle,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(BrowseUiState())
+    // C-03: search/filter state survives process death
+    private val _state = MutableStateFlow(
+        BrowseUiState(
+            selectedCategory = savedState[KEY_CATEGORY],
+            selectedType = savedState[KEY_TYPE],
+            searchQuery = savedState[KEY_QUERY] ?: "",
+        ),
+    )
     val state: StateFlow<BrowseUiState> = _state.asStateFlow()
 
     private val _alphabetState = MutableStateFlow(AlphabetUiState())
@@ -144,16 +152,20 @@ class DictionaryViewModel @Inject constructor(
     }
 
     fun selectCategory(category: String?) {
+        savedState[KEY_CATEGORY] = category
         _state.update { it.copy(selectedCategory = category, page = 1) }
         loadSigns()
     }
 
     fun selectType(type: String?) {
-        _state.update { it.copy(selectedType = if (type == "All") null else type, page = 1) }
+        val normalized = if (type == "All") null else type
+        savedState[KEY_TYPE] = normalized
+        _state.update { it.copy(selectedType = normalized, page = 1) }
         loadSigns()
     }
 
     fun onSearchQueryChange(query: String) {
+        savedState[KEY_QUERY] = query
         _state.update { it.copy(searchQuery = query) }
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
@@ -227,5 +239,11 @@ class DictionaryViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         audioPlayer.stop()
+    }
+
+    private companion object {
+        const val KEY_CATEGORY = "category"
+        const val KEY_TYPE = "type"
+        const val KEY_QUERY = "query"
     }
 }
