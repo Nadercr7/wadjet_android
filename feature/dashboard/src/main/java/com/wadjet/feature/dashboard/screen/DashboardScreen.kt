@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -421,14 +422,20 @@ private fun FavoriteRow(
                 style = MaterialTheme.typography.labelSmall,
             )
         }
-        Text(
-            text = stringResource(R.string.dashboard_remove),
-            color = WadjetColors.Error,
-            style = MaterialTheme.typography.labelSmall,
+        // K-01: 48dp minimum touch target
+        Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
+                .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
                 .clickable(onClick = onRemove)
                 .semantics { role = Role.Button },
-        )
+        ) {
+            Text(
+                text = stringResource(R.string.dashboard_remove),
+                color = WadjetColors.Error,
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
     }
 }
 

@@ -40,6 +40,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -668,16 +669,16 @@ private fun ChatBubble(
                     color = WadjetColors.TextMuted,
                 )
                 if (isUser && onEdit != null && !message.isStreaming) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(R.string.chat_edit_message_desc),
-                        tint = WadjetColors.TextMuted,
-                        modifier = Modifier
-                            .size(14.dp)
-                            .clip(CircleShape)
-                            .clickable { onEdit() },
-                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    // K-01: 48dp minimum touch target (icon itself stays 14dp)
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.chat_edit_message_desc),
+                            tint = WadjetColors.TextMuted,
+                            modifier = Modifier.size(14.dp),
+                        )
+                    }
                 }
             }
 
@@ -694,15 +695,21 @@ private fun ChatBubble(
                         modifier = Modifier.size(14.dp),
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = stringResource(R.string.chat_retry),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = WadjetColors.Gold,
+                    // K-01: 48dp minimum touch target
+                    Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
+                            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
                             .clip(RoundedCornerShape(4.dp))
-                            .clickable { onRetry() }
-                            .padding(horizontal = 4.dp, vertical = 2.dp),
-                    )
+                            .clickable(onClickLabel = null, role = androidx.compose.ui.semantics.Role.Button) { onRetry() }
+                            .padding(horizontal = 4.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.chat_retry),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = WadjetColors.Gold,
+                        )
+                    }
                 }
             }
 

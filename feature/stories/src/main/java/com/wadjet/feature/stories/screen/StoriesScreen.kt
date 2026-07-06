@@ -363,7 +363,7 @@ private fun StoryCard(
                         haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
                         onToggleFavorite()
                     },
-                    modifier = Modifier.size(36.dp),
+                    modifier = Modifier.size(48.dp), // K-01: minimum touch target
                 ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,

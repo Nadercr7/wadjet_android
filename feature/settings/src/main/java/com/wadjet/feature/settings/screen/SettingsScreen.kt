@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -197,11 +198,14 @@ fun SettingsScreen(
                             )
                         }
                         Box(
+                            contentAlignment = Alignment.Center,
                             modifier = Modifier
+                                // K-01: 48dp minimum touch target
+                                .sizeIn(minHeight = 48.dp)
                                 .clip(MaterialTheme.shapes.small)
                                 .background(WadjetColors.Surface)
                                 .border(1.dp, WadjetColors.Gold, MaterialTheme.shapes.small)
-                                .clickable(onClick = onClearCache)
+                                .clickable(onClick = onClearCache, role = androidx.compose.ui.semantics.Role.Button)
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                         ) {
                             Text(stringResource(R.string.settings_clear_cache), color = WadjetColors.Gold, style = MaterialTheme.typography.labelMedium)
@@ -222,12 +226,19 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(stringResource(DesignR.string.footer_credit), color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = stringResource(R.string.settings_send_feedback),
-                        color = WadjetColors.Gold,
-                        style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.clickable(onClick = onFeedback),
-                    )
+                    // K-01: 48dp minimum touch target
+                    Box(
+                        contentAlignment = Alignment.CenterStart,
+                        modifier = Modifier
+                            .sizeIn(minHeight = 48.dp)
+                            .clickable(onClick = onFeedback, role = androidx.compose.ui.semantics.Role.Button),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_send_feedback),
+                            color = WadjetColors.Gold,
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
                 }
             }
 
