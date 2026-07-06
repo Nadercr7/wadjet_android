@@ -1,63 +1,62 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
     <!-- Explore screen -->
-    <string name="explore_title">Explore</string>
-    <string name="explore_identify_desc">Identify from photo</string>
-    <string name="explore_empty_search">No results for \"%1$s\"</string>
-    <string name="explore_empty_title">No landmarks found</string>
-    <string name="explore_empty_search_subtitle">Try a different search term</string>
-    <string name="explore_empty_subtitle">Explore Egypt\'s ancient wonders â€” check back soon</string>
-    <string name="explore_featured">Featured</string>
-    <string name="explore_all_landmarks">All Landmarks</string>
-    <string name="explore_loading_more">Loading moreâ€¦</string>
-    <string name="explore_error">Couldn\'t load landmarks. Check your connection</string>
-    <string name="explore_search_placeholder">Search landmarksâ€¦</string>
-    <string name="explore_all_cities">All Cities</string>
-    <string name="explore_featured_badge">â˜… Featured</string>
+    <string name="explore_title">استكشف</string>
+    <string name="explore_identify_desc">تعرّف من صورة</string>
+    <string name="explore_empty_search">لا توجد نتائج لـ \"%1$s\"</string>
+    <string name="explore_empty_title">لا توجد معالم</string>
+    <string name="explore_empty_search_subtitle">جرّب كلمة بحث مختلفة</string>
+    <string name="explore_empty_subtitle">استكشف عجائب مصر القديمة — عد قريبًا</string>
+    <string name="explore_featured">مميز</string>
+    <string name="explore_all_landmarks">كل المعالم</string>
+    <string name="explore_loading_more">جاري تحميل المزيد…</string>
+    <string name="explore_error">تعذر تحميل المعالم. تأكد من اتصالك</string>
+    <string name="explore_search_placeholder">ابحث عن معالم…</string>
+    <string name="explore_all_cities">كل المدن</string>
+    <string name="explore_featured_badge">★ مميز</string>
 
     <!-- Landmark detail screen -->
-    <string name="detail_loading">Loadingâ€¦</string>
-    <string name="detail_share_text">%1$s\n%2$s\n\nExplore on Wadjet</string>
-    <string name="detail_error">Couldn\'t load landmark details. Check your connection</string>
-    <string name="detail_part_of">Part of: </string>
-    <string name="detail_action_maps">Maps</string>
-    <string name="detail_action_chat">Chat</string>
-    <string name="detail_action_saved">Saved</string>
-    <string name="detail_action_save">Save</string>
-    <string name="detail_tab_overview">Overview</string>
-    <string name="detail_tab_history">History</string>
-    <string name="detail_tab_tips">Tips</string>
-    <string name="detail_tab_gallery">Gallery</string>
-    <string name="detail_recommendations">Recommendations</string>
-    <string name="detail_related_sites">Related Sites</string>
-    <string name="detail_wikipedia">Wikipedia</string>
-    <string name="detail_read_wikipedia">Read on Wikipedia â†’</string>
-    <string name="detail_highlights">Highlights</string>
-    <string name="detail_notable_pharaohs">Notable Pharaohs</string>
-    <string name="detail_notable_tombs">Notable Tombs</string>
-    <string name="detail_notable_features">Notable Features</string>
-    <string name="detail_key_artifacts">Key Artifacts</string>
-    <string name="detail_architectural_features">Architectural Features</string>
+    <string name="detail_loading">جاري التحميل…</string>
+    <string name="detail_share_text">%1$s\n%2$s\n\nاستكشف على واجِت</string>
+    <string name="detail_error">تعذر تحميل تفاصيل المعلم. تأكد من اتصالك</string>
+    <string name="detail_part_of">جزء من: </string>
+    <string name="detail_action_maps">الخرائط</string>
+    <string name="detail_action_chat">محادثة</string>
+    <string name="detail_action_saved">محفوظ</string>
+    <string name="detail_action_save">حفظ</string>
+    <string name="detail_tab_overview">نظرة عامة</string>
+    <string name="detail_tab_history">التاريخ</string>
+    <string name="detail_tab_tips">نصائح</string>
+    <string name="detail_tab_gallery">معرض الصور</string>
+    <string name="detail_recommendations">قد يعجبك أيضًا</string>
+    <string name="detail_related_sites">مواقع ذات صلة</string>
+    <string name="detail_wikipedia">ويكيبيديا</string>
+    <string name="detail_read_wikipedia">اقرأ على ويكيبيديا ←</string>
+    <string name="detail_highlights">أبرز المعالم</string>
+    <string name="detail_notable_pharaohs">فراعنة بارزون</string>
+    <string name="detail_notable_tombs">مقابر بارزة</string>
+    <string name="detail_notable_features">مميزات بارزة</string>
+    <string name="detail_key_artifacts">القطع الأثرية</string>
+    <string name="detail_architectural_features">العمارة</string>
 
     <!-- Identify screen -->
-    <string name="identify_title">Identify Landmark</string>
-    <string name="identify_upload_title">Upload a photo of a landmark</string>
-    <string name="identify_upload_subtitle">Pick a clear photo from your gallery and we\'ll identify the Egyptian landmark for you.</string>
-    <string name="identify_analyze_button">Identify Landmark</string>
-    <string name="identify_loading">Identifying landmarkâ€¦</string>
-    <string name="identify_error">Couldn\'t identify this landmark. Try another photo</string>
-    <string name="identify_no_match_title">No landmarks identified</string>
-    <string name="identify_no_match_subtitle">Try a different angle or get closer to the landmark.</string>
-    <string name="identify_another_button">Identify Another</string>
-    <string name="identify_not_egyptian_warning">This may not be an Egyptian landmark</string>
-    <string name="identify_unknown_landmark">This landmark is not in our database yet</string>
-    <string name="identify_top_matches">Top Matches</string>
-    <string name="identify_view_details">View Full Details</string>
-    <string name="identify_ask_thoth">Ask Thoth about this landmark</string>
-    <string name="identify_agreement_verified">Verified âœ“</string>
-    <string name="identify_agreement_consensus">Consensus</string>
-    <string name="identify_agreement_uncertain">Uncertain</string>
-    <string name="identify_agreement_single">Single Source</string>
-    <string name="identify_agreement_best_guess">Best Guess</string>
+    <string name="identify_title">تعرّف على المعلم</string>
+    <string name="identify_upload_title">ارفع صورة لمعلم</string>
+    <string name="identify_upload_subtitle">اختر صورة واضحة من معرضك وسنتعرّف لك على المعلم المصري.</string>
+    <string name="identify_analyze_button">تعرّف على المعلم</string>
+    <string name="identify_loading">جاري التعرّف على المعلم…</string>
+    <string name="identify_error">تعذر التعرف على هذا المعلم. جرّب صورة أخرى</string>
+    <string name="identify_no_match_title">لم يتم التعرف على معالم</string>
+    <string name="identify_no_match_subtitle">جرّب زاوية مختلفة أو اقترب من المعلم.</string>
+    <string name="identify_another_button">تعرّف على معلم آخر</string>
+    <string name="identify_not_egyptian_warning">قد لا يكون هذا معلمًا مصريًا</string>
+    <string name="identify_unknown_landmark">هذا المعلم ليس في قاعدة بياناتنا بعد</string>
+    <string name="identify_top_matches">أفضل التطابقات</string>
+    <string name="identify_view_details">عرض التفاصيل الكاملة</string>
+    <string name="identify_ask_thoth">اسأل تحوت عن هذا المعلم</string>
+    <string name="identify_agreement_verified">موثّق ✓</string>
+    <string name="identify_agreement_consensus">إجماع</string>
+    <string name="identify_agreement_uncertain">غير مؤكد</string>
+    <string name="identify_agreement_single">مصدر واحد</string>
+    <string name="identify_agreement_best_guess">أفضل تخمين</string>
 </resources>
-

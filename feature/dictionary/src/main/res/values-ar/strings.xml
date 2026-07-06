@@ -1,65 +1,63 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
     <!-- Dictionary screen tabs -->
-    <string name="dictionary_tab_browse">Browse</string>
-    <string name="dictionary_tab_learn">Learn</string>
-    <string name="dictionary_tab_write">Write</string>
+    <string name="dictionary_tab_browse">تصفّح</string>
+    <string name="dictionary_tab_learn">تعلّم</string>
+    <string name="dictionary_tab_write">اكتب</string>
 
     <!-- Browse tab -->
-    <string name="browse_search_placeholder">Search signsâ€¦</string>
-    <string name="browse_all_filter">All</string>
-    <string name="browse_error">Couldn\'t load hieroglyphs. Check your connection</string>
-    <string name="browse_empty_title">No signs found</string>
-    <string name="browse_empty_subtitle">Try a different search or filter</string>
-    <string name="browse_loading_more">Loading more signsâ€¦</string>
+    <string name="browse_search_placeholder">ابحث بالكود أو النطق أو الوصف…</string>
+    <string name="browse_all_filter">الكل</string>
+    <string name="browse_error">تعذر تحميل الهيروغليفية. تأكد من اتصالك</string>
+    <string name="browse_empty_title">لا توجد علامات مطابقة</string>
+    <string name="browse_empty_subtitle">جرّب بحثًا أو تصفية مختلفة</string>
+    <string name="browse_loading_more">جاري تحميل المزيد من العلامات…</string>
 
     <!-- Learn tab -->
-    <string name="learn_alphabet_title">Egyptian Alphabet</string>
-    <string name="learn_alphabet_subtitle">The 25 uniliteral signs â€” tap any to explore</string>
-    <string name="learn_lessons_title">Lessons</string>
-    <string name="learn_level">Level %1$d</string>
-    <string name="lesson_1_title">The Alphabet</string>
-    <string name="lesson_1_desc">Learn the 26 uniliteral signs â€” the building blocks of hieroglyphic writing.</string>
-    <string name="lesson_2_title">Common Words</string>
-    <string name="lesson_2_desc">Combine signs to read and write frequently used Egyptian words.</string>
-    <string name="lesson_3_title">Royal Names</string>
-    <string name="lesson_3_desc">Read cartouches â€” the oval frames containing pharaoh names.</string>
-    <string name="lesson_4_title">Determinatives</string>
-    <string name="lesson_4_desc">Silent signs that hint at a word\'s meaning category.</string>
-    <string name="lesson_5_title">Full Sentences</string>
-    <string name="lesson_5_desc">Put it all together â€” read complete inscriptions.</string>
+    <string name="learn_alphabet_title">الأبجدية المصرية</string>
+    <string name="learn_alphabet_subtitle">العلامات الأحادية الـ٢٥ — اضغط أي علامة لاستكشافها</string>
+    <string name="learn_lessons_title">الدروس</string>
+    <string name="learn_level">المستوى %1$d</string>
+    <string name="lesson_1_title">الأبجدية</string>
+    <string name="lesson_1_desc">تعلّم العلامات الأحادية الـ٢٦ — اللبنات الأساسية للكتابة الهيروغليفية.</string>
+    <string name="lesson_2_title">كلمات شائعة</string>
+    <string name="lesson_2_desc">اجمع العلامات لقراءة وكتابة كلمات مصرية شائعة.</string>
+    <string name="lesson_3_title">أسماء ملكية</string>
+    <string name="lesson_3_desc">اقرأ الخراطيش — الأطر البيضاوية التي تحمل أسماء الفراعنة.</string>
+    <string name="lesson_4_title">المخصّصات</string>
+    <string name="lesson_4_desc">علامات صامتة تشير إلى فئة معنى الكلمة.</string>
+    <string name="lesson_5_title">جمل كاملة</string>
+    <string name="lesson_5_desc">اجمع كل ما تعلمته — اقرأ نقوشًا كاملة.</string>
 
     <!-- Lesson screen -->
-    <string name="lesson_loading">Loading lessonâ€¦</string>
-    <string name="lesson_error">Couldn\'t load this lesson. Check your connection</string>
-    <string name="lesson_tip">ðŸ’¡ %1$s</string>
-    <string name="lesson_signs_label">Signs in this lesson:</string>
-    <string name="lesson_examples_label">Example Words:</string>
-    <string name="lesson_practice_label">Practice:</string>
-    <string name="lesson_word_hint">Hint: %1$s</string>
+    <string name="lesson_loading">جاري تحميل الدرس…</string>
+    <string name="lesson_error">تعذر تحميل هذا الدرس. تأكد من اتصالك</string>
+    <string name="lesson_tip">💡 %1$s</string>
+    <string name="lesson_signs_label">علامات هذا الدرس:</string>
+    <string name="lesson_examples_label">أمثلة الكلمات:</string>
+    <string name="lesson_practice_label">تمرين:</string>
+    <string name="lesson_word_hint">تلميح: %1$s</string>
 
     <!-- Write tab -->
-    <string name="write_input_label">Enter text</string>
-    <string name="write_input_placeholder">Type English text or transliterationâ€¦</string>
-    <string name="write_convert_button">Convert</string>
-    <string name="write_breakdown_label">Breakdown:</string>
-    <string name="write_read_aloud_desc">Read aloud</string>
-
-    <!-- Sign detail -->
-    <string name="sign_detail_title">Sign Detail</string>
-    <string name="sign_transliteration_label">Transliteration</string>
-    <string name="sign_reading_label">Reading</string>
-    <string name="sign_description_label">Description</string>
-    <string name="sign_pronunciation_label">Pronunciation</string>
-    <string name="sign_fun_fact_label">Fun Fact</string>
-    <string name="sign_pronounce_desc">Pronounce</string>
-    <string name="sign_share_chooser">Share Sign</string>
-    <string name="sign_practice_writing">Practice Writing</string>
-    <!-- G-03: keys previously missing from the ar locale entirely -->
+    <string name="write_input_label">اكتب نصًا</string>
+    <string name="write_input_placeholder">اكتب نصًا إنجليزيًا أو نقحرة…</string>
+    <string name="write_convert_button">تحويل</string>
     <string name="write_palette_label">لوحة الرموز</string>
     <string name="write_mode_smart">ذكي</string>
     <string name="write_mode_phonetic">صوتي</string>
-    <string name="write_mode_gardiner">جاردينر</string>
+    <string name="write_mode_gardiner">جاردنر</string>
+    <string name="write_breakdown_label">التفصيل:</string>
+    <string name="write_read_aloud_desc">اقرأ بصوت مسموع</string>
+
+    <!-- Sign detail -->
+    <string name="sign_detail_title">تفاصيل العلامة</string>
+    <string name="sign_transliteration_label">النقحرة</string>
+    <string name="sign_reading_label">القراءة</string>
+    <string name="sign_description_label">الوصف</string>
+    <string name="sign_pronunciation_label">النطق</string>
+    <string name="sign_fun_fact_label">معلومة طريفة</string>
+    <string name="sign_pronounce_desc">انطق</string>
+    <string name="sign_share_chooser">مشاركة العلامة</string>
+    <string name="sign_practice_writing">تدرّب على الكتابة</string>
     <string name="lesson_speak">انطق</string>
 </resources>
-
