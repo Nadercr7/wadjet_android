@@ -53,6 +53,7 @@ class ChatViewModel @Inject constructor(
     private val audioPlayer: AudioPlaybackManager,
     private val toastController: com.wadjet.core.common.ToastController,
     private val strings: StringResolver,
+    @com.wadjet.core.common.di.ApplicationScope private val appScope: kotlinx.coroutines.CoroutineScope,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -473,7 +474,8 @@ class ChatViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         streamJob?.cancel()
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO).launch {
+        // I-03: persist on the application scope so the write survives VM teardown.
+        appScope.launch {
             saveCurrentConversation()
         }
         audioPlayer.stop()
