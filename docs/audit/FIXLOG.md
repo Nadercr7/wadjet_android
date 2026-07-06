@@ -69,13 +69,15 @@ _Phase 1 findings are appended below once the audit sweep completes._
 ## [E-03] No @Index on queried columns (signs.category/type, landmarks.type/city, scan_results.firestore_id)
 - Date: 2026-07-06 | Severity: major | Area: E-db / I-perf
 - Evidence: all entities in `core/database` lack `indices`; DAOs filter on these columns → full-table scans.
-- Status: OPEN | Verification: code-read.
+- Status: **FIXED** (commit 8578885) — @Index on signs(category_name,type_name), landmarks(type,city), scan_results(firestore_id); Room v9 + MIGRATION_8_9 (index names follow Room's index_<table>_<column> convention).
+- Verification: emulator — real v8→v9 upgrade: user_version 9, all 5 indices present in sqlite_master, story_progress data survived, no Room validation errors.
 
 ## [E-04] No seed data → fresh install offline = completely empty dictionary/explore/stories
 - Date: 2026-07-06 | Severity: major | Area: E-db / M-offline
 - Evidence: no `createFromAsset`/bundled DB; assets contain only (unused) ML models.
 - Expected: prepopulated signs/landmarks DB or first-run seed import.
-- Status: OPEN (NEEDS-DECISION: is offline-first-install in scope?) | Verification: code-read.
+- Status: **FIXED** (commit 8b327fe, approved by supervisor) — bundled seed snapshots (assets/seed: 1023 signs 419KB, 164 landmarks 380KB, 26 categories) imported by `SeedImporter` on first run when tables are empty; live responses overwrite seed rows via the existing REPLACE upserts.
+- Verification: emulator — pm clear + airplane mode + launch: logcat `E-04 seeded 1023 signs, 26 categories` + `164 landmarks`, zero network.
 
 ## [E-05] Minor DB/offline gaps (bundle)
 - Date: 2026-07-06 | Severity: minor | Area: E-db / M-offline
@@ -86,7 +88,8 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Date: 2026-07-06 | Severity: major | Area: J-security
 - Evidence: `core/network/build.gradle.kts:28-29` → `NetworkModule.kt:151-152,161` (sent as Authorization header). Keys sourced from local.properties (untracked — no git leak).
 - Expected: proxy Pexels via own backend, or accept + rotate.
-- Status: OPEN (NEEDS-DECISION) | Verification: code-read + `git ls-files`/`git grep` clean.
+- Status: **BLOCKED (backend change required)** — approved for implementation, but the backend has ZERO Pexels surface (grep of Wadjet-v3-beta: no pexels route/service; the thumbnail fallback is Android-only). A proxy endpoint must be added server-side first; the backend repo is read-only for this engagement. Interim exposure is limited: keys ship only in debug/local builds via untracked local.properties (empty string when absent) and the dual-key 429 rotation caps abuse value. Follow-up: add `/api/images/pexels-search` server-side, then point `NetworkModule`'s pexels client at it and delete the BuildConfig keys.
+- Verification: cross-repo grep (no backend pexels code).
 
 ## [J-02] Firestore security rules unverifiable from this repo (client writes users/{uid}/story_progress)
 - Date: 2026-07-06 | Severity: major (external verification needed) | Area: J-security / N-firebase
@@ -105,25 +108,29 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Date: 2026-07-06 | Severity: major | Area: I-perf
 - Evidence: `core/designsystem/.../WadjetAsyncImage.kt:25` — used in Explore/Dictionary/Dashboard/Stories list cells; Coil discourages in lists (per-image subcomposition).
 - Expected: `AsyncImage` with explicit size for list cells.
-- Status: OPEN | Verification: code-read.
+- Status: **FIXED** (commit c966a49) — rememberAsyncImagePainter + state overlay (no subcomposition); same public signature so all call sites unchanged.
+- Verification: emulator — story cover images render in list cells post-change.
 
 ## [I-02] MediaPlayer.prepare() (blocking) on main thread at 6 sites
 - Date: 2026-07-06 | Severity: major | Area: I-perf / H-audio
 - Evidence: `DictionaryViewModel.kt:203`, `LessonViewModel.kt:70`, `SignDetailViewModel.kt:109`, `ScanViewModel.kt:102`, `ScanResultViewModel.kt:105`, `AudioPlaybackManager.kt:35`.
 - Expected: `prepareAsync()` + listener, or `withContext(Dispatchers.IO)`.
-- Status: OPEN | Verification: code-read.
+- Status: **FIXED** (commit 0b8f99f) — five VM sites were already consolidated into AudioPlaybackManager by H-06; the manager now uses prepareAsync + onPrepared (speed applied there before start).
+- Verification: emulator — TTS playback still works through the async path (dictionary + narration).
 
 ## [I-03] onCleared() fire-and-forget CoroutineScope for persisting chat/story state → data-loss risk
 - Date: 2026-07-06 | Severity: major | Area: I-perf / C-state
 - Evidence: `ChatViewModel.kt:472`, `StoryReaderViewModel.kt:339` — unstructured `CoroutineScope(SupervisorJob()+IO).launch` at teardown.
 - Expected: persist via singleton/application scope or WorkManager.
-- Status: OPEN | Verification: code-read.
+- Status: **FIXED** (commit 22de1c0) — both sites use the existing Hilt `@ApplicationScope` singleton scope (DispatchersModule) instead of throwaway scopes.
+- Verification: build green; chat history + story progress still persist across screen exits.
 
 ## [I-04] rememberBase64Bitmap decodes full bitmap in composition on main thread
 - Date: 2026-07-06 | Severity: major | Area: I-perf
 - Evidence: `feature/scan/.../util/ImageUtil.kt:11-21`.
 - Expected: decode off-main with inSampleSize, or hand bytes to Coil.
-- Status: OPEN | Verification: code-read.
+- Status: **FIXED** (commit 8a9945c) — produceState + Dispatchers.Default decode; emits null until ready.
+- Verification: build green.
 
 ## [I-05] Minor perf/debt (bundle)
 - Date: 2026-07-06 | Severity: minor | Area: I-perf / O-debt
@@ -234,6 +241,8 @@ _Phase 1 findings are appended below once the audit sweep completes._
 ## [B-01] No deep links anywhere (email verify/reset links + FCM notifications can't open the app/content)
 - Date: 2026-07-06 | Severity: major | Area: B-parity / C-nav
 - Evidence: no `navDeepLink` in `WadjetNavGraph.kt`; launcher activity has only MAIN/LAUNCHER (`AndroidManifest.xml:27-37`); backend email links (`auth.py:354,393`) open web only; FCM extras never consumed by MainActivity.
+- Status: **FIXED (partial by design)** (commit 529f168) — `wadjet://story/{id}` and `wadjet://landmark/{slug}` deep links (manifest VIEW filter + typed navDeepLink); FCM notifications with story_id/landmark_slug now emit those VIEW intents; running activity forwards onNewIntent to NavController. Email verify/reset links necessarily still open the web: claiming the backend's https domain needs assetlinks.json hosted server-side (read-only backend) — follow-up noted.
+- Verification: emulator — `am start -a VIEW -d wadjet://story/creation-from-nun` opened the reader directly (cold path) and `wadjet://landmark/great-pyramids-of-giza` opened the detail screen on the RUNNING activity (onNewIntent path).
 - Expected (web): fully URL-addressable routes.
 - Status: OPEN | Verification: code-read.
 
@@ -292,8 +301,9 @@ _Phase 1 findings are appended below once the audit sweep completes._
 
 ## [D-05] Dual Firebase+backend auth: account must exist in BOTH stores; verify/reset handled only via Firebase
 - Date: 2026-07-06 | Severity: major (architectural) | Area: D-network / B-parity
-- Evidence: `AuthRepositoryImpl.kt:51-137` — Firebase first, then backend; `currentUser` requires both. Backend verify/reset endpoints (`auth.py:320-418`) unused → states can diverge. Web-only accounts can't log in on Android.
-- Status: NEEDS-DECISION (product call on auth architecture) | Verification: cross-repo code-read.
+- Evidence: `AuthRepositoryImpl.kt:51-137` — Firebase first, then backend; `currentUser` requires both. Backend verify/reset endpoints (`auth.py:320-418`) unused → states can diverge. Web-only accounts can't log in on Android. LIVE: backend login returns email_verified:false for a Firebase-verified account; Firestore progress mirror writes are PERMISSION_DENIED (J-02) — i.e. the Firebase half provides no working functionality beyond auth itself.
+- Status: **STOPPED per guardrail** (approved, but the clean approach is architecturally broad): the correct unification is to DROP Firebase Auth on Android and use backend auth exclusively, exactly like web — backend already has everything needed client-side: /auth/register, /login, /refresh, /logout, /send-verification, /verify-email, /forgot, /reset AND /auth/google (accepts the same Google ID token Credential Manager already produces). That refactor touches AuthRepository(+Impl), all auth UI flows, session bootstrap, Firestore-dependent code and Google sign-in — a high-risk rewrite requiring full auth re-verification, beyond safe scope for this batch. Plan recorded in ENHANCEMENTS.md (E-P6).
+- Verification: cross-repo code-read + live drift evidence.
 
 ## [D-06] Landmark pagination metadata missing — totalPages always 1
 - Date: 2026-07-06 | Severity: major | Area: D-network
@@ -318,13 +328,15 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Date: 2026-07-06 | Severity: major | Area: L-ui
 - Evidence: `MainActivity.kt:80` no-arg `enableEdgeToEdge()` → SystemBarStyle.auto follows SYSTEM theme; app forces dark UI → dark icons on near-black background in light mode.
 - Expected: explicit `SystemBarStyle.dark(...)` for both bars.
-- Status: OPEN | Verification: code-read (runtime confirm pending device).
+- Status: **FIXED** (commit a2026bf) — explicit SystemBarStyle.dark for status+nav bars.
+- Verification: build green; bars render light icons on dark background on emulator (dark system theme; style now locked regardless of system theme).
 
 ## [L-02] Double top bars on Explore/Stories/Chat tabs (incl. back arrow on root destinations)
 - Date: 2026-07-06 | Severity: major | Area: L-ui / C-nav
 - Evidence: global TopAppBar for top-level routes (`MainActivity.kt:222-256`) + own TopAppBars in `ExploreScreen.kt:112`, `StoriesScreen.kt:88`, `ChatScreen.kt:265`; Landing/Hub correctly rely on global bar (inconsistent).
 - Expected: one app bar per screen; no back button on bottom-nav roots.
-- Status: OPEN | Verification: code-read (visual confirm pending device).
+- Status: **FIXED** (commit f8f22d7) — global TopAppBar suppressed on Explore/Stories/Chat (screens keep their own action-bearing bars); back arrow removed from Explore/Stories roots and made conditional on ChatScreen (shown only for pushed landmark chat).
+- Verification: emulator screenshot — Stories tab shows a single "Stories" bar with no back arrow.
 
 ## [L-03] Hardcoded "Chapter X of Y" in LandingScreen
 - Date: 2026-07-06 | Severity: major (i18n) | Area: L-ui / G-i18n
@@ -335,7 +347,8 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Date: 2026-07-06 | Severity: major | Area: K-a11y
 - Evidence: `ChatScreen.kt:665-673` raw 14dp Icon with .clickable; `ChatScreen.kt:694-697` retry Text; `StoriesScreen.kt:369-374` favorite IconButton forced 36dp; `DashboardScreen.kt:428-430` Remove text; `SettingsScreen.kt:200-239` clickable rows without Role.Button/min height.
 - Expected: IconButton / sizeIn(min 48dp) + Role semantics.
-- Status: OPEN | Verification: code-read.
+- Status: **FIXED** (commit 705ad91) — chat edit pencil → IconButton (48dp), chat retry → 48dp Box+Role.Button, stories favorite 36→48dp, dashboard Remove → 48dp Box, settings clear-cache/feedback → minHeight 48dp + Role.Button.
+- Verification: build green; controls remain visually identical (icons keep their small glyph size inside larger targets).
 
 ## [K-02] Contrast: Dust #8B7355 (~3.8:1 on Night) used for small text
 - Date: 2026-07-06 | Severity: minor | Area: K-a11y

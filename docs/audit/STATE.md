@@ -105,6 +105,24 @@ _Living document. Updated by the audit agent. Started: 2026-07-06._
 - New finding G-07 (minor): value-constants chips (difficulty/sign types/feedback categories) still EN — value<->label mapping needed (Batch 5 candidate).
 - Arabic narration end-to-end re-verified after all audio refactors: Arabic paragraph -> lang=ar -> 200 audio/wav -> played; replay served from client cache.
 
+### Batch 4 — UI/perf/security (committed & verified on emulator)
+
+| Fix | Commit | Proof |
+|---|---|---|
+| L-01 dark system bars | a2026bf | explicit SystemBarStyle.dark both bars |
+| I-02 prepareAsync | 0b8f99f | playback works via async path |
+| I-03 ApplicationScope persistence | 22de1c0 | build green, persistence intact |
+| I-04 off-main base64 decode | 8a9945c | produceState + Dispatchers.Default |
+| I-01 painter-based list images | c966a49 | story covers render in lists |
+| E-03 Room indices (v9) | 8578885 | real v8->v9: 5 indices, data survived |
+| L-02 single top bar, no root back arrows | f8f22d7 | screenshot: one Stories bar |
+| K-01 48dp touch targets | 705ad91 | 6 controls enlarged |
+| B-01 wadjet:// deep links + FCM intents | 529f168 | am start VIEW opened reader (cold) + landmark (onNewIntent) |
+| E-04 bundled seed data | 8b327fe | pm clear + airplane: seeded 1023 signs/26 cats/164 landmarks |
+
+- J-01 BLOCKED: backend has no Pexels surface; proxy needs a server endpoint (backend read-only). Follow-up E-P7.
+- D-05 STOPPED per guardrail: clean fix = drop Firebase Auth for backend-only auth (incl. /auth/google) — full plan in ENHANCEMENTS E-P6.
+
 ## Notes / known repo facts
 
 - 10 feature modules + 9 core modules (see settings.gradle.kts), ~207 Kotlin files.
