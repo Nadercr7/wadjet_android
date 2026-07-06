@@ -2,9 +2,14 @@ package com.wadjet.core.database.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "landmarks")
+@Entity(
+    tableName = "landmarks",
+    // E-03: DAOs filter on type/city — avoid full-table scans.
+    indices = [Index("type"), Index("city")],
+)
 data class LandmarkEntity(
     @PrimaryKey val slug: String,
     val name: String,

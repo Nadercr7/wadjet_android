@@ -31,7 +31,7 @@ import com.wadjet.core.database.entity.StoryProgressEntity
         FavoriteEntity::class,
         StoryCacheEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = true,
 )
 abstract class WadjetDatabase : RoomDatabase() {
@@ -134,6 +134,18 @@ abstract class WadjetDatabase : RoomDatabase() {
                         "sort_order INTEGER NOT NULL DEFAULT 0, " +
                         "updated_at INTEGER NOT NULL)"
                 )
+            }
+        }
+
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // E-03: indices for DAO filter columns (names follow Room's
+                // index_<table>_<column> convention so schema validation passes)
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_signs_category_name ON signs (category_name)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_signs_type_name ON signs (type_name)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_landmarks_type ON landmarks (type)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_landmarks_city ON landmarks (city)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_scan_results_firestore_id ON scan_results (firestore_id)")
             }
         }
     }

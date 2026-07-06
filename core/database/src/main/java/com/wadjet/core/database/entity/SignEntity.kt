@@ -2,9 +2,14 @@ package com.wadjet.core.database.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "signs")
+@Entity(
+    tableName = "signs",
+    // E-03: DAOs filter on category/type — avoid full-table scans.
+    indices = [Index("category_name"), Index("type_name")],
+)
 data class SignEntity(
     @PrimaryKey
     val code: String,

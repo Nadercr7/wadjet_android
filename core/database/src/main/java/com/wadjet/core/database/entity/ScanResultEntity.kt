@@ -2,9 +2,14 @@ package com.wadjet.core.database.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "scan_results")
+@Entity(
+    tableName = "scan_results",
+    // E-03: lookups by firestore_id — avoid full-table scans.
+    indices = [Index("firestore_id")],
+)
 data class ScanResultEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "firestore_id") val firestoreId: String? = null,
