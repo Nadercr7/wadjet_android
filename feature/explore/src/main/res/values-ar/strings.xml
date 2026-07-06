@@ -67,4 +67,14 @@
     <string name="identify_error_failed">فشل التعرف</string>
     <string name="identify_error_read_image">تعذر قراءة الصورة المختارة</string>
     <string name="identify_error_process_image">تعذر معالجة الصورة</string>
+
+    <!-- G-07 -->
+    <string name="label_lmcat_all">الكل</string>
+    <string name="label_lmcat_pharaonic">فرعوني</string>
+    <string name="label_lmcat_islamic">إسلامي</string>
+    <string name="label_lmcat_coptic">قبطي</string>
+    <string name="label_lmcat_greco_roman">يوناني روماني</string>
+    <string name="label_lmcat_museum">متحف</string>
+    <string name="label_lmcat_natural">طبيعي</string>
+    <string name="label_lmcat_modern">حديث</string>
 </resources>

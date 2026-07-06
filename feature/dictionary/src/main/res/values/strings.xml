@@ -63,4 +63,12 @@
 
     <!-- ViewModel messages (G-04) -->
     <string name="dict_generating_pronunciation">Generating pronunciation…</string>
+
+    <!-- G-07: display labels for stable sign-type filter values -->
+    <string name="label_type_all">All</string>
+    <string name="label_type_uniliteral">Uniliteral</string>
+    <string name="label_type_biliteral">Biliteral</string>
+    <string name="label_type_triliteral">Triliteral</string>
+    <string name="label_type_logogram">Logogram</string>
+    <string name="label_type_determinative">Determinative</string>
 </resources>

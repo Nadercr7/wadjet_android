@@ -40,4 +40,10 @@
     <string name="reader_generating_narration">Generating narration…</string>
     <string name="reader_error_load">Failed to load story</string>
     <string name="reader_generating_scene">Generating scene image…</string>
+
+    <!-- G-07: display labels for stable difficulty filter values -->
+    <string name="label_difficulty_all">All</string>
+    <string name="label_difficulty_beginner">Beginner</string>
+    <string name="label_difficulty_intermediate">Intermediate</string>
+    <string name="label_difficulty_advanced">Advanced</string>
 </resources>

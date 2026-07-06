@@ -289,7 +289,7 @@ private fun CategoryChips(
             FilterChip(
                 selected = category == selected,
                 onClick = { onSelect(category) },
-                label = { Text(category) },
+                label = { Text(landmarkCategoryLabel(category)) }, // G-07
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = WadjetColors.Gold,
                     selectedLabelColor = WadjetColors.Night,
@@ -514,4 +514,18 @@ private fun Badge(text: String, color: Color) {
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
         )
     }
+}
+
+/** G-07: category VALUES are stable server filter identifiers; only the label is localized. */
+@Composable
+private fun landmarkCategoryLabel(value: String): String = when (value.lowercase()) {
+    "all" -> stringResource(R.string.label_lmcat_all)
+    "pharaonic" -> stringResource(R.string.label_lmcat_pharaonic)
+    "islamic" -> stringResource(R.string.label_lmcat_islamic)
+    "coptic" -> stringResource(R.string.label_lmcat_coptic)
+    "greco-roman" -> stringResource(R.string.label_lmcat_greco_roman)
+    "museum" -> stringResource(R.string.label_lmcat_museum)
+    "natural" -> stringResource(R.string.label_lmcat_natural)
+    "modern" -> stringResource(R.string.label_lmcat_modern)
+    else -> value
 }

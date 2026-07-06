@@ -40,4 +40,10 @@
     <string name="reader_generating_narration">جاري توليد السرد…</string>
     <string name="reader_error_load">تعذر تحميل القصة</string>
     <string name="reader_generating_scene">جاري إنشاء المشهد…</string>
+
+    <!-- G-07 -->
+    <string name="label_difficulty_all">الكل</string>
+    <string name="label_difficulty_beginner">مبتدئ</string>
+    <string name="label_difficulty_intermediate">متوسط</string>
+    <string name="label_difficulty_advanced">متقدم</string>
 </resources>

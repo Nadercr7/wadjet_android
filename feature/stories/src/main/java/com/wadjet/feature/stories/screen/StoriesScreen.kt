@@ -133,7 +133,7 @@ fun StoriesScreen(
                             onClick = { onDifficultySelected(difficulty) },
                             label = {
                                 Text(
-                                    text = difficulty,
+                                    text = difficultyLabel(difficulty),
                                     color = if (selected) WadjetColors.Night else WadjetColors.Text,
                                 )
                             },
@@ -386,7 +386,7 @@ private fun DifficultyBadge(difficulty: String, modifier: Modifier = Modifier) {
         else -> WadjetColors.TextMuted
     }
     Text(
-        text = difficulty.replaceFirstChar { it.uppercase() },
+        text = difficultyLabel(difficulty),
         color = color,
         style = MaterialTheme.typography.labelSmall,
         modifier = modifier
@@ -394,4 +394,16 @@ private fun DifficultyBadge(difficulty: String, modifier: Modifier = Modifier) {
             .background(color.copy(alpha = 0.15f))
             .padding(horizontal = 6.dp, vertical = 2.dp),
     )
+}
+
+/**
+ * G-07: filter VALUES are stable API identifiers; only the LABEL is localized.
+ */
+@Composable
+private fun difficultyLabel(value: String): String = when (value.lowercase()) {
+    "all" -> stringResource(R.string.label_difficulty_all)
+    "beginner" -> stringResource(R.string.label_difficulty_beginner)
+    "intermediate" -> stringResource(R.string.label_difficulty_intermediate)
+    "advanced" -> stringResource(R.string.label_difficulty_advanced)
+    else -> value.replaceFirstChar { it.uppercase() }
 }

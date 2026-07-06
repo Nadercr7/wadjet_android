@@ -67,4 +67,14 @@
     <string name="identify_error_failed">Identification failed</string>
     <string name="identify_error_read_image">Failed to read selected image</string>
     <string name="identify_error_process_image">Failed to process image</string>
+
+    <!-- G-07: display labels for stable landmark category values -->
+    <string name="label_lmcat_all">All</string>
+    <string name="label_lmcat_pharaonic">Pharaonic</string>
+    <string name="label_lmcat_islamic">Islamic</string>
+    <string name="label_lmcat_coptic">Coptic</string>
+    <string name="label_lmcat_greco_roman">Greco-Roman</string>
+    <string name="label_lmcat_museum">Museum</string>
+    <string name="label_lmcat_natural">Natural</string>
+    <string name="label_lmcat_modern">Modern</string>
 </resources>

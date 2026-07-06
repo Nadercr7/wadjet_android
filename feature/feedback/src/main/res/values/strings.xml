@@ -17,4 +17,10 @@
     <!-- ViewModel messages (G-04) -->
     <string name="feedback_error_category">Please select a category</string>
     <string name="feedback_error_min_chars">Message must be at least 10 characters</string>
+
+    <!-- G-07: display labels for stable feedback category values -->
+    <string name="label_cat_bug">Bug</string>
+    <string name="label_cat_suggestion">Suggestion</string>
+    <string name="label_cat_praise">Praise</string>
+    <string name="label_cat_other">Other</string>
 </resources>

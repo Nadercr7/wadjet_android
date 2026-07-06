@@ -122,7 +122,7 @@ fun BrowseTab(
                 FilterChip(
                     selected = isSelected,
                     onClick = { onTypeSelect(type) },
-                    label = { Text(type.replaceFirstChar { it.uppercase() }) },
+                    label = { Text(signTypeLabel(type)) }, // G-07: localized label, stable value
                     colors = chipColors(isSelected),
                 )
             }
@@ -222,3 +222,15 @@ private fun chipColors(selected: Boolean) = FilterChipDefaults.filterChipColors(
     containerColor = WadjetColors.Surface,
     labelColor = WadjetColors.TextMuted,
 )
+
+/** G-07: sign-type filter VALUES are stable API identifiers; only the label is localized. */
+@Composable
+private fun signTypeLabel(value: String): String = when (value.lowercase()) {
+    "all" -> stringResource(R.string.label_type_all)
+    "uniliteral" -> stringResource(R.string.label_type_uniliteral)
+    "biliteral" -> stringResource(R.string.label_type_biliteral)
+    "triliteral" -> stringResource(R.string.label_type_triliteral)
+    "logogram" -> stringResource(R.string.label_type_logogram)
+    "determinative" -> stringResource(R.string.label_type_determinative)
+    else -> value.replaceFirstChar { it.uppercase() }
+}

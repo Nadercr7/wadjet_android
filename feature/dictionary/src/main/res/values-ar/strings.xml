@@ -63,4 +63,12 @@
 
     <!-- ViewModel messages (G-04) -->
     <string name="dict_generating_pronunciation">جاري توليد النطق…</string>
+
+    <!-- G-07 -->
+    <string name="label_type_all">الكل</string>
+    <string name="label_type_uniliteral">أحادي الصوت</string>
+    <string name="label_type_biliteral">ثنائي الصوت</string>
+    <string name="label_type_triliteral">ثلاثي الصوت</string>
+    <string name="label_type_logogram">لوغوغرام</string>
+    <string name="label_type_determinative">مخصّص</string>
 </resources>
