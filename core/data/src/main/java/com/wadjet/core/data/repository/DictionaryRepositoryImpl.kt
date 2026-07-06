@@ -66,9 +66,10 @@ class DictionaryRepositoryImpl @Inject constructor(
             } else {
                 throw ApiException("Failed to load signs: ${response.code()}")
             }
-        } catch (e: java.io.IOException) {
-            // Offline fallback — serve from Room cache
-            Timber.w(e, "Network unavailable, falling back to cached signs")
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            // E-05: fall back to cache on ANY fetch failure (offline OR server error)
+            Timber.w(e, "Sign fetch failed, falling back to cached signs")
             val limit = perPage
             val offset = (page - 1) * perPage
 

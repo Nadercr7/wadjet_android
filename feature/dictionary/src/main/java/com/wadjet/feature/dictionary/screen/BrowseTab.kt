@@ -101,7 +101,7 @@ fun BrowseTab(
                     colors = chipColors(state.selectedCategory == null),
                 )
             }
-            items(state.categories) { cat ->
+            items(state.categories, key = { it.code }) { cat -> // I-05: stable keys
                 FilterChip(
                     selected = state.selectedCategory == cat.code,
                     onClick = { onCategorySelect(cat.code) },
@@ -117,7 +117,7 @@ fun BrowseTab(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(bottom = 8.dp),
         ) {
-            items(SIGN_TYPES) { type ->
+            items(SIGN_TYPES, key = { it }) { type -> // I-05: stable keys
                 val isSelected = (type == "All" && state.selectedType == null) || type == state.selectedType
                 FilterChip(
                     selected = isSelected,

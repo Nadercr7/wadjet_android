@@ -429,7 +429,7 @@ private fun TtsSection(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = stringResource(R.string.settings_tts_speed_value, String.format("%.1f", speed)),
+                    text = stringResource(R.string.settings_tts_speed_value, String.format(java.util.Locale.getDefault(), "%.1f", speed)), // G-05
                     color = WadjetColors.Sand,
                     style = MaterialTheme.typography.bodySmall,
                 )

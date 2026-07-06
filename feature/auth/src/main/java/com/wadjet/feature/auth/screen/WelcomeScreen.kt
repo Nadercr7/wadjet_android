@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Row
@@ -288,7 +289,7 @@ fun WelcomeScreen(
 @Composable
 private fun FeatureCard(glyph: String, title: String, subtitle: String, modifier: Modifier = Modifier) {
     WadjetCard(
-        modifier = modifier.height(120.dp),
+        modifier = modifier.heightIn(min = 120.dp), // L-04: allow growth at large font scale
     ) {
         Column(
             modifier = Modifier.padding(12.dp),

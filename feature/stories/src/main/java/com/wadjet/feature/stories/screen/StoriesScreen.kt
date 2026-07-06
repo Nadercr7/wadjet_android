@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -185,11 +186,10 @@ fun StoriesScreen(
                             )
                         }
                     }
-                    items(
+                    itemsIndexed(
                         items = filtered,
-                        key = { it.id },
-                    ) { story ->
-                        val itemIndex = filtered.indexOf(story)
+                        key = { _, story -> story.id },
+                    ) { itemIndex, story ->
                         val isLocked = itemIndex >= FREE_STORY_LIMIT
                         val progress = state.progress[story.id]
                         FadeUp(visible = itemIndex < visibleCount) {
