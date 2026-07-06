@@ -302,31 +302,5 @@ private fun ScanProgressOverlay(step: ScanStep) {
     }
 }
 
-@Composable
-private fun PermissionDeniedContent(onRequestPermission: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text(
-            text = "Camera Permission Required",
-            style = MaterialTheme.typography.headlineSmall,
-            color = WadjetColors.Gold,
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = "Wadjet needs camera access to scan hieroglyphs. Tap below to grant permission.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = WadjetColors.TextMuted,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        com.wadjet.core.designsystem.component.WadjetButton(
-            text = "Grant Permission",
-            onClick = onRequestPermission,
-        )
-    }
-}
+// U8: removed dead PermissionDeniedContent (unreachable since the camera was
+// disabled; it carried hardcoded English strings). Scan is image-upload-only.
