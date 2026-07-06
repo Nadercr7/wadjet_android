@@ -8,4 +8,8 @@
 <full-backup-content>
     <exclude domain="sharedpref" path="wadjet_secure_prefs.xml"/>
     <exclude domain="sharedpref" path="wadjet_secure_prefs"/>
+    <!-- J-03: local caches (Room DB incl. scan history/progress, plaintext prefs)
+         must not round-trip through cloud backups; the backend is the source of truth. -->
+    <exclude domain="database" path="wadjet.db"/>
+    <exclude domain="sharedpref" path="."/>
 </full-backup-content>
