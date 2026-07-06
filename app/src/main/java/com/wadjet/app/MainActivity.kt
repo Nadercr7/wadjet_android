@@ -124,15 +124,24 @@ private fun WadjetApp(
     val isOffline by networkMonitor.isOnline.collectAsStateWithLifecycle(initialValue = true)
     var showQuickSettings by remember { mutableStateOf(false) }
 
-    // Reactive auth state observation — navigate to Welcome on sign-out/token clear
-    val currentUser by authRepository.currentUser.collectAsStateWithLifecycle(initialValue = null)
-    val isAuthenticated = currentUser != null
-    LaunchedEffect(isAuthenticated) {
-        if (!isAuthenticated && navController.currentDestination?.hasRoute(Route.Welcome::class) != true) {
-            // User signed out or token expired — reset to Welcome
-            navController.navigate(Route.Welcome) {
-                popUpTo(navController.graph.id) { inclusive = true }
+    // Reactive auth state observation — navigate to Welcome ONLY on a real
+    // authenticated→unauthenticated transition. Comparing transitions (rather than
+    // reacting to the current value) avoids the recreation race where the flow's
+    // initial/transient null briefly reads as "signed out" and dumped a logged-in
+    // user onto Welcome after every activity recreation (e.g. language switch).
+    LaunchedEffect(Unit) {
+        var wasAuthenticated: Boolean? = null
+        authRepository.currentUser.collect { user ->
+            val isAuthenticated = user != null
+            if (wasAuthenticated == true && !isAuthenticated &&
+                navController.currentDestination?.hasRoute(Route.Welcome::class) != true
+            ) {
+                // User signed out or token expired — reset to Welcome
+                navController.navigate(Route.Welcome) {
+                    popUpTo(navController.graph.id) { inclusive = true }
+                }
             }
+            wasAuthenticated = isAuthenticated
         }
     }
 

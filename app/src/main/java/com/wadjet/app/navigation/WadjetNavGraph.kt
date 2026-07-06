@@ -468,13 +468,9 @@ fun WadjetNavGraph(
             val context = androidx.compose.ui.platform.LocalContext.current
             val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
 
-            if (state.signedOut) {
-                androidx.compose.runtime.LaunchedEffect(Unit) {
-                    navController.navigate(Route.Welcome) {
-                        popUpTo(navController.graph.id) { inclusive = true }
-                    }
-                }
-            }
+            // C-01: sign-out navigation is handled solely by the global auth observer in
+            // MainActivity (authenticated→unauthenticated transition); navigating here too
+            // caused a duplicate, racing redirect to Welcome.
 
             SettingsScreen(
                 state = state,
