@@ -16,8 +16,10 @@ interface AudioApiService {
     @POST("api/audio/speak")
     suspend fun speak(@Body body: SpeakRequest): Response<ResponseBody>
 
+    // Backend mounts STT at /api/stt (audio.py router prefix "/api" + @post("/stt")),
+    // unlike speak which lives at /api/audio/speak.
     @Multipart
-    @POST("api/audio/stt")
+    @POST("api/stt")
     suspend fun stt(
         @Part file: MultipartBody.Part,
         @Part("lang") lang: RequestBody,
