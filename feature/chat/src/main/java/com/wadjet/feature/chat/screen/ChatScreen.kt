@@ -106,6 +106,7 @@ import com.wadjet.core.domain.model.ChatMessage.Role
 import com.wadjet.feature.chat.ChatUiState
 import com.wadjet.feature.chat.ConversationSummary
 import androidx.compose.ui.res.stringResource
+import com.wadjet.core.common.audio.trySetLanguageFor
 import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.feature.chat.R
 import dev.jeziellago.compose.markdowntext.MarkdownText
@@ -159,9 +160,11 @@ fun ChatScreen(
     // Handle local TTS fallback
     LaunchedEffect(state.localTtsText) {
         val text = state.localTtsText ?: return@LaunchedEffect
-        val isArabic = text.any { it in '\u0600'..'\u06FF' || it in '\u0750'..'\u077F' }
-        ttsInstance?.language = if (isArabic) Locale("ar") else Locale.US
-        ttsInstance?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        // H-04: verify the device has a voice for the text's language (ar-EG \u2192 ar);
+        // skip rather than let an English voice mangle Arabic.
+        if (ttsInstance?.trySetLanguageFor(text) == true) {
+            ttsInstance.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        }
         onDismissLocalTts()
     }
 

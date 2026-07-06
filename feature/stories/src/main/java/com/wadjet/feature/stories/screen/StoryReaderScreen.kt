@@ -83,6 +83,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.wadjet.core.common.audio.trySetLanguageFor
 import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.core.designsystem.WadjetColors
 import androidx.compose.ui.res.painterResource
@@ -131,8 +132,13 @@ fun StoryReaderScreen(
     // Handle LOCAL_TTS fallback via dedicated state field
     LaunchedEffect(state.localTtsText) {
         val text = state.localTtsText ?: return@LaunchedEffect
-        val isArabic = text.any { it in '\u0600'..'\u06FF' || it in '\u0750'..'\u077F' }
-        ttsInstance?.language = if (isArabic) Locale("ar") else Locale.US
+        // H-04: verify the device has a voice for the text's language (ar-EG \u2192 ar);
+        // skip rather than let an English voice mangle Arabic.
+        if (ttsInstance?.trySetLanguageFor(text) != true) {
+            onLocalTtsDone()
+            onDismissLocalTts()
+            return@LaunchedEffect
+        }
         val utteranceId = "narration_${System.currentTimeMillis()}"
         ttsInstance?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onStart(id: String?) {}

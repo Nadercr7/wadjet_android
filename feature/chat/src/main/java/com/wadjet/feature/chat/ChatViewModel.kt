@@ -315,7 +315,9 @@ class ChatViewModel @Inject constructor(
             _state.update { it.copy(isSpeaking = true, isLoadingTts = true, speakingMessageId = message.id) }
 
             toastController.info("Generating audio\u2026")
-            chatRepository.speak(message.content).onSuccess { bytes ->
+            // H-04: Arabic replies must request the Arabic TTS voice (web sends chatLang).
+            val ttsLang = if (com.wadjet.core.common.audio.isArabicText(message.content)) "ar" else "en"
+            chatRepository.speak(message.content, ttsLang).onSuccess { bytes ->
                 if (bytes != null) {
                     _state.update { it.copy(isLoadingTts = false) }
                     val speed = ttsPreferences.ttsSpeed.first()
