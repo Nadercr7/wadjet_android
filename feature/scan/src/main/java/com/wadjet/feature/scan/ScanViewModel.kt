@@ -3,7 +3,7 @@ package com.wadjet.feature.scan
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.media.MediaPlayer
+import com.wadjet.core.common.audio.AudioPlaybackManager
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -50,6 +50,7 @@ sealed class ScanEvent {
 class ScanViewModel @Inject constructor(
     private val scanRepository: ScanRepository,
     private val userRepository: UserRepository,
+    private val audioPlayer: AudioPlaybackManager,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -58,8 +59,6 @@ class ScanViewModel @Inject constructor(
 
     private val _events = MutableSharedFlow<ScanEvent>()
     val events: SharedFlow<ScanEvent> = _events.asSharedFlow()
-
-    private var mediaPlayer: MediaPlayer? = null
 
     fun speak(key: String, text: String, lang: String = "en") {
         val current = _state.value.ttsStates[key]
@@ -93,35 +92,17 @@ class ScanViewModel @Inject constructor(
     }
 
     private fun playWavBytes(key: String, bytes: ByteArray) {
-        stopMediaPlayer()
-        try {
-            val tmp = File.createTempFile("tts_", ".wav", context.cacheDir)
-            tmp.writeBytes(bytes)
-            mediaPlayer = MediaPlayer().apply {
-                setDataSource(tmp.absolutePath)
-                prepare()
-                setOnCompletionListener {
-                    _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) }
-                    stopMediaPlayer()
-                    tmp.delete()
-                }
-                start()
-            }
-            _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.PLAYING)) }
-        } catch (e: Exception) {
-            Timber.e(e, "MediaPlayer failed")
-            _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.IDLE)) }
-        }
+        _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.PLAYING)) }
+        audioPlayer.playWavBytes(
+            bytes = bytes,
+            onCompletion = { _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) } },
+            onError = { _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) } },
+        )
     }
 
     private fun stopTts(key: String) {
-        stopMediaPlayer()
+        audioPlayer.stop()
         _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.IDLE)) }
-    }
-
-    private fun stopMediaPlayer() {
-        mediaPlayer?.apply { if (isPlaying) stop(); release() }
-        mediaPlayer = null
     }
 
     fun onImageCaptured(file: File) {
@@ -215,7 +196,7 @@ class ScanViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        stopMediaPlayer()
+        audioPlayer.stop()
         // Clean up temp files in cacheDir
         context.cacheDir.listFiles()?.forEach { file ->
             if (file.name.startsWith("scan_") || file.name.startsWith("tts_") || file.name.startsWith("picked_")) {

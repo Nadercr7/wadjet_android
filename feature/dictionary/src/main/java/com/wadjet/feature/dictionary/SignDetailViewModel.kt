@@ -1,6 +1,6 @@
 package com.wadjet.feature.dictionary
 
-import android.media.MediaPlayer
+import com.wadjet.core.common.audio.AudioPlaybackManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.io.File
 import javax.inject.Inject
 
 data class SignDetailUiState(
@@ -33,14 +32,13 @@ class SignDetailViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val ttsPreferences: TtsPreferencesRepository,
     private val toastController: com.wadjet.core.common.ToastController,
+    private val audioPlayer: AudioPlaybackManager,
 ) : ViewModel() {
 
     private val code: String = savedStateHandle.get<String>("code") ?: ""
 
     private val _state = MutableStateFlow(SignDetailUiState())
     val state: StateFlow<SignDetailUiState> = _state.asStateFlow()
-
-    private var mediaPlayer: MediaPlayer? = null
 
     init {
         loadSign()
@@ -100,21 +98,12 @@ class SignDetailViewModel @Inject constructor(
             toastController.info("Generating pronunciation…")
             repository.speakPhonetic(text).onSuccess { bytes ->
                 if (bytes != null) {
-                    try {
-                        val tmp = File.createTempFile("sign_tts_", ".wav")
-                        tmp.writeBytes(bytes)
-                        mediaPlayer?.apply { if (isPlaying) stop(); release() }
-                        mediaPlayer = MediaPlayer().apply {
-                            setDataSource(tmp.absolutePath)
-                            prepare()
-                            playbackParams = playbackParams.setSpeed(speed)
-                            start()
-                            setOnCompletionListener { tmp.delete() }
-                        }
-                    } catch (e: Exception) {
-                        Timber.e(e, "Sign TTS playback failed")
-                        _state.update { it.copy(error = "TTS playback failed") }
-                    }
+                    audioPlayer.playWavBytes(
+                        bytes = bytes,
+                        prefix = "sign_tts_",
+                        speed = speed,
+                        onError = { _state.update { it.copy(error = "TTS playback failed") } },
+                    )
                 } else {
                     _state.update { it.copy(error = "TTS not available") }
                 }
@@ -127,6 +116,6 @@ class SignDetailViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        mediaPlayer?.release()
+        audioPlayer.stop()
     }
 }

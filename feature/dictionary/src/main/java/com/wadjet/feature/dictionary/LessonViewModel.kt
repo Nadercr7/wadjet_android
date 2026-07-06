@@ -1,6 +1,6 @@
 package com.wadjet.feature.dictionary
 
-import android.media.MediaPlayer
+import com.wadjet.core.common.audio.AudioPlaybackManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.io.File
 import javax.inject.Inject
 
 data class LessonUiState(
@@ -28,10 +27,10 @@ class LessonViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: DictionaryRepository,
     private val toastController: ToastController,
+    private val audioPlayer: AudioPlaybackManager,
 ) : ViewModel() {
 
     private val level: Int = savedStateHandle["level"] ?: 1
-    private var mediaPlayer: MediaPlayer? = null
 
     private val _state = MutableStateFlow(LessonUiState())
     val state: StateFlow<LessonUiState> = _state.asStateFlow()
@@ -63,19 +62,7 @@ class LessonViewModel @Inject constructor(
         viewModelScope.launch {
             repository.speakPhonetic(text).onSuccess { bytes ->
                 if (bytes != null) {
-                    try {
-                        val tmp = File.createTempFile("lesson_tts_", ".wav")
-                        tmp.writeBytes(bytes)
-                        mediaPlayer?.apply { if (isPlaying) stop(); release() }
-                        mediaPlayer = MediaPlayer().apply {
-                            setDataSource(tmp.absolutePath)
-                            prepare()
-                            setOnCompletionListener { release(); mediaPlayer = null; tmp.delete() }
-                            start()
-                        }
-                    } catch (e: Exception) {
-                        Timber.e(e, "Lesson TTS playback failed")
-                    }
+                    audioPlayer.playWavBytes(bytes = bytes, prefix = "lesson_tts_")
                 }
             }.onFailure {
                 Timber.e(it, "Lesson TTS failed")
@@ -85,7 +72,6 @@ class LessonViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        mediaPlayer?.apply { if (isPlaying) stop(); release() }
-        mediaPlayer = null
+        audioPlayer.stop()
     }
 }

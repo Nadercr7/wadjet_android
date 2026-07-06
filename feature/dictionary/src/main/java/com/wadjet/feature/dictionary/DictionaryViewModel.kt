@@ -1,6 +1,6 @@
 package com.wadjet.feature.dictionary
 
-import android.media.MediaPlayer
+import com.wadjet.core.common.audio.AudioPlaybackManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.domain.model.Category
@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.io.File
 import javax.inject.Inject
 
 data class AlphabetUiState(
@@ -53,6 +52,7 @@ class DictionaryViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val ttsPreferences: TtsPreferencesRepository,
     private val toastController: com.wadjet.core.common.ToastController,
+    private val audioPlayer: AudioPlaybackManager,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(BrowseUiState())
@@ -193,28 +193,12 @@ class DictionaryViewModel @Inject constructor(
             toastController.info("Generating pronunciation\u2026")
             repository.speakPhonetic(text).onSuccess { bytes ->
                 if (bytes != null) {
-                    var tmp: File? = null
-                    try {
-                        tmp = File.createTempFile("dict_tts_", ".wav")
-                        tmp.writeBytes(bytes)
-                        mediaPlayer?.apply { if (isPlaying) stop(); release() }
-                        val player = MediaPlayer().apply {
-                            setDataSource(tmp.absolutePath)
-                            prepare()
-                            playbackParams = playbackParams.setSpeed(speed)
-                            setOnCompletionListener {
-                                it.release()
-                                if (mediaPlayer === it) mediaPlayer = null
-                                tmp.delete()
-                            }
-                            start()
-                        }
-                        mediaPlayer = player
-                    } catch (e: Exception) {
-                        Timber.e(e, "Dictionary TTS playback failed")
-                        tmp?.delete()
-                        _state.update { it.copy(localTtsText = text) }
-                    }
+                    audioPlayer.playWavBytes(
+                        bytes = bytes,
+                        prefix = "dict_tts_",
+                        speed = speed,
+                        onError = { _state.update { it.copy(localTtsText = text) } },
+                    )
                 } else {
                     _state.update { it.copy(localTtsText = text) }
                 }
@@ -243,11 +227,8 @@ class DictionaryViewModel @Inject constructor(
         }
     }
 
-    private var mediaPlayer: MediaPlayer? = null
-
     override fun onCleared() {
         super.onCleared()
-        mediaPlayer?.apply { if (isPlaying) stop(); release() }
-        mediaPlayer = null
+        audioPlayer.stop()
     }
 }

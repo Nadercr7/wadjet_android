@@ -1,7 +1,6 @@
 package com.wadjet.feature.scan
 
-import android.content.Context
-import android.media.MediaPlayer
+import com.wadjet.core.common.audio.AudioPlaybackManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,14 +9,12 @@ import com.wadjet.core.designsystem.component.TtsState
 import com.wadjet.core.domain.model.ScanResult
 import com.wadjet.core.domain.repository.ScanRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.io.File
 import javax.inject.Inject
 
 data class ScanResultUiState(
@@ -33,15 +30,13 @@ data class ScanResultUiState(
 class ScanResultViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val scanRepository: ScanRepository,
-    @ApplicationContext private val context: Context,
+    private val audioPlayer: AudioPlaybackManager,
 ) : ViewModel() {
 
     private val scanId: String = savedStateHandle.get<String>("scanId") ?: ""
 
     private val _state = MutableStateFlow(ScanResultUiState())
     val state: StateFlow<ScanResultUiState> = _state.asStateFlow()
-
-    private var mediaPlayer: MediaPlayer? = null
 
     init {
         loadResult()
@@ -96,35 +91,17 @@ class ScanResultViewModel @Inject constructor(
     }
 
     private fun playWavBytes(key: String, bytes: ByteArray) {
-        stopMediaPlayer()
-        try {
-            val tmp = File.createTempFile("tts_", ".wav", context.cacheDir)
-            tmp.writeBytes(bytes)
-            mediaPlayer = MediaPlayer().apply {
-                setDataSource(tmp.absolutePath)
-                prepare()
-                setOnCompletionListener {
-                    _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) }
-                    stopMediaPlayer()
-                    tmp.delete()
-                }
-                start()
-            }
-            _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.PLAYING)) }
-        } catch (e: Exception) {
-            Timber.e(e, "MediaPlayer failed")
-            _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.IDLE)) }
-        }
+        _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.PLAYING)) }
+        audioPlayer.playWavBytes(
+            bytes = bytes,
+            onCompletion = { _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) } },
+            onError = { _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) } },
+        )
     }
 
     private fun stopTts(key: String) {
-        stopMediaPlayer()
+        audioPlayer.stop()
         _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.IDLE)) }
-    }
-
-    private fun stopMediaPlayer() {
-        mediaPlayer?.apply { if (isPlaying) stop(); release() }
-        mediaPlayer = null
     }
 
     fun dismissLocalTts() {
@@ -133,6 +110,6 @@ class ScanResultViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        stopMediaPlayer()
+        audioPlayer.stop()
     }
 }
