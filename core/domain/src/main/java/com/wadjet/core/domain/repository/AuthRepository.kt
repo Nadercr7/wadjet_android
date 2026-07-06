@@ -21,5 +21,12 @@ interface AuthRepository {
      */
     suspend fun reloadEmailVerified(): Result<Boolean>
 
+    /**
+     * A1: exchanges the current Firebase identity for a backend session.
+     * Called after sign-in for verified users, and after the email-verification
+     * gate passes for newly verified users.
+     */
+    suspend fun establishBackendSession(): Result<User>
+
     suspend fun signOut()
 }

@@ -72,11 +72,9 @@ class AuthViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, error = null) }
             authRepository.signInWithEmail(email.trim(), password)
                 .onSuccess { user ->
-                    // B-03: the cached flag is stale right after sign-in — reload
-                    // before gating so already-verified accounts skip the sheet.
-                    val verified = user.emailVerified ||
-                        authRepository.reloadEmailVerified().getOrDefault(false)
-                    if (!verified) {
+                    // A1: the repository reloads the verification flag (B-03) and only
+                    // establishes a backend session for verified accounts.
+                    if (!user.emailVerified) {
                         // Stop at verification gate — don't emit AuthSuccess yet
                         _state.update {
                             it.copy(
@@ -157,18 +155,24 @@ class AuthViewModel @Inject constructor(
             authRepository.reloadEmailVerified()
                 .onSuccess { verified ->
                     if (verified) {
-                        val current = _state.value.user?.copy(emailVerified = true)
-                        _state.update {
-                            it.copy(
-                                isLoading = false,
-                                user = current,
-                                pendingVerificationEmail = null,
-                                verificationCheckFailed = false,
-                            )
-                        }
-                        _activeSheet.value = AuthSheet.NONE
-                        _events.emit(AuthEvent.EmailVerified)
-                        _events.emit(AuthEvent.AuthSuccess)
+                        // A1: the backend session is only created now, after verification
+                        authRepository.establishBackendSession()
+                            .onSuccess { user ->
+                                _state.update {
+                                    it.copy(
+                                        isLoading = false,
+                                        user = user,
+                                        pendingVerificationEmail = null,
+                                        verificationCheckFailed = false,
+                                    )
+                                }
+                                _activeSheet.value = AuthSheet.NONE
+                                _events.emit(AuthEvent.EmailVerified)
+                                _events.emit(AuthEvent.AuthSuccess)
+                            }
+                            .onFailure { e ->
+                                _state.update { it.copy(isLoading = false, error = e.message ?: strings.get(R.string.auth_error_login_failed)) }
+                            }
                     } else {
                         _state.update { it.copy(isLoading = false, verificationCheckFailed = true) }
                     }

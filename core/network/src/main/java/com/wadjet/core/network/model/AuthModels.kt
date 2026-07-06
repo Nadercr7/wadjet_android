@@ -21,6 +21,12 @@ data class GoogleAuthRequest(
     val credential: String,
 )
 
+/** A1: Firebase ID token → backend session exchange (POST api/auth/firebase). */
+@Serializable
+data class FirebaseAuthRequest(
+    @SerialName("id_token") val idToken: String,
+)
+
 @Serializable
 data class ForgotPasswordRequest(
     val email: String,

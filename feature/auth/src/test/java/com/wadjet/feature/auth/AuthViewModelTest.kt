@@ -288,6 +288,8 @@ class AuthViewModelTest {
     fun `checkEmailVerified when verified emits EmailVerified and AuthSuccess`() = runTest {
         coEvery { authRepository.register(any(), any(), any()) } returns Result.success(unverifiedUser)
         coEvery { authRepository.reloadEmailVerified() } returns Result.success(true)
+        // A1: backend session is established only after the verification gate passes
+        coEvery { authRepository.establishBackendSession() } returns Result.success(fakeUser)
 
         vm.register("test@example.com", "Password1", "Password1", null)
         advanceUntilIdle()

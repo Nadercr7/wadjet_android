@@ -82,11 +82,8 @@ class AuthInterceptor @Inject constructor(
 
     private fun Request.isAuthEndpoint(): Boolean {
         val path = url.encodedPath
-        return path.contains("/auth/login") ||
-            path.contains("/auth/register") ||
-            path.contains("/auth/google") ||
+        return path.contains("/auth/firebase") ||
             path.contains("/auth/refresh") ||
-            path.contains("/auth/forgot-password") ||
             path.contains("/auth/logout")
     }
 }

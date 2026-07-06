@@ -1,5 +1,6 @@
 package com.wadjet.core.data.di
 
+import com.wadjet.core.data.auth.FirebaseIdTokenProviderImpl
 import com.wadjet.core.data.repository.AuthRepositoryImpl
 import com.wadjet.core.data.repository.ChatRepositoryImpl
 import com.wadjet.core.data.repository.DictionaryRepositoryImpl
@@ -20,6 +21,7 @@ import com.wadjet.core.domain.repository.StoriesRepository
 import com.wadjet.core.domain.repository.TranslateRepository
 import com.wadjet.core.domain.repository.TtsPreferencesRepository
 import com.wadjet.core.domain.repository.UserRepository
+import com.wadjet.core.network.FirebaseIdTokenProvider
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -69,4 +71,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindTtsPreferencesRepository(impl: TtsPreferencesRepositoryImpl): TtsPreferencesRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFirebaseIdTokenProvider(impl: FirebaseIdTokenProviderImpl): FirebaseIdTokenProvider
 }
