@@ -49,20 +49,32 @@ class TokenAuthenticator @Inject constructor(
             }
 
             // Perform refresh
-            val newToken = refreshToken(response)
-            if (newToken != null) {
-                response.request.newBuilder()
-                    .header("Authorization", "Bearer $newToken")
+            when (val outcome = refreshToken(response)) {
+                is RefreshOutcome.Success -> response.request.newBuilder()
+                    .header("Authorization", "Bearer ${outcome.token}")
                     .build()
-            } else {
-                // Refresh failed — invalidate session (signals Firebase signout + local cleanup)
-                tokenManager.invalidateSession()
-                null
+                RefreshOutcome.Rejected -> {
+                    // Server explicitly rejected the refresh token — the session is dead.
+                    tokenManager.invalidateSession()
+                    null
+                }
+                RefreshOutcome.NetworkError -> {
+                    // D-08: transient network failure (offline/DNS/timeout) is NOT an auth
+                    // rejection. Invalidating here silently signed users out whenever a
+                    // 401->refresh raced a connectivity drop. Fail this request only.
+                    null
+                }
             }
         }
     }
 
-    private fun refreshToken(response: Response): String? {
+    private sealed interface RefreshOutcome {
+        data class Success(val token: String) : RefreshOutcome
+        data object Rejected : RefreshOutcome
+        data object NetworkError : RefreshOutcome
+    }
+
+    private fun refreshToken(response: Response): RefreshOutcome {
         return try {
             val refreshRequest = Request.Builder()
                 .url("${baseUrl}api/auth/refresh")
@@ -86,16 +98,23 @@ class TokenAuthenticator @Inject constructor(
                 val body = refreshResponse.body?.string()
                 extractAndSaveRefreshToken(refreshResponse)
                 refreshResponse.close()
-                body?.let { parseAccessToken(it) }?.also {
+                val token = body?.let { parseAccessToken(it) }?.also {
                     tokenManager.accessToken = it
                 }
+                if (token != null) RefreshOutcome.Success(token) else RefreshOutcome.Rejected
             } else {
+                val code = refreshResponse.code
                 refreshResponse.close()
-                null
+                // Only 401/403 mean the refresh token itself is invalid; a 5xx or
+                // gateway error is the backend's problem, not a dead session.
+                if (code == 401 || code == 403) RefreshOutcome.Rejected else RefreshOutcome.NetworkError
             }
+        } catch (e: java.io.IOException) {
+            Timber.w(e, "Token refresh failed (network) — keeping session")
+            RefreshOutcome.NetworkError
         } catch (e: Exception) {
-            Timber.e(e, "Token refresh failed")
-            null
+            Timber.e(e, "Token refresh failed (unexpected) — keeping session")
+            RefreshOutcome.NetworkError
         }
     }
 
