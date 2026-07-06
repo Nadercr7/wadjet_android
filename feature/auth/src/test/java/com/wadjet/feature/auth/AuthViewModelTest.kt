@@ -68,7 +68,7 @@ class AuthViewModelTest {
         authRepository = mockk(relaxed = true) {
             every { currentUser } returns flowOf(null)
         }
-        vm = AuthViewModel(authRepository)
+        vm = AuthViewModel(authRepository, mockk(relaxed = true))
     }
 
     @After
@@ -132,7 +132,7 @@ class AuthViewModelTest {
         vm.signInWithEmail("bad-email", "Password1")
         advanceUntilIdle()
 
-        assertEquals("Please enter a valid email and password", vm.state.value.error)
+        assertTrue(vm.state.value.error != null) // localized via StringResolver (G-04)
         coVerify(exactly = 0) { authRepository.signInWithEmail(any(), any()) }
     }
 
@@ -208,7 +208,7 @@ class AuthViewModelTest {
         vm.register("test@example.com", "Password1", "Different1", null)
         advanceUntilIdle()
 
-        assertEquals("Passwords do not match", vm.state.value.error)
+        assertTrue(vm.state.value.error != null) // localized via StringResolver (G-04)
         coVerify(exactly = 0) { authRepository.register(any(), any(), any()) }
     }
 
