@@ -2,6 +2,7 @@ package com.wadjet.core.data.repository
 
 import com.wadjet.core.common.EgyptianPronunciation
 import com.wadjet.core.common.suspendRunCatching
+import com.wadjet.core.data.audio.TtsAudioCache
 import com.wadjet.core.data.ApiException
 import com.wadjet.core.database.dao.SignDao
 import com.wadjet.core.database.entity.SignEntity
@@ -36,6 +37,7 @@ class DictionaryRepositoryImpl @Inject constructor(
     private val audioApi: AudioApiService,
     private val signDao: SignDao,
     private val categoryDao: com.wadjet.core.database.dao.CategoryDao,
+    private val ttsCache: TtsAudioCache,
 ) : DictionaryRepository {
 
     override suspend fun getSigns(
@@ -228,13 +230,14 @@ class DictionaryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun speakPhonetic(text: String): Result<ByteArray?> = suspendRunCatching {
+        ttsCache.get(text, "en", EgyptianPronunciation.CONTEXT)?.let { return@suspendRunCatching it }
         val response = audioApi.speak(SpeakRequest(
             text = text,
             lang = "en",
             context = EgyptianPronunciation.CONTEXT,
         ))
         when (response.code()) {
-            200 -> response.body()?.bytes()
+            200 -> response.body()?.bytes()?.also { ttsCache.put(text, "en", EgyptianPronunciation.CONTEXT, it) }
             204 -> null
             else -> throw ApiException("TTS failed: ${response.code()}")
         }

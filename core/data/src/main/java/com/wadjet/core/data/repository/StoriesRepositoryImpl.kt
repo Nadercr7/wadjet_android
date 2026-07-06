@@ -3,6 +3,7 @@ package com.wadjet.core.data.repository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.wadjet.core.common.suspendRunCatching
+import com.wadjet.core.data.audio.TtsAudioCache
 import com.wadjet.core.data.ApiException
 import com.wadjet.core.domain.model.Chapter
 import com.wadjet.core.domain.model.DecisionChoice
@@ -52,6 +53,7 @@ class StoriesRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val storyProgressDao: StoryProgressDao,
     private val storyCacheDao: StoryCacheDao,
+    private val ttsCache: TtsAudioCache,
 ) : StoriesRepository {
 
     private val cacheJson = Json { ignoreUnknownKeys = true }
@@ -240,9 +242,10 @@ class StoriesRepositoryImpl @Inject constructor(
     }
 
     override suspend fun speakChapter(text: String, lang: String): Result<ByteArray?> = suspendRunCatching {
+        ttsCache.get(text, lang, "story_narration")?.let { return@suspendRunCatching it }
         val response = audioApi.speak(SpeakRequest(text = text, lang = lang, context = "story_narration"))
         when (response.code()) {
-            200 -> response.body()?.bytes()
+            200 -> response.body()?.bytes()?.also { ttsCache.put(text, lang, "story_narration", it) }
             204 -> null
             else -> throw ApiException("TTS failed: ${response.code()}")
         }

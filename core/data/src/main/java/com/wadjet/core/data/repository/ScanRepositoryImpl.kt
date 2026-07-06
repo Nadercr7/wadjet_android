@@ -1,6 +1,7 @@
 package com.wadjet.core.data.repository
 
 import com.wadjet.core.common.suspendRunCatching
+import com.wadjet.core.data.audio.TtsAudioCache
 import com.wadjet.core.data.ApiException
 import com.wadjet.core.database.dao.ScanResultDao
 import com.wadjet.core.database.entity.ScanResultEntity
@@ -30,6 +31,7 @@ class ScanRepositoryImpl @Inject constructor(
     private val audioApi: AudioApiService,
     private val scanResultDao: ScanResultDao,
     private val json: Json,
+    private val ttsCache: TtsAudioCache,
 ) : ScanRepository {
 
     override suspend fun scanImage(imageFile: File, mode: String): Result<ScanResult> = suspendRunCatching {
@@ -99,9 +101,10 @@ class ScanRepositoryImpl @Inject constructor(
     }
 
     override suspend fun speak(text: String, lang: String, context: String): Result<ByteArray?> = suspendRunCatching {
+        ttsCache.get(text, lang, context)?.let { return@suspendRunCatching it }
         val response = audioApi.speak(SpeakRequest(text = text, lang = lang, context = context))
         when (response.code()) {
-            200 -> response.body()?.bytes()
+            200 -> response.body()?.bytes()?.also { ttsCache.put(text, lang, context, it) }
             204 -> null
             else -> throw Exception("TTS failed: ${response.code()}")
         }
