@@ -39,10 +39,25 @@ class WadjetFirebaseMessaging : FirebaseMessagingService() {
         body: String,
         data: Map<String, String>,
     ) {
-        val intent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("notification_type", type)
-            data.forEach { (key, value) -> putExtra(key, value) }
+        // B-01: content notifications open the target screen via wadjet:// deep links
+        val deepLink = when {
+            !data["story_id"].isNullOrBlank() -> "wadjet://story/${data["story_id"]}"
+            !data["landmark_slug"].isNullOrBlank() -> "wadjet://landmark/${data["landmark_slug"]}"
+            else -> null
+        }
+        val intent = if (deepLink != null) {
+            Intent(Intent.ACTION_VIEW, android.net.Uri.parse(deepLink)).apply {
+                setPackage(packageName)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+        } else {
+            packageManager.getLaunchIntentForPackage(packageName)?.apply {
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("notification_type", type)
+                data.forEach { (key, value) -> putExtra(key, value) }
+            }
         }
 
         val pendingIntent = PendingIntent.getActivity(

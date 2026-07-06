@@ -127,6 +127,17 @@ private fun WadjetApp(
         }
     }
     val navController = rememberNavController()
+
+    // B-01: handle wadjet:// deep links arriving while the activity is alive
+    // (notification taps); the launch intent is handled by NavHost itself.
+    val deepLinkActivity = androidx.compose.ui.platform.LocalContext.current as? androidx.activity.ComponentActivity
+    androidx.compose.runtime.DisposableEffect(navController, deepLinkActivity) {
+        val listener = androidx.core.util.Consumer<android.content.Intent> { intent ->
+            navController.handleDeepLink(intent)
+        }
+        deepLinkActivity?.addOnNewIntentListener(listener)
+        onDispose { deepLinkActivity?.removeOnNewIntentListener(listener) }
+    }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val isOffline by networkMonitor.isOnline.collectAsStateWithLifecycle(initialValue = true)

@@ -306,7 +306,10 @@ fun WadjetNavGraph(
             )
             }
         }
-        composable<Route.LandmarkDetail> { navEntry ->
+        composable<Route.LandmarkDetail>(
+            // B-01: wadjet://landmark/{slug}
+            deepLinks = listOf(androidx.navigation.navDeepLink<Route.LandmarkDetail>(basePath = "wadjet://landmark")),
+        ) { navEntry ->
             val viewModel: DetailViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
             CompositionLocalProvider(
@@ -421,7 +424,10 @@ fun WadjetNavGraph(
             }
         }
 
-        composable<Route.StoryReader> {
+        composable<Route.StoryReader>(
+            // B-01: wadjet://story/{storyId}
+            deepLinks = listOf(androidx.navigation.navDeepLink<Route.StoryReader>(basePath = "wadjet://story")),
+        ) {
             val viewModel: StoryReaderViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
             CompositionLocalProvider(
