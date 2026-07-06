@@ -346,7 +346,7 @@ class StoriesRepositoryImpl @Inject constructor(
                 SaveProgressRequest(
                     storyId = progress.storyId,
                     chapterIndex = progress.chapterIndex,
-                    glyphsLearned = progress.glyphsLearned,
+                    glyphsLearned = Json.encodeToString(progress.glyphsLearned),
                     score = progress.score,
                     completed = progress.completed,
                 ),
