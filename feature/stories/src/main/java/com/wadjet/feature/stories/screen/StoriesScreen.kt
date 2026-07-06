@@ -283,7 +283,7 @@ private fun StoryCard(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = story.titleEn,
+                    text = localized(story.titleEn, story.titleAr),
                     color = if (isLocked) WadjetColors.TextMuted else WadjetColors.Text,
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,

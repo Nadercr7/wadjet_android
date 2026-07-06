@@ -451,8 +451,10 @@ private fun ContinueStoryCard(
                 color = WadjetColors.Gold,
             )
             Spacer(modifier = Modifier.height(8.dp))
+            // G-06: server story titles are bilingual; follow the app locale.
+            val isArabicLocale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]?.language == "ar"
             Text(
-                text = story.titleEn,
+                text = if (isArabicLocale && story.titleAr.isNotBlank()) story.titleAr else story.titleEn,
                 style = MaterialTheme.typography.titleSmall,
                 color = WadjetColors.Gold,
                 maxLines = 1,

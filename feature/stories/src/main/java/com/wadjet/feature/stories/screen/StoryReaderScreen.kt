@@ -161,7 +161,7 @@ fun StoryReaderScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            text = story?.titleEn ?: stringResource(R.string.reader_loading_title),
+                            text = story?.let { localized(it.titleEn, it.titleAr) } ?: stringResource(R.string.reader_loading_title),
                             color = WadjetColors.Gold,
                             style = MaterialTheme.typography.titleMedium,
                         )
@@ -235,7 +235,7 @@ fun StoryReaderScreen(
             item {
                 FadeUp(visible = true) {
                     Text(
-                        text = chapter.titleEn,
+                        text = localized(chapter.titleEn, chapter.titleAr),
                         color = WadjetColors.Gold,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
@@ -536,13 +536,17 @@ private fun ParagraphBlock(
             },
         ),
     ) {
+        // G-06: paragraph text and annotated words must switch language together,
+        // otherwise indexOf(wordEn) can never match inside textAr.
+        val useArabic = isAppLocaleArabic() && paragraph.textAr.isNotBlank()
         val annotatedText = buildAnnotatedString {
-            val text = paragraph.textEn
+            val text = if (useArabic) paragraph.textAr else paragraph.textEn
             val annotations = paragraph.glyphAnnotations
             var lastEnd = 0
 
             annotations.forEach { annotation ->
-                val wordStart = text.indexOf(annotation.wordEn, lastEnd)
+                val word = if (useArabic && annotation.wordAr.isNotBlank()) annotation.wordAr else annotation.wordEn
+                val wordStart = text.indexOf(word, lastEnd)
                 if (wordStart >= 0) {
                     // Text before annotation
                     if (wordStart > lastEnd) {
@@ -559,10 +563,10 @@ private fun ParagraphBlock(
                             fontWeight = FontWeight.Medium,
                         ),
                     ) {
-                        append(annotation.wordEn)
+                        append(word)
                     }
                     pop()
-                    lastEnd = wordStart + annotation.wordEn.length
+                    lastEnd = wordStart + word.length
                 }
             }
             // Remaining text
@@ -610,7 +614,7 @@ private fun ParagraphBlock(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(ann.gardinerCode, color = WadjetColors.Sand, style = MaterialTheme.typography.labelSmall)
-                            Text(ann.meaningEn, color = WadjetColors.Text, style = MaterialTheme.typography.bodyMedium)
+                            Text(localized(ann.meaningEn, ann.meaningAr), color = WadjetColors.Text, style = MaterialTheme.typography.bodyMedium)
                             Text(ann.transliteration, color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
                         }
                     }
@@ -643,7 +647,7 @@ private fun InteractionBlock(
         when (interaction) {
             is Interaction.ChooseGlyph -> {
                 Text(
-                    text = interaction.questionEn,
+                    text = localized(interaction.questionEn, interaction.questionAr),
                     color = WadjetColors.Ivory,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
@@ -687,12 +691,12 @@ private fun InteractionBlock(
 
             is Interaction.WriteWord -> {
                 Text(
-                    text = stringResource(R.string.reader_write_prompt, interaction.targetWordEn),
+                    text = stringResource(R.string.reader_write_prompt, localized(interaction.targetWordEn, interaction.targetWordAr)),
                     color = WadjetColors.Ivory,
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 Text(
-                    text = stringResource(R.string.reader_hint, interaction.hintEn),
+                    text = stringResource(R.string.reader_hint, localized(interaction.hintEn, interaction.hintAr)),
                     color = WadjetColors.TextMuted,
                     style = MaterialTheme.typography.bodySmall,
                 )
@@ -741,7 +745,7 @@ private fun InteractionBlock(
 
             is Interaction.GlyphDiscovery -> {
                 Text(
-                    text = interaction.promptEn,
+                    text = localized(interaction.promptEn, interaction.promptAr),
                     color = WadjetColors.Ivory,
                     style = MaterialTheme.typography.bodyLarge,
                 )
@@ -787,7 +791,7 @@ private fun InteractionBlock(
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Column {
                                     Text(interaction.glyphCode, color = WadjetColors.Sand, style = MaterialTheme.typography.labelMedium)
-                                    Text(interaction.meaningEn, color = WadjetColors.Text, style = MaterialTheme.typography.bodyMedium)
+                                    Text(localized(interaction.meaningEn, interaction.meaningAr), color = WadjetColors.Text, style = MaterialTheme.typography.bodyMedium)
                                     Text(interaction.transliteration, color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
                                 }
                             }
@@ -816,7 +820,7 @@ private fun InteractionBlock(
 
             is Interaction.StoryDecision -> {
                 Text(
-                    text = interaction.promptEn,
+                    text = localized(interaction.promptEn, interaction.promptAr),
                     color = WadjetColors.Ivory,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
@@ -839,7 +843,7 @@ private fun InteractionBlock(
                             .padding(12.dp),
                     ) {
                         Text(
-                            text = choice.textEn,
+                            text = localized(choice.textEn, choice.textAr),
                             color = if (isSelected) WadjetColors.Gold else WadjetColors.Text,
                             style = MaterialTheme.typography.bodyMedium,
                         )
@@ -922,9 +926,9 @@ private fun FeedbackBanner(
                         fontWeight = FontWeight.Bold,
                     )
                 }
-                val explanation = result.explanationEn
-                    ?: result.outcomeEn
-                    ?: (interaction as? Interaction.ChooseGlyph)?.explanationEn
+                val explanation = localizedOrNull(result.explanationEn, result.explanationAr)
+                    ?: localizedOrNull(result.outcomeEn, result.outcomeAr)
+                    ?: (interaction as? Interaction.ChooseGlyph)?.let { localizedOrNull(it.explanationEn, it.explanationAr) }
                 if (!explanation.isNullOrBlank()) {
                     Text(
                         text = explanation,
