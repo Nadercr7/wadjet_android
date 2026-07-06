@@ -88,14 +88,30 @@ Use the app; you should see `screen_view`, `login`, `sign_up`, `scan_completed`,
 
 ## 7. Send a real push notification (end-to-end FCM check)
 
-Console → **Engage → Messaging → New campaign → Firebase Notification messages**:
-- Title/body anything; under **Additional options → Custom data** add key `story_id`
-  value e.g. `creation-from-nun` (or `landmark_slug` = `great-pyramids-of-giza`).
-- Target the app `com.wadjet.app`, send test message to the device's FCM token
-  (visible in console → Firestore `users/<uid>/fcm_tokens/` after step 3, or logcat `FCM token`).
+**Option A — your own API (E-P9, preferred).** Needs step 3 done + the backend deployed
+with `GOOGLE_APPLICATION_CREDENTIALS` pointing at a service-account JSON
+(console → Project settings → Service accounts → Generate new private key; on HF Spaces
+upload the file as a secret file and set the env var to its path). Then, signed in as
+the admin account (`ADMIN_EMAIL`):
 
-Expected: notification shows with the Wadjet eye status icon; tapping opens the story
-reader / landmark detail directly (deep links verified in Phase 2).
+```bash
+curl -X POST https://<backend>/api/push/send \
+  -H "Authorization: Bearer <admin access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"New story!","body":"The Eye of Ra awaits","broadcast":true,"story_id":"eye-of-ra"}'
+# → {"tokens":N,"sent":n,"failed":m,"pruned":p}  (dead tokens are auto-deleted)
+```
+
+Target a single user instead with `"uid":"<firebase uid>"` in place of `broadcast`.
+
+**Option B — Firebase console.** **Engage → Messaging → New campaign → Firebase
+Notification messages**: any title/body; under **Additional options → Custom data** add
+`story_id` = `creation-from-nun` (or `landmark_slug` = `great-pyramids-of-giza`); send a
+test message to the device token (visible in Firestore `users/<uid>/fcm_tokens/` after
+step 3, or logcat `FCM token`).
+
+Expected either way: notification shows with the Wadjet eye status icon; tapping opens
+the story reader / landmark detail directly (deep links verified in Phase 2).
 
 ## 8. OPTIONAL — let web-created accounts sign in on Android
 
@@ -127,6 +143,28 @@ print(result.success_count, result.failure_count, result.errors)
 
 Their existing passwords keep working (Firebase verifies against the imported bcrypt hash).
 
+## 9. App Links — https story URLs open the app (E-P8)
+
+The backend branch serves `/.well-known/assetlinks.json` once you set this env var
+on the deployment (alongside step 4's vars):
+
+```bash
+# both certs: RELEASE (wadjet-release.jks, extracted 2026-07-06) + DEBUG (this machine)
+ANDROID_CERT_SHA256=1C:94:2D:17:2F:AF:6A:0A:C1:D1:65:2E:05:4F:9A:2A:97:5F:95:C8:C1:B4:29:57:0A:0B:41:24:B5:FB:D9:02,7A:83:F2:2E:45:FC:71:45:8F:BD:35:ED:C2:92:E9:A4:B9:27:48:CE:42:D0:75:5C:AF:F4:47:05:30:F0:63:11
+```
+
+- The first fingerprint is your **release** cert (`keytool -list -v -keystore wadjet-release.jks -alias wadjet`).
+- If Play App Signing re-signs your app, ALSO append the Play cert's SHA-256
+  (Play Console → Setup → App integrity → App signing).
+- Drop the debug fingerprint (second value) for a production-only statement.
+
+After deploy, sanity-check `https://<backend>/.well-known/assetlinks.json` returns the
+statement, then on a device: reinstall the app (or
+`adb shell pm verify-app-links --re-verify com.wadjet.app`), wait ~30s, and
+`adb shell pm get-app-links com.wadjet.app` should show
+`nadercr7-wadjet-v2.hf.space: verified`. From then on, story links
+(`https://…/stories/<id>`) shared anywhere open the app's reader directly.
+
 ---
 
 ### Quick status checklist
@@ -139,5 +177,6 @@ Their existing passwords keep working (Firebase verifies against the imported bc
 | 4 Backend env + deploy | Android sign-in vs prod, Pexels proxy | ⬜ **PENDING-USER-DEPLOY** |
 | 5 Crashlytics enable | crash reports | ⬜ **PENDING-USER-CONSOLE** |
 | 6 Analytics DebugView | verification only | ⬜ optional |
-| 7 Test push | FCM E2E vs prod | ⬜ after 3 |
+| 7 Test push | FCM E2E vs prod | ⬜ after 3 (+ service account for the E-P9 API) |
 | 8 User import | web accounts on Android | ⬜ optional |
+| 9 App Links env + deploy | https story links open the app | ⬜ **PENDING-USER-DEPLOY** (value ready to paste above) |

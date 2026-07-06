@@ -252,7 +252,7 @@ _Phase 1 findings are appended below once the audit sweep completes._
 ## [B-02] Password reset / email verification complete on web only
 - Date: 2026-07-06 | Severity: minor (given B-01) | Area: B-parity
 - Evidence: `ForgotPasswordSheet.kt` sends email; reset token flow not handled in-app. Firebase-based verify flow present (`VerifyEmailSheet.kt`).
-- Status: OPEN (depends on B-01) | Verification: code-read.
+- Status: **CLOSED (Phase 4)** — (a) content half: E-P8 verified https App Links (`/stories`, `/stories/{id}`) open the app (Android b31bd9c + backend 99fef4b; auto-verify pending the user's assetlinks deploy, runbook §9); (b) verify/reset email links are Firebase-hosted since A1 (Firebase-primary auth) — the original "backend email links open web only" concern no longer applies to the app's own flows. | Verification: emulator — https story/list links opened the in-app reader/list with the domain approved.
 
 ## [C-01] Duplicate/racing sign-out navigation
 - Date: 2026-07-06 | Severity: major | Area: C-nav

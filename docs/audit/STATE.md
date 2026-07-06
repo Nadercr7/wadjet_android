@@ -217,3 +217,33 @@ Thoth renders; session survives force-stop.
 2. Deploy backend branch + set `FIREBASE_PROJECT_ID`, `PEXELS_API_KEYS` (§4) — until then production sign-in for THIS app build and thumbnails-via-proxy don't work in prod.
 3. Enable Crashlytics + verify Analytics DebugView (§5–6).
 4. Optional: bulk-import web users into Firebase (§8); test push (§7).
+
+---
+
+# PHASE 4 — approved enhancements E-P8, E-P9, E-P1 (2026-07-06)
+
+Humanization SKIPPED per supervisor (no local skill); existing copy untouched.
+
+## Per-enhancement results (commit ↔ proof)
+
+| E-P | What shipped | Commits | Runtime proof |
+|---|---|---|---|
+| E-P8 App Links | Backend serves `/.well-known/assetlinks.json` from `ANDROID_CERT_SHA256` env (404 while unconfigured); Android autoVerify https intent-filter + typed deep links `/stories`→list, `/stories/{id}`→reader | backend `99fef4b`, Android `b31bd9c` | assetlinks served LIVE by local boot (both fingerprints, correct statement shape — tests too); on emulator with the domain approved: `VIEW https://…/stories/creation-from-nun` opened the in-app READER, `…/stories` opened the list. `pm get-app-links` shows the domain registered; installed-APK signature == the debug fingerprint in the statement. AUTO-verify = PENDING-USER-DEPLOY (runbook §9 has the exact env value incl. release SHA-256 extracted from wadjet-release.jks) |
+| E-P9 Push sender | `app/core/push_service.py` (Firestore `users/{uid}/fcm_tokens` → `send_each_for_multicast`, 500-token batches, prunes Unregistered/invalid-argument tokens) + admin-only `POST /api/push/send` (uid or broadcast, story_id/landmark_slug data for the app's deep links) | backend `a941a84` + wiring in `99fef4b` | 7 endpoint tests (401/403/400/503/success/single-target/sdk-failure→503) + 2 unit tests (batch chunking, prune policy) — 11 new tests green. Real delivery = PENDING-USER-CONSOLE (needs firestore.rules deploy + `GOOGLE_APPLICATION_CREDENTIALS`; manual test = runbook §7 Option A) |
+| E-P1 Wi-Fi prefetch | `StoryPrefetchWorker` (@HiltWorker, daily, UNMETERED + battery-not-low, ≤3 attempts) pulls every story through the existing Room story_cache; Settings→Offline toggle (default ON, EN+AR); WadjetApplication observes the toggle to schedule/cancel; WorkManager on-demand init via HiltWorkerFactory | Android `d79d6f1` | LIVE: logcat `E-P1 prefetched 12/12 stories into Room cache` (+22 story GETs in backend log); airplane + force-stop + relaunch → NEVER-opened "The Book of Thoth" reader rendered fully offline (Ch 1/6; chapter image intentionally not prefetched → retry placeholder); JobScheduler dump shows `Network type: NOT_METERED&INTERNET` + `batteryNotLow=true` required (metered ⇒ CONNECTIVITY unsatisfied by construction); toggle OFF → `E-P1 prefetch cancelled`, ON → rescheduled + immediate 12/12 re-run |
+
+## Regression
+
+- Android: assembleDebug + :core:data/:feature:settings unit tests green (one build OOM'd from
+  host memory pressure — NOT a code failure; passed after killing stale processes; hs_err logs cleaned).
+- Backend: full pytest green (see below), local boot serves web unaffected
+  (`/welcome` 200, `/` 302→welcome, `/api/health` 200, story page session-gate intact).
+- Emulator note: one mid-session Android system_server wobble (System UI ANR) after heavy load;
+  OS reboot inside the running 4GB instance recovered it; all checks passed after.
+
+## Pending on the user (added to FIREBASE_RUNBOOK)
+
+- §9: set `ANDROID_CERT_SHA256` (exact value ready — release + debug fingerprints) and deploy →
+  App Links auto-verify goes live; drop the debug fingerprint for production-only.
+- §7 Option A: service-account (`GOOGLE_APPLICATION_CREDENTIALS`) + rules deploy → real push E2E
+  via `POST /api/push/send`.

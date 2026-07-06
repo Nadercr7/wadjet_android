@@ -34,3 +34,11 @@ _(collected during Phase 2)_
 | 5 | E-P3 | Real scan progress from server `timing`/`detection_source` stages | Honest, informative progress (F-04 removed the fakery; this adds real stages) | M | Low |
 | 6 | E-P2 | Landmark paging via backend `has_more` (or Paging 3) | Exact contract match, removes synthesized totalPages | S–M | Low |
 | 7 | E-P10 (new) | On-device landmark identify fallback (bundled EfficientNet-B0, 52 classes) mirroring the C2 pattern | Offline "what am I looking at", clearly lower-fidelity than the server AI pipeline | M | Low-Med |
+
+## Phase 4 status updates
+
+- **E-P1** (Wi-Fi story prefetch): **DONE** (Android `d79d6f1`) — verified 12/12 prefetched, offline reading of never-opened stories, NOT_METERED constraint, Settings toggle.
+- **E-P8** (App Links): **DONE** (backend `99fef4b` + Android `b31bd9c`) — auto-verify PENDING-USER-DEPLOY (runbook §9 has the paste-ready env value).
+- **E-P9** (push sender): **DONE** (backend `a941a84`+`99fef4b`) — real delivery PENDING-USER-CONSOLE (service account + rules deploy; runbook §7).
+
+Remaining approved-nothing list (unchanged priorities): E-P5 (migration test rig), E-P3 (real scan progress stages), E-P2 (has_more paging), E-P10 (on-device landmark identify). New idea (propose-only): **E-P11** — hook `send_push` into content publishing (notify on new story) once the story catalog becomes dynamic; trivial once E-P9 credentials exist.
