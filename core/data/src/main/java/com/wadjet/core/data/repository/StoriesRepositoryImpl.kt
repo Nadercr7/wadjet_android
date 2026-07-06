@@ -30,7 +30,6 @@ import com.wadjet.core.database.dao.StoryProgressDao
 import com.wadjet.core.database.entity.StoryCacheEntity
 import com.wadjet.core.database.entity.StoryProgressEntity
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -54,6 +53,7 @@ class StoriesRepositoryImpl @Inject constructor(
     private val storyProgressDao: StoryProgressDao,
     private val storyCacheDao: StoryCacheDao,
     private val ttsCache: TtsAudioCache,
+    private val analytics: com.wadjet.core.firebase.WadjetAnalytics,
 ) : StoriesRepository {
 
     private val cacheJson = Json { ignoreUnknownKeys = true }
@@ -259,15 +259,15 @@ class StoriesRepositoryImpl @Inject constructor(
             awaitClose()
             return@callbackFlow
         }
+        val flowScope = this
         val listener = firestore.collection("users").document(uid)
             .collection("story_progress").document(storyId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     Timber.w(error, "Story progress listen failed, falling back to Room")
-                    val dao = storyProgressDao
-                    val sid = storyId
-                    CoroutineScope(Dispatchers.IO).launch {
-                        trySend(dao.getByStoryId(sid)?.toDomain())
+                    // I-05(g): fallback read scoped to the flow, not a throwaway scope
+                    flowScope.launch(Dispatchers.IO) {
+                        trySend(storyProgressDao.getByStoryId(storyId)?.toDomain())
                     }
                     return@addSnapshotListener
                 }
@@ -296,14 +296,15 @@ class StoriesRepositoryImpl @Inject constructor(
             awaitClose()
             return@callbackFlow
         }
+        val flowScope = this
         val listener = firestore.collection("users").document(uid)
             .collection("story_progress")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     Timber.w(error, "All progress listen failed, falling back to Room")
-                    val dao = storyProgressDao
-                    CoroutineScope(Dispatchers.IO).launch {
-                        trySend(dao.getAll().associate { it.storyId to it.toDomain() })
+                    // I-05(g): fallback read scoped to the flow, not a throwaway scope
+                    flowScope.launch(Dispatchers.IO) {
+                        trySend(storyProgressDao.getAll().associate { it.storyId to it.toDomain() })
                     }
                     return@addSnapshotListener
                 }
@@ -326,6 +327,9 @@ class StoriesRepositoryImpl @Inject constructor(
     override suspend fun saveProgress(progress: StoryProgress) {
         // Always persist to Room first (offline-safe)
         storyProgressDao.upsert(progress.toEntity())
+
+        // A4
+        if (progress.completed) analytics.logStoryCompleted(progress.storyId)
 
         val uid = firebaseAuth.currentUser?.uid ?: return
         val data = mapOf(

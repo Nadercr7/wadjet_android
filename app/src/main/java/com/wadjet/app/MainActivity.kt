@@ -74,12 +74,32 @@ class MainActivity : AppCompatActivity() {
     @Inject @Named("webClientId") lateinit var webClientId: String
     @Inject lateinit var networkMonitor: NetworkMonitor
     @Inject lateinit var toastController: ToastController
+    @Inject lateinit var analytics: com.wadjet.core.firebase.WadjetAnalytics
+
+    // A3: POST_NOTIFICATIONS is runtime-gated on API 33+ — without asking,
+    // FCM notifications silently never appear.
+    private val notificationPermissionLauncher =
+        registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { }
+
+    private fun maybeRequestNotificationPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.POST_NOTIFICATIONS,
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            if (!granted) {
+                notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         val isLoggedIn = authRepository.isLoggedIn
+        // Ask signed-in users on launch; new sign-ins are asked via onAuthenticated below.
+        if (isLoggedIn) maybeRequestNotificationPermission()
         // L-01: the app is forced-dark; auto style would follow the SYSTEM theme
         // and paint dark icons on the near-black background in light mode.
         enableEdgeToEdge(
@@ -96,6 +116,8 @@ class MainActivity : AppCompatActivity() {
                     networkMonitor = networkMonitor,
                     toastController = toastController,
                     widthSizeClass = windowSizeClass.widthSizeClass,
+                    onAuthenticated = ::maybeRequestNotificationPermission,
+                    analytics = analytics,
                 )
             }
         }
@@ -111,6 +133,8 @@ private fun WadjetApp(
     networkMonitor: NetworkMonitor,
     toastController: ToastController,
     widthSizeClass: WindowWidthSizeClass,
+    onAuthenticated: () -> Unit = {},
+    analytics: com.wadjet.core.firebase.WadjetAnalytics? = null,
 ) {
     var currentToast by remember { mutableStateOf<ToastState?>(null) }
     LaunchedEffect(Unit) {
@@ -140,6 +164,13 @@ private fun WadjetApp(
     }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+
+    // A4: automatic screen_view analytics per navigation destination
+    LaunchedEffect(currentDestination) {
+        val screen = currentDestination?.route
+            ?.substringBefore('/')?.substringBefore('?')?.substringAfterLast('.')
+        if (analytics != null && !screen.isNullOrBlank()) analytics.logScreenView(screen)
+    }
     val isOffline by networkMonitor.isOnline.collectAsStateWithLifecycle(initialValue = true)
     var showQuickSettings by remember { mutableStateOf(false) }
 
@@ -159,6 +190,10 @@ private fun WadjetApp(
                 navController.navigate(Route.Welcome) {
                     popUpTo(navController.graph.id) { inclusive = true }
                 }
+            }
+            if (isAuthenticated && wasAuthenticated == false) {
+                // A3: fresh sign-in — ask for notification permission (API 33+)
+                onAuthenticated()
             }
             wasAuthenticated = isAuthenticated
         }

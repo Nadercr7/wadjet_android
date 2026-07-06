@@ -37,6 +37,9 @@ class WadjetApplication : Application(), SingletonImageLoader.Factory {
         super.onCreate()
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
+        } else {
+            // A4: surface production warnings/errors in Crashlytics
+            Timber.plant(CrashlyticsTree())
         }
         Timber.tag("Wadjet").i("App started; BuildConfig.DEBUG=${BuildConfig.DEBUG}")
         // E-04: populate signs/categories/landmarks from bundled seed on first run

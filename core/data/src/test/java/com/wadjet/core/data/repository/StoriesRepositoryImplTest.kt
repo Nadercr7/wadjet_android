@@ -147,6 +147,7 @@ class StoriesRepositoryImplTest {
             mockk<com.wadjet.core.data.audio.TtsAudioCache>(relaxed = true) {
                 every { get(any(), any(), any()) } returns null
             },
+            mockk<com.wadjet.core.firebase.WadjetAnalytics>(relaxed = true),
         )
     }
 
