@@ -72,7 +72,11 @@ class AuthViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, error = null) }
             authRepository.signInWithEmail(email.trim(), password)
                 .onSuccess { user ->
-                    if (!user.emailVerified) {
+                    // B-03: the cached flag is stale right after sign-in — reload
+                    // before gating so already-verified accounts skip the sheet.
+                    val verified = user.emailVerified ||
+                        authRepository.reloadEmailVerified().getOrDefault(false)
+                    if (!verified) {
                         // Stop at verification gate — don't emit AuthSuccess yet
                         _state.update {
                             it.copy(

@@ -246,6 +246,8 @@ class AuthViewModelTest {
     @Test
     fun `signInWithEmail with unverified user opens VERIFY_EMAIL sheet`() = runTest {
         coEvery { authRepository.signInWithEmail(any(), any()) } returns Result.success(unverifiedUser)
+        // B-03: gate re-checks server-side state before showing the sheet
+        coEvery { authRepository.reloadEmailVerified() } returns Result.success(false)
 
         vm.signInWithEmail("test@example.com", "Password1")
         advanceUntilIdle()
