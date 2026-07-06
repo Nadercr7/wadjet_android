@@ -36,8 +36,8 @@ coil = "3.0.4"
 # Camera
 cameraX = "1.4.1"
 
-# ML
-onnxRuntime = "1.20.0"
+# ML — A-03: ≥1.23.0 ships 16KB-page-aligned .so files (JNI-lib fix merged upstream 2025-06-04)
+onnxRuntime = "1.27.0"
 
 # Coroutines
 coroutines = "1.9.0"

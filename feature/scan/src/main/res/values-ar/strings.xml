@@ -29,6 +29,9 @@
     <string name="scan_source_onnx_fallback">ONNX (احتياطي)</string>
     <string name="scan_source_onnx_ai">ONNX + تحقق AI</string>
     <string name="scan_source_onnx">ONNX</string>
+    <!-- C2 -->
+    <string name="scan_source_on_device">على الجهاز (دون اتصال)</string>
+    <string name="scan_offline_banner">نتيجة دون اتصال — اكتشاف على الجهاز بدقة أقل. الترجمة تتطلب اتصالاً بالإنترنت.</string>
     <string name="scan_detected_by">تم الاكتشاف بواسطة: %1$s</string>
     <string name="scan_confidence_badge">الدقة: %1$d%%</string>
     <string name="scan_stat_avg">متوسط</string>

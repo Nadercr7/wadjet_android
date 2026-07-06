@@ -23,8 +23,13 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:domain"))
+
     // ONNX Runtime
     implementation(libs.onnxruntime.android)
+
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.timber)
 
     // Testing
     testImplementation(libs.junit)

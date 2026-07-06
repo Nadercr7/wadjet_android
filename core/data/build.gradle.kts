@@ -30,6 +30,7 @@ dependencies {
     implementation(project(":core:database"))
     implementation(project(":core:firebase"))
     implementation(project(":core:common"))
+    implementation(project(":core:ml"))
 
     // OkHttp SSE (for chat streaming)
     implementation(libs.okhttp.sse)

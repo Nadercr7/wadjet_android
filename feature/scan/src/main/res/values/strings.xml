@@ -29,6 +29,9 @@
     <string name="scan_source_onnx_fallback">ONNX (Fallback)</string>
     <string name="scan_source_onnx_ai">ONNX + AI Verified</string>
     <string name="scan_source_onnx">ONNX</string>
+    <!-- C2: offline on-device fallback -->
+    <string name="scan_source_on_device">On-device (offline)</string>
+    <string name="scan_offline_banner">Offline result — on-device detection, lower accuracy. Translation needs a connection.</string>
     <string name="scan_detected_by">Detected by: %1$s</string>
     <string name="scan_confidence_badge">Confidence: %1$d%%</string>
     <string name="scan_stat_avg">Avg</string>

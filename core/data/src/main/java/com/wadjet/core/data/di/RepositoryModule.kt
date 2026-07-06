@@ -75,4 +75,13 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindFirebaseIdTokenProvider(impl: FirebaseIdTokenProviderImpl): FirebaseIdTokenProvider
+
+    companion object {
+        /** C2: plain class in :core:ml (no Hilt there) — provided here. */
+        @dagger.Provides
+        @Singleton
+        fun provideOnDeviceScanner(
+            @dagger.hilt.android.qualifiers.ApplicationContext context: android.content.Context,
+        ): com.wadjet.core.ml.OnDeviceScanner = com.wadjet.core.ml.OnDeviceScanner(context)
+    }
 }

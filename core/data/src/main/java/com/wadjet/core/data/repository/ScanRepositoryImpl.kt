@@ -32,22 +32,36 @@ class ScanRepositoryImpl @Inject constructor(
     private val scanResultDao: ScanResultDao,
     private val json: Json,
     private val ttsCache: TtsAudioCache,
+    private val onDeviceScanner: dagger.Lazy<com.wadjet.core.ml.OnDeviceScanner>,
+    private val analytics: com.wadjet.core.firebase.WadjetAnalytics,
 ) : ScanRepository {
 
     override suspend fun scanImage(imageFile: File, mode: String): Result<ScanResult> = suspendRunCatching {
-        val filePart = MultipartBody.Part.createFormData(
-            "file",
-            imageFile.name,
-            imageFile.asRequestBody("image/jpeg".toMediaType()),
-        )
-        val modePart = mode.toRequestBody("text/plain".toMediaType())
+        val result = try {
+            // PRIMARY: server inference (full pipeline — accurate, with translation)
+            val filePart = MultipartBody.Part.createFormData(
+                "file",
+                imageFile.name,
+                imageFile.asRequestBody("image/jpeg".toMediaType()),
+            )
+            val modePart = mode.toRequestBody("text/plain".toMediaType())
 
-        val response = scanApi.scan(filePart, modePart)
-        if (response.isSuccessful) {
-            response.body()!!.toDomain()
-        } else {
-            throw ApiException("Scan failed: ${response.code()}")
+            val response = scanApi.scan(filePart, modePart)
+            if (response.isSuccessful) {
+                response.body()!!.toDomain()
+            } else {
+                // HTTP errors mean the server was REACHED — surface them as before,
+                // never silently downgrade to the on-device result.
+                throw ApiException("Scan failed: ${response.code()}")
+            }
+        } catch (e: java.io.IOException) {
+            // C2 (F-02): server unreachable → OFFLINE-ONLY on-device fallback
+            // (detect+classify only; no translation — flagged on_device_onnx).
+            Timber.w(e, "Server scan unreachable — running on-device ONNX fallback")
+            onDeviceScanner.get().scan(imageFile, mode)
         }
+        analytics.logScanCompleted(result.numDetections, result.detectionSource)
+        result
     }
 
     override suspend fun saveScanResult(result: ScanResult, thumbnailPath: String): Result<Int> = suspendRunCatching {
