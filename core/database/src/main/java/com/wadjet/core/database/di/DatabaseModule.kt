@@ -25,7 +25,10 @@ object DatabaseModule {
     fun provideDatabase(@ApplicationContext context: Context): WadjetDatabase =
         Room.databaseBuilder(context, WadjetDatabase::class.java, "wadjet.db")
             .addMigrations(WadjetDatabase.MIGRATION_4_5, WadjetDatabase.MIGRATION_5_6, WadjetDatabase.MIGRATION_6_7)
-            .fallbackToDestructiveMigration()
+            // E-01: destructive fallback on UPGRADE silently wiped scan history,
+            // story progress and favorites whenever a migration was missing.
+            // Downgrade-only keeps user data safe; forward migrations are mandatory.
+            .fallbackToDestructiveMigrationOnDowngrade()
             .build()
 
     @Provides
