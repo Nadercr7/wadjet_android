@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wadjet Android | DEPI Final Project</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=Plus+Jakarta+Sans:wght@300..700&family=Noto+Sans+Egyptian+Hieroglyphs&display=swap" rel="stylesheet">
+
+    <style>
+        /*
+           WADJET ANDROID DECK
+           DEPI Software Development Track, 2026
+           Zero deps. Print-to-PDF ready.
+
+           Design principles applied:
+           - CRAP (one visual anchor per slide, 2+ font size contrast)
+           - Cognitive load (Miller's 7+/-2, one point per slide)
+           - Narrative arc (SCQA, density alternation, no 3 consecutive dense slides)
+           - Composition (Gestalt proximity, three-tier whitespace)
+           - Color 60-30-10 (night 60%, ivory/text 30%, gold 10%)
+           - Data viz (stats always have context labels)
+           - Dark tech (40px dot grid, L-corner accents, glow rings, pulse dots)
+
+           Animation sources:
+           - Hover.css (float-shadow, border-fade, bounce easing)
+           - motion-primitives (blur-in, stagger reveal, spring easing)
+           - animate-ui (slide-up, shine sweep)
+           - magicui (shimmer-sweep, border-beam, pulse keyframes, easeOutExpo counters)
+           - react-bits (shiny-text gradient, blur-text entrance, split-text stagger)
+        */
+
+        :root {
+            --gold: #D4AF37;
+            --gold-light: #E5C76B;
+            --gold-dark: #B8962E;
+            --gold-muted: #A08520;
+            --night: #0B0A09;
+            --surface: #15140F;
+            --surface-alt: #1B1A14;
+            --ivory: #F5F0E8;
+            --sand: #C4A265;
+            --dust: #8B7355;
+            --text: #F0EDE6;
+            --text-muted: #918778;
+            --border: #2C2A24;
+
+            --font-display: 'Fraunces', 'Playfair Display', Georgia, 'Times New Roman', serif;
+            --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-hiero: 'Noto Sans Egyptian Hieroglyphs', serif;
+
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+            --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+            --ease-shine: cubic-bezier(0.4, 0, 0.2, 1);
+            --duration: 0.7s;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-snap-type: y mandatory;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--night);
+            color: var(--text);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-kerning: normal;
+            line-height: 1.75;
+            font-weight: 380;
+        }
+
+        /* ══════════ SLIDE CONTAINER ══════════ */
+        .slide {
+            height: 100vh;
+            width: 100%;
+            padding: 3.5rem 5rem;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ══════════ PROGRESS BAR ══════════ */
+        .progress-bar {
+            position: fixed;
+            top: 0; left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light));
+            z-index: 1000;
+            transition: width 0.3s var(--ease-out-quart);
+            width: 0%;
+        }
+
+        /* ══════════ NAV DOTS ══════════ */
+        .nav-dots {
+            position: fixed;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+        }
+        .nav-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--border);
+            border: 1px solid var(--dust);
+            cursor: pointer;
+            transition: all 0.2s var(--ease-out-quart);
+            position: relative;
+        }
+        /* Expand tap target to 44px without affecting visual size (Impeccable spec) */
+        .nav-dot::before {
+            content: '';
+            position: absolute;
+            inset: -18px;
+        }
+        .nav-dot.active {
+            background: var(--gold);
+            border-color: var(--gold);
+            box-shadow: 0 0 6px rgba(212,175,55,0.35);
+            transform: scale(1.3);
+        }
+        .nav-dot:hover { border-color: var(--gold-light); }
+
+        /* ══════════ SLIDE FOOTERS ══════════ */
+        .slide-number {
+            position: absolute;
+            bottom: 1.5rem;
+            right: 2rem;
+            font-size: 0.72rem;
+            color: var(--dust);
+            letter-spacing: 0.1em;
+        }
+        .depi-footer {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 2rem;
+            font-size: 0.58rem;
+            color: var(--dust);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            opacity: 0.55;
+        }
+
+        /* ══════════ TYPOGRAPHY ══════════ */
+        h1, h2, h3, h4 {
+            font-family: var(--font-display);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -0.025em;
+            text-wrap: balance;
+            font-variation-settings: "opsz" 144;
+        }
+        h1 { font-size: clamp(2.5rem, 5vw, 4.5rem); letter-spacing: -0.035em; }
+        h2 { font-size: clamp(1.6rem, 3.2vw, 2.8rem); letter-spacing: -0.028em; }
+        h3 { font-size: clamp(1.05rem, 1.7vw, 1.5rem); letter-spacing: -0.02em; }
+        h4 { font-size: 0.95rem; font-weight: 600; letter-spacing: -0.015em; font-variation-settings: "opsz" 14; }
+
+        p, li { line-height: 1.7; text-wrap: pretty; }
+        .lead { font-size: 1.1rem; color: var(--sand); line-height: 1.6; text-wrap: balance; }
+        .text-muted { color: var(--text-muted); }
+        .text-gold { color: var(--gold); }
+        .text-sand { color: var(--sand); }
+        .text-ivory { color: var(--ivory); }
+        .text-sm { font-size: 0.82rem; }
+        .text-xs { font-size: 0.7rem; }
+
+        .gold-gradient {
+            background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hieroglyph { font-family: var(--font-hiero); color: var(--gold); font-size: 1.4rem; }
+        .hieroglyph-lg { font-family: var(--font-hiero); color: var(--gold-muted); font-size: 2.5rem; opacity: 0.4; }
+        .hieroglyph-hero { font-family: var(--font-hiero); color: var(--gold); font-size: 2.5rem; }
+
+        /* ══════════ LAYOUT (Gestalt: micro < meso < macro whitespace) ══════════ */
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .items-start { align-items: flex-start; }
+        .justify-center { justify-content: center; }
+        .gap-1 { gap: 0.5rem; }
+        .gap-2 { gap: 1rem; }
+        .gap-3 { gap: 1.5rem; }
+        .gap-4 { gap: 2rem; }
+        .w-full { width: 100%; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .mt-1 { margin-top: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .mt-3 { margin-top: 1.5rem; }
+        .mt-4 { margin-top: 2rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mb-3 { margin-bottom: 1.5rem; }
+        .max-w-5xl { max-width: 64rem; }
+        .max-w-4xl { max-width: 56rem; }
+        .max-w-3xl { max-width: 48rem; }
+        .text-left { text-align: left; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+        .grid-2x3 { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: auto auto; gap: 1.25rem; }
+
+        /* ══════════ CARDS (Hover.css float-shadow pattern adapted to gold) ══════════ */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.3rem;
+            position: relative;
+            overflow: hidden;
+            text-align: left;
+            transition: transform 0.3s var(--ease-out-quart), box-shadow 0.3s var(--ease-out-quart);
+        }
+        @media (hover: hover) {
+            .card:hover {
+                border-color: rgba(212,175,55,0.25);
+                box-shadow: 0 8px 30px rgba(212,175,55,0.06);
+                transform: translateY(-2px);
+            }
+            .tech-table tr:hover { background: rgba(212,175,55,0.025); }
+        }
+        .card:active {
+            transform: translateY(-1px);
+            transition-duration: 0.1s;
+        }
+        .card-gold-border { border-color: rgba(212,175,55,0.25); }
+        .card-icon {
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            background: rgba(212,175,55,0.1);
+            border: 1px solid rgba(212,175,55,0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 0.7rem;
+        }
+
+        .badge {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.28rem 0.8rem;
+            border-radius: 100px;
+            font-size: 0.62rem; font-weight: 600;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            margin-bottom: 0.8rem;
+        }
+        .badge-gold {
+            background: rgba(212,175,55,0.12);
+            border: 1px solid rgba(212,175,55,0.25);
+            color: var(--gold);
+        }
+
+        /* ══════════ STAT BLOCKS (data-viz: context labels always present) ══════════ */
+        .stat-block { text-align: center; }
+        .stat-number {
+            font-family: var(--font-display);
+            font-size: 2.6rem; font-weight: 800; line-height: 1;
+            color: var(--gold);
+            font-variant-numeric: tabular-nums;
+        }
+        .stat-number-sm { font-size: 1.9rem; }
+        .stat-label {
+            font-size: 0.7rem; color: var(--sand);
+            margin-top: 0.2rem; letter-spacing: 0.05em;
+        }
+
+        /* ══════════ PIPELINE ══════════ */
+        .pipeline { display: flex; align-items: flex-start; gap: 0.6rem; }
+        .pipeline-step { flex: 1; text-align: center; position: relative; }
+        .pipeline-step::after {
+            content: '\2192'; position: absolute; right: -0.55rem; top: 1rem;
+            color: var(--gold-muted); font-size: 1rem;
+        }
+        .pipeline-step:last-child::after { display: none; }
+        .pipeline-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(212,175,55,0.15); border: 1.5px solid var(--gold);
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-display); font-weight: 700;
+            font-size: 0.8rem; color: var(--gold);
+            margin: 0 auto 0.5rem;
+        }
+        .pipeline-title { font-weight: 600; font-size: 0.78rem; color: var(--ivory); margin-bottom: 0.15rem; }
+        .pipeline-desc { font-size: 0.68rem; color: var(--text-muted); line-height: 1.4; }
+
+        /* ══════════ PHONE MOCKUP (CSS-only Android frame) ══════════ */
+        .phone-frame {
+            background: #1B1A14; border: 2px solid #35332A; border-radius: 36px;
+            padding: 8px; position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            width: 210px; flex-shrink: 0;
+        }
+        .phone-frame-sm {
+            width: 155px; border-radius: 26px; padding: 5px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+        }
+        .phone-notch {
+            width: 65px; height: 18px; border-radius: 9px;
+            background: #0B0A09; margin: 0 auto 3px;
+        }
+        .phone-frame-sm .phone-notch { width: 45px; height: 12px; border-radius: 6px; margin-bottom: 2px; }
+        .phone-status {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 10px; font-size: 0.48rem; color: var(--text-muted); margin-bottom: 3px;
+        }
+        .phone-frame-sm .phone-status { font-size: 0.38rem; padding: 0 7px; }
+        .phone-screen {
+            background: var(--night); border-radius: 28px;
+            overflow: hidden; min-height: 320px; position: relative;
+        }
+        .phone-frame-sm .phone-screen { border-radius: 19px; min-height: 200px; }
+        .phone-gesture {
+            width: 85px; height: 4px; border-radius: 2px;
+            background: #58554A; margin: 6px auto 3px;
+        }
+        .phone-frame-sm .phone-gesture { width: 55px; height: 3px; margin: 4px auto 2px; }
+
+        .phone-content { padding: 0.7rem; font-size: 0.6rem; color: var(--text); }
+        .phone-frame-sm .phone-content { padding: 0.45rem; font-size: 0.48rem; }
+        .phone-content .phone-header {
+            font-family: var(--font-display); font-size: 0.7rem;
+            font-weight: 700; color: var(--gold); margin-bottom: 0.4rem;
+        }
+        .phone-frame-sm .phone-content .phone-header { font-size: 0.52rem; margin-bottom: 0.25rem; }
+        .phone-mini-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 7px;
+            padding: 0.35rem 0.45rem; margin-bottom: 0.3rem; font-size: 0.52rem;
+        }
+        .phone-frame-sm .phone-mini-card {
+            border-radius: 5px; padding: 0.2rem 0.3rem;
+            margin-bottom: 0.18rem; font-size: 0.4rem;
+        }
+        .phone-viewfinder {
+            background: #13120E; border-radius: 10px; aspect-ratio: 3/4;
+            display: flex; align-items: center; justify-content: center;
+            position: relative; border: 1px solid var(--border); margin-bottom: 0.4rem;
+        }
+        .phone-viewfinder::before {
+            content: ''; position: absolute; inset: 12%;
+            border: 1.5px solid rgba(212,175,55,0.4); border-radius: 4px;
+        }
+        .phone-scan-btn {
+            width: 34px; height: 34px; border-radius: 50%;
+            border: 2px solid var(--gold); background: rgba(212,175,55,0.15);
+            margin: 0 auto; display: flex; align-items: center; justify-content: center;
+        }
+        .phone-scan-btn::after {
+            content: ''; width: 16px; height: 16px; border-radius: 50%; background: var(--gold);
+        }
+
+        .phone-chat-bubble {
+            padding: 0.3rem 0.5rem; border-radius: 10px;
+            margin-bottom: 0.25rem; font-size: 0.48rem; max-width: 82%; line-height: 1.3;
+        }
+        .phone-chat-user {
+            background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.2);
+            color: var(--ivory); margin-left: auto; border-bottom-right-radius: 3px;
+        }
+        .phone-chat-bot {
+            background: var(--surface); border: 1px solid var(--border);
+            color: var(--text); border-bottom-left-radius: 3px;
+        }
+
+        /* ══════════ TECH TABLE ══════════ */
+        .tech-table { width: 100%; border-collapse: collapse; }
+        .tech-table th {
+            text-align: left; font-size: 0.62rem; letter-spacing: 0.1em;
+            text-transform: uppercase; color: var(--dust);
+            padding: 0.4rem 0.7rem; border-bottom: 1px solid var(--border);
+        }
+        .tech-table td {
+            padding: 0.42rem 0.7rem; font-size: 0.76rem;
+            border-bottom: 1px solid rgba(44,42,36,0.5); color: var(--text);
+            font-variant-numeric: tabular-nums;
+        }
+        .tech-table td:first-child { color: var(--sand); font-weight: 500; white-space: nowrap; }
+        .tech-table tr { transition: background 0.15s var(--ease-out-quart); }
+
+        /* ══════════ COMPARISON TABLE ══════════ */
+        .compare-table { width: 100%; border-collapse: collapse; font-size: 0.66rem; }
+        .compare-table th {
+            text-align: left; font-size: 0.58rem; letter-spacing: 0.08em;
+            text-transform: uppercase; color: var(--dust);
+            padding: 0.3rem 0.45rem; border-bottom: 1px solid var(--border);
+        }
+        .compare-table th:last-child { color: var(--gold); }
+        .compare-table td {
+            padding: 0.28rem 0.45rem; border-bottom: 1px solid rgba(44,42,36,0.3);
+            color: var(--text-muted); vertical-align: top;
+        }
+        .compare-table td:first-child { color: var(--ivory); font-weight: 500; }
+        .compare-table td:last-child { color: var(--gold-light); font-weight: 500; }
+
+        /* ══════════ ARCHITECTURE ══════════ */
+        .arch-box {
+            border: 1.5px solid var(--border); border-radius: 10px;
+            padding: 0.7rem 1rem; background: var(--surface); text-align: center;
+        }
+        .arch-box-gold { border-color: rgba(212,175,55,0.35); }
+        .arch-label { font-size: 0.68rem; font-weight: 600; color: var(--ivory); margin-bottom: 0.15rem; }
+        .arch-sub { font-size: 0.55rem; color: var(--text-muted); }
+        .arch-arrow {
+            display: flex; align-items: center; justify-content: center;
+            color: var(--gold-muted); font-size: 1.1rem; padding: 0 0.2rem;
+        }
+        .arch-module-grid { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: center; }
+        .arch-module {
+            padding: 0.22rem 0.55rem; border-radius: 5px;
+            font-size: 0.58rem; font-weight: 500; border: 1px solid;
+        }
+        .arch-module-feature {
+            border-color: rgba(212,175,55,0.3); color: var(--gold-light);
+            background: rgba(212,175,55,0.05);
+        }
+        .arch-module-core {
+            border-color: rgba(196,162,101,0.25); color: var(--sand);
+            background: rgba(196,162,101,0.05);
+        }
+
+        /* dark-tech.md: pulse dots on connection points */
+        .pulse-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--gold); position: relative;
+            display: inline-block; vertical-align: middle;
+        }
+        .pulse-dot::after {
+            content: ''; position: absolute; inset: -4px; border-radius: 50%;
+            background: rgba(212,175,55,0.1);
+            animation: pulse-ring 2s ease-out infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(1); opacity: 0.6; }
+            100% { transform: scale(1.8); opacity: 0; }
+        }
+
+        /* ══════════ CHALLENGE CARDS ══════════ */
+        .challenge-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+        .challenge-problem { border-left: 3px solid #ef4444; }
+        .challenge-solution { border-left: 3px solid #4ade80; }
+        .challenge-tag {
+            font-size: 0.58rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.35rem;
+        }
+        .challenge-tag-red { color: #ef4444; }
+        .challenge-tag-green { color: #4ade80; }
+
+        /* ══════════ DECORATIVE (dark-tech.md spec) ══════════ */
+        .dot-pattern {
+            position: absolute; inset: 0;
+            background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+            background-size: 40px 40px; opacity: 0.35; pointer-events: none;
+            -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 30%, transparent 100%);
+            mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 30%, transparent 100%);
+        }
+        .dot-pattern-gold {
+            background-image: radial-gradient(circle, rgba(212,175,55,0.12) 1px, transparent 1px);
+            background-size: 40px 40px; opacity: 0.5;
+        }
+
+        .meteor {
+            position: absolute; width: 80px; height: 1px;
+            background: linear-gradient(90deg, var(--gold), transparent);
+            opacity: 0; animation: meteor-fall 4s ease-in-out infinite;
+        }
+        @keyframes meteor-fall {
+            0% { opacity: 0; transform: translate(0, 0) rotate(-35deg); }
+            5% { opacity: 0.7; }
+            15% { opacity: 0; transform: translate(-200px, 200px) rotate(-35deg); }
+            100% { opacity: 0; }
+        }
+
+        .glow-ring {
+            position: absolute; width: 500px; height: 500px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(212,175,55,0.035), transparent 70%);
+            pointer-events: none;
+        }
+
+        .divider {
+            width: 60px; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            margin: 0.8rem auto;
+        }
+
+        /* L-corner accents (dark-tech.md: 20% opacity) */
+        .l-corner {
+            position: absolute; top: 1.5rem; left: 1.5rem;
+            width: 30px; height: 30px;
+            border-top: 2px solid rgba(212,175,55,0.2);
+            border-left: 2px solid rgba(212,175,55,0.2);
+            pointer-events: none;
+        }
+        .l-corner-br {
+            top: auto; left: auto; bottom: 3rem; right: 4rem;
+            border-top: none; border-left: none;
+            border-bottom: 2px solid rgba(212,175,55,0.15);
+            border-right: 2px solid rgba(212,175,55,0.15);
+        }
+
+        /* ══════════ SCROLL REVEALS ══════════ */
+        .reveal {
+            opacity: 0; transform: translateY(30px);
+            transition: opacity 0.8s var(--ease-out-expo), transform 0.8s var(--ease-out-expo);
+        }
+        .reveal-blur {
+            opacity: 0; filter: blur(8px); transform: translateY(20px);
+            transition: opacity 0.8s var(--ease-out-expo), filter 0.8s var(--ease-out-expo), transform 0.8s var(--ease-out-expo);
+        }
+        .reveal-scale {
+            opacity: 0; transform: scale(0.92);
+            transition: opacity 0.6s var(--ease-out-expo), transform 0.6s var(--ease-out-quart);
+        }
+        .reveal-left {
+            opacity: 0; transform: translateX(-40px);
+            transition: opacity 0.7s var(--ease-out-expo), transform 0.7s var(--ease-out-expo);
+        }
+        .reveal-right {
+            opacity: 0; transform: translateX(40px);
+            transition: opacity 0.7s var(--ease-out-expo), transform 0.7s var(--ease-out-expo);
+        }
+        .reveal-fade {
+            opacity: 0;
+            transition: opacity 1s var(--ease-out-quart);
+        }
+
+        .slide.visible .reveal,
+        .slide.visible .reveal-blur,
+        .slide.visible .reveal-scale,
+        .slide.visible .reveal-left,
+        .slide.visible .reveal-right,
+        .slide.visible .reveal-fade {
+            opacity: 1; transform: none; filter: none;
+        }
+
+        /* Stagger delays (motion-primitives: 0.1s per child) */
+        .reveal-d1 { transition-delay: 0.1s; }
+        .reveal-d2 { transition-delay: 0.2s; }
+        .reveal-d3 { transition-delay: 0.3s; }
+        .reveal-d4 { transition-delay: 0.4s; }
+        .reveal-d5 { transition-delay: 0.5s; }
+        .reveal-d6 { transition-delay: 0.6s; }
+        .reveal-d7 { transition-delay: 0.7s; }
+        .reveal-d8 { transition-delay: 0.8s; }
+        .reveal-d9 { transition-delay: 0.9s; }
+        .reveal-d10 { transition-delay: 1.0s; }
+
+        /* ══════════ SHIMMER (magicui shiny-text + react-bits gradient) ══════════ */
+        .shimmer {
+            background: linear-gradient(
+                110deg,
+                var(--gold-dark) 0%, var(--gold) 30%, var(--gold-light) 48%,
+                #fff 50%,
+                var(--gold-light) 52%, var(--gold) 70%, var(--gold-dark) 100%
+            );
+            background-size: 250% 100%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer-sweep 4s var(--ease-shine) 2;
+        }
+        @keyframes shimmer-sweep {
+            0%, 100% { background-position: 100% center; }
+            50% { background-position: 0% center; }
+        }
+
+        /* ══════════ BORDER BEAM (magicui spin-around adapted) ══════════ */
+        .border-beam {
+            position: relative; overflow: hidden;
+        }
+        .border-beam::before {
+            content: ''; position: absolute; inset: 0;
+            border-radius: inherit; padding: 1px;
+            background: conic-gradient(from 0deg, transparent 60%, var(--gold) 80%, transparent 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor; mask-composite: exclude;
+            animation: beam-spin 6s linear infinite;
+        }
+        @keyframes beam-spin { to { transform: rotate(360deg); } }
+
+        /* ══════════ BUTTONS ══════════ */
+        .btn {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.55rem 1.3rem; border-radius: 8px;
+            font-size: 0.8rem; font-weight: 600; text-decoration: none;
+            transition: all 0.2s var(--ease-out-quart); border: none; cursor: pointer;
+        }
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: var(--night);
+        }
+        .btn-gold:hover { box-shadow: 0 0 20px rgba(212,175,55,0.25); transform: translateY(-1px); }
+        .btn-gold:active { transform: translateY(0); box-shadow: 0 0 12px rgba(212,175,55,0.15); transition-duration: 0.1s; }
+        .btn-ghost { border: 1px solid var(--border); color: var(--text); background: transparent; }
+        .btn-ghost:hover { border-color: var(--gold-muted); color: var(--gold-light); }
+        .btn-ghost:active { transform: translateY(1px); transition-duration: 0.1s; }
+
+        /* ══════════ FULLSCREEN BUTTON ══════════ */
+        .fs-btn {
+            position: fixed;
+            top: 1rem; right: 1rem;
+            z-index: 999;
+            width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(21,20,15,0.6);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--dust);
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: transform 0.2s var(--ease-out-quart), color 0.2s var(--ease-out-quart), border-color 0.2s var(--ease-out-quart);
+        }
+        @media (hover: hover) {
+            .fs-btn:hover { color: var(--gold); border-color: rgba(212,175,55,0.4); transform: scale(1.05); }
+        }
+        .fs-btn:active { transform: scale(0.95); transition-duration: 0.1s; }
+        .fs-btn:focus { outline: none; }
+        .fs-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+        .fs-btn svg { width: 16px; height: 16px; }
+        .fs-btn .icon-exit { display: none; }
+        :fullscreen .fs-btn .icon-enter { display: none; }
+        :fullscreen .fs-btn .icon-exit { display: block; }
+
+        /* ══════════ KEYBOARD HINT ══════════ */
+        .keyboard-hint {
+            position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%);
+            font-size: 0.58rem; color: var(--dust); letter-spacing: 0.1em;
+            opacity: 0.5; transition: opacity 0.8s; z-index: 998;
+        }
+        .keyboard-hint.hidden { opacity: 0; pointer-events: none; }
+        .kbd {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 2px 5px; border: 1px solid var(--border); border-radius: 3px;
+            font-size: 0.52rem; color: var(--dust); background: var(--surface); margin: 0 2px;
+        }
+
+        /* ══════════ MISC ══════════ */
+        .privacy-card {
+            background: rgba(212,175,55,0.04); border: 1px solid rgba(212,175,55,0.2);
+            border-radius: 10px; padding: 0.7rem 1rem; text-align: center;
+        }
+
+        .slide-scan-layout {
+            display: grid; grid-template-columns: 1fr 210px;
+            gap: 2rem; align-items: center; width: 100%; max-width: 62rem;
+        }
+        .slide-split {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 2.5rem; width: 100%; max-width: 62rem; align-items: start;
+        }
+        .slide-three-col {
+            display: grid; grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.3rem; width: 100%; max-width: 66rem; align-items: start;
+        }
+
+        .write-demo {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 0.9rem; text-align: center;
+        }
+        .write-input { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.2rem; }
+        .write-arrow { color: var(--gold-muted); font-size: 0.85rem; margin: 0.2rem 0; }
+        .write-output { font-family: var(--font-hiero); font-size: 1.3rem; color: var(--gold); margin-bottom: 0.15rem; }
+        .write-pronunciation { font-size: 0.68rem; color: var(--sand); font-style: italic; }
+
+        .ml-pipeline { display: flex; flex-direction: column; gap: 0.15rem; align-items: center; }
+        .ml-pipeline-step {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: 0.45rem 0.9rem;
+            font-size: 0.7rem; color: var(--ivory); text-align: center;
+            width: 100%; max-width: 210px;
+        }
+        .ml-pipeline-arrow { color: var(--gold-muted); font-size: 0.75rem; }
+
+        .logo-img { width: 75px; height: 75px; object-fit: contain; filter: drop-shadow(0 0 30px rgba(212,175,55,0.4)); }
+        .logo-img-sm { width: 55px; height: 55px; }
+
+        .demo-badge {
+            display: inline-block; padding: 0.35rem 0.9rem;
+            border: 1px solid rgba(212,175,55,0.2); border-radius: 8px;
+            font-size: 0.72rem; color: var(--ivory); background: rgba(212,175,55,0.05);
+        }
+
+        /* ══════════ PRINT ══════════ */
+        @media print {
+            html { scroll-snap-type: none; }
+            .slide {
+                height: 100vh !important; max-height: 100vh !important;
+                overflow: hidden !important;
+                page-break-after: always; page-break-inside: avoid;
+            }
+            .slide:last-of-type { page-break-after: avoid; }
+            .progress-bar, .nav-dots, .keyboard-hint { display: none !important; }
+            .reveal, .reveal-blur, .reveal-scale, .reveal-left, .reveal-right, .reveal-fade {
+                opacity: 1 !important; transform: none !important; filter: none !important;
+            }
+            .meteor, .glow-ring, .dot-pattern, .l-corner, .border-beam::before { display: none; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .reveal, .reveal-blur, .reveal-scale, .reveal-left, .reveal-right, .reveal-fade {
+                transition: opacity 0.2s ease; transform: none; filter: none;
+            }
+            .meteor, .glow-ring { display: none; }
+            .shimmer { animation: none; }
+            .card { transition: none; }
+            .nav-dot { transition: none; }
+            .pulse-dot::after { animation: none; }
+            @keyframes pulse-ring { 0%, 100% { transform: none; opacity: 0; } }
+        }
+
+        /* ══════════ FOCUS-VISIBLE (keyboard a11y) ══════════ */
+        .nav-dot:focus { outline: none; }
+        .nav-dot:focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 3px;
+        }
+        .btn:focus { outline: none; }
+        .btn:focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="nav-dots" id="navDots"></div>
+    <button class="fs-btn" id="fsBtn" type="button" title="Toggle fullscreen (F)" aria-label="Toggle fullscreen">
+        <svg class="icon-enter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+        <svg class="icon-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+    </button>
+    <div class="keyboard-hint" id="keyHint">
+        <span class="kbd">&uarr;</span> <span class="kbd">&darr;</span> <span class="kbd">Space</span> navigate &middot; <span class="kbd">F</span> fullscreen
+    </div>
+
+    <!-- ═══════════ SLIDE 01: TITLE ═══════════
+         LOW density (25%). Visual anchor: shimmer title.
+         Narrative arc: Hook. First impression. -->
+    <section class="slide" data-slide="1">
+        <div class="dot-pattern dot-pattern-gold"></div>
+        <div class="glow-ring" style="top:-18%; right:-12%;"></div>
+        <div class="l-corner"></div>
+        <div class="meteor" style="top:18%; right:25%; animation-delay:0s;"></div>
+        <div class="meteor" style="top:45%; right:10%; animation-delay:2.2s;"></div>
+        <div class="meteor" style="top:72%; right:38%; animation-delay:3.8s;"></div>
+
+        <div class="reveal-scale" style="margin-bottom:1.5rem;">
+            <img src="%%LOGO_BASE64%%" alt="Wadjet" class="logo-img">
+        </div>
+        <div class="reveal reveal-d1" style="margin-bottom:0.7rem;">
+            <span class="badge badge-gold">DEPI SOFTWARE DEVELOPMENT TRACK &middot; FINAL PROJECT &middot; 2026</span>
+        </div>
+        <h1 class="reveal reveal-d2 shimmer" style="margin-bottom:0.4rem;">Wadjet</h1>
+        <p class="reveal-blur reveal-d3 lead" style="margin-bottom:2rem;">Egyptian Heritage AI</p>
+        <div class="reveal reveal-d4" style="margin-bottom:0.4rem;">
+            <p style="font-size:1.05rem; font-weight:500;">Nader Mohamed</p>
+        </div>
+        <p class="reveal reveal-d5 text-muted text-sm">BSc Artificial Intelligence, Kafr El Sheikh University</p>
+        <div class="reveal-fade reveal-d6" style="margin-top:2.5rem;">
+            <span class="hieroglyph-lg">&#x13080; &#x13079; &#x1305F; &#x130A3; &#x13250; &#x1339B; &#x130ED; &#x1339E;</span>
+        </div>
+
+        <span class="depi-footer">DEPI &middot; Software Development &middot; 2026</span>
+        <span class="slide-number">01 / 14</span>
+    </section>
+
+    <!-- ═══════════ SLIDE 02: THE PROBLEM ═══════════
+         MEDIUM density (55%). SCQA: Situation + Complication.
+         3 cards = 3 chunks. Miller's law: safe.
+         Humanizer pass applied: plain language, no marketing. -->
+    <section class="slide" data-slide="2">
+        <div class="dot-pattern"></div>
+        <div class="l-corner"></div>
+
+        <span class="badge badge-gold reveal">THE PROBLEM</span>
+        <h2 class="reveal reveal-d1" style="margin-bottom:0.2rem;">
+            Ancient Egypt is <span class="text-gold">fascinating</span> but <span class="text-muted">inaccessible</span>
+        </h2>
+        <div class="divider reveal reveal-d2"></div>
+
+        <div class="grid-3 max-w-5xl" style="margin-top:1.2rem;">
+            <div class="card reveal reveal-d3">
+                <div class="card-icon"><span class="hieroglyph">&#x13080;</span></div>
+                <h4>Can't read it</h4>
+                <p class="text-sm text-muted" style="margin-top:0.3rem;">You visit a temple. You photograph the walls. You walk away with zero understanding of what any of it says. 99.9% of visitors do exactly this.</p>
+            </div>
+            <div class="card reveal reveal-d4">
+                <div class="card-icon"><span class="hieroglyph">&#x1339B;</span></div>
+                <h4>No single tool</h4>
+                <p class="text-sm text-muted" style="margin-top:0.3rem;">Scanning lives in one app. Dictionaries in another. Writing tools in a third. Most people give up before they find anything useful.</p>
+            </div>
+            <div class="card reveal reveal-d5">
+                <div class="card-icon"><span class="hieroglyph">&#x1305F;</span></div>
+                <h4>Scattered knowledge</h4>
+                <p class="text-sm text-muted" style="margin-top:0.3rem;">Landmark details sit in expensive academic books. Mythology fragments across a dozen websites. Sign references behind paywalls.</p>
+            </div>
+        </div>
+
+        <span class="depi-footer">DEPI &middot; Software Development &middot; 2026</span>
+        <span class="slide-number">02 / 14</span>
+    </section>
+
+    <!-- ═══════════ SLIDE 03: THE SOLUTION ═══════════
+         MEDIUM-HIGH density (65%). SCQA: Answer.
+         6 cards = 6 chunks. Right at Miller's boundary. -->
+    <section class="slide" data-slide="3">
+        <div class="dot-pattern"></div>
+        <div class="l-corner"></div>
+
+        <span class="badge badge-gold reveal">THE SOLUTION</span>
+        <h2 class="reveal reveal-d1" style="margin-bottom:0.2rem;">
+            One app. Six tools. <span class="gold-gradient">Everything Egypt.</span>
+        </h2>
+        <p class="reveal reveal-d2 text-sm text-sand" style="margin-top:0.3rem; margin-bottom:0.1rem; letter-spacing:0.02em;">
+            For <span class="text-gold" style="font-weight:600;">tourists</span>, <span class="text-gold" style="font-weight:600;">students</span>, <span class="text-gold" style="font-weight:600;">history enthusiasts</span>, and <span class="text-gold" style="font-weight:600;">Egyptology researchers</span>
+        </p>
+        <div class="divider reveal reveal-d2"></div>
+
+        <div class="grid-2x3 max-w-5xl" style="margin-top:0.8rem;">
+            <div class="card reveal reveal-d1">
+                <div class="card-icon"><span class="hieroglyph">&#x13080;</span></div>
+                <h4>Scan</h4>
+                <p class="text-sm text-muted" style="margin-top:0.2rem;">Point your camera at hieroglyphs. Get glyph-by-glyph classification and translation.</p>
+            </div>
+            <div class="card reveal reveal-d2">
+                <div class="card-icon"><span class="hieroglyph">&#x1339B;</span></div>
+                <h4>Dictionary</h4>
+                <p class="text-sm text-muted" style="margin-top:0.2rem;">1,000+ Gardiner signs. Offline. Search by name, sound, or category.</p>
+            </div>
+            <div class="card reveal reveal-d3">
+                <div class="card-icon"><span class="hieroglyph">&#x130A3;</span></div>
+                <h4>Write</h4>
+                <p class="text-sm text-muted" style="margin-top:0.2rem;">Type English, get hieroglyphs. Hear the pronunciation through TTS.</p>
+            </div>
+            <div class="card reveal reveal-d4">
+                <div class="card-icon"><span class="hieroglyph">&#x13250;</span></div>
+                <h4>Explore</h4>
+                <p class="text-sm text-muted" style="margin-top:0.2rem;">260+ Egyptian landmarks. Images, history, smart categories.</p>
+            </div>
+            <div class="card reveal reveal-d5">
+                <div class="card-icon"><span class="hieroglyph">&#x130ED;</span></div>
+                <h4>Thoth</h4>
+                <p class="text-sm text-muted" style="margin-top:0.2rem;">AI Egyptology guide. Multi-turn conversation. Remembers context.</p>
+            </div>
+            <div class="card reveal reveal-d6">
+                <div class="card-icon"><span class="hieroglyph">&#x1339E;</span></div>
+                <h4>Stories</h4>
+                <p class="text-sm text-muted" style="margin-top:0.2rem;">12 mythology tales. Scene illustrations, voice narration, chapter progress.</p>
+            </div>
+        </div>
+
+        <p class="reveal reveal-d7 text-muted text-sm" style="margin-top:1rem;">Native Android &middot; Material 3 &middot; Bilingual EN/AR</p>
+
+        <span class="depi-footer">DEPI &middot; Software Development &middot; 2026</span>
+        <span class="slide-number">03 / 14</span>
+    </section>
+
+    <!-- ═══════════ SLIDE 04: SCAN & TRANSLATE ═══════════
+         HIGH density (75%). Hero feature.
+         Visual anchor: 98.2% stat.
+         Pipeline = 4 chunks. Stats = 3 chunks. Total ~7. -->
+    <section class="slide" data-slide="4">
+        <div class="dot-pattern"></div>
+        <div class="l-corner"></div>
+
+        <span class="badge badge-gold reveal">CORE FEATURE</span>
+        <h2 class="reveal reveal-d1" style="margin-bottom:0.15rem;">Scan & <span class="gold-gradient">Translate</span></h2>
+        <p class="reveal reveal-d2 text-muted text-sm" style="margin-bottom:1.2rem;">Point. Shoot. Read.</p>
+
+        <div class="slide-scan-layout">
+            <div>
+                <div class="pipeline reveal reveal-d3" style="margin-bottom:1.5rem;">
+                    <div class="pipeline-step">
+                        <div class="pipeline-num">1</div>
+                        <div class="pipeline-title">Camera</div>
+                        <div class="pipeline-desc">CameraX capture</div>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-num">2</div>
+                        <div class="pipeline-title">Detect</div>
+                        <div class="pipeline-desc">Locate each glyph</div>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-num">3</div>
+                        <div class="pipeline-title">Classify</div>
+                        <div class="pipeline-desc">171 Gardiner classes</div>
+                    </div>
+                    <div class="pipeline-step">
+                        <div class="pipeline-num">4</div>
+                        <div class="pipeline-title">Translate</div>
+                        <div class="pipeline-desc">EN/AR output</div>
+                    </div>
+                </div>
+
+                <div class="grid-3 reveal reveal-d5">
+                    <div class="stat-block">
+                        <div class="stat-number" data-count="98.2" data-suffix="%" data-decimals="1">0</div>
+                        <div class="stat-label">accuracy (171 classes)</div>
+                    </div>
+                    <div class="stat-block">
+                        <div class="stat-number stat-number-sm" data-count="3" data-suffix=" models">0</div>
+                        <div class="stat-label">cross-validate results</div>
+                    </div>
+                    <div class="stat-block">
+                        <div class="stat-number stat-number-sm" data-count="5" data-prefix="< " data-suffix="s">0</div>
+                        <div class="stat-label">full pipeline</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="phone-frame reveal-blur reveal-d4">
+                <div class="phone-notch"></div>
+                <div class="phone-status"><span>9:41</span><span>&#x25CF;&#x25CF;&#x25CF; &#x258C;</span></div>
+                <div class="phone-screen">
+                    <div class="phone-content" style="padding:0;">
+                        <!-- Top bar: back arrow + "Scan" + history icon -->
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding:0.5rem 0.6rem 0.3rem;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            <span style="font-size:0.6rem; color:var(--text); font-weight:500;">Scan</span>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+                        </div>
+                        <!-- ImageUploadZone: dashed gold border -->
+                        <div style="margin:0.3rem 0.55rem; border:1.5px dashed rgba(212,175,55,0.5); border-radius:10px; padding:1.2rem 0.5rem; text-align:center;">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5" style="margin-bottom:0.3rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <div style="font-size:0.44rem; color:var(--ivory); margin-bottom:0.12rem;">Upload or capture a photo</div>
+                            <div style="font-size:0.36rem; color:var(--text-muted);">then tap Analyze</div>
+                        </div>
+                        <!-- Pipeline steps -->
+                        <div style="display:flex; justify-content:space-around; padding:0.35rem 0.4rem; margin-top:0.2rem;">
+                            <div style="text-align:center;"><div style="width:14px; height:14px; border-radius:50%; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; margin:0 auto 0.1rem; font-size:0.3rem; color:var(--gold);">1</div><div style="font-size:0.3rem; color:var(--text-muted);">Detect</div></div>
+                            <div style="text-align:center;"><div style="width:14px; height:14px; border-radius:50%; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; margin:0 auto 0.1rem; font-size:0.3rem; color:var(--gold);">2</div><div style="font-size:0.3rem; color:var(--text-muted);">Classify</div></div>
+                            <div style="text-align:center;"><div style="width:14px; height:14px; border-radius:50%; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; margin:0 auto 0.1rem; font-size:0.3rem; color:var(--gold);">3</div><div style="font-size:0.3rem; color:var(--text-muted);">Translit.</div></div>
+                            <div style="text-align:center;"><div style="width:14px; height:14px; border-radius:50%; border:1px solid var(--gold); display:flex; align-items:center; justify-content:center; margin:0 auto 0.1rem; font-size:0.3rem; color:var(--gold);">4</div><div style="font-size:0.3rem; color:var(--text-muted);">Translate</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="phone-gesture"></div>
+            </div>
+        </div>
+
+        <span class="depi-footer">DEPI &middot; Software Development &middot; 2026</span>
+        <span class="slide-number">04 / 14</span>
+    </section>
+
+    <!-- ═══════════ SLIDE 05: DICTIONARY & WRITE ═══════════
+         MEDIUM density (60%). Split layout. -->
+    <section class="slide" data-slide="5">
+        <div class="dot-pattern"></div>
+        <div class="l-corner"></div>
+
+        <span class="badge badge-gold reveal">LEARN & CREATE</span>
+        <h2 class="reveal reveal-d1" style="margin-bottom:1.2rem;">Dictionary & <span class="gold-gradient">Write</span></h2>
+
+        <div class="slide-split">
+            <div class="reveal-left reveal-d2">
+                <h3 style="margin-bottom:0.5rem;">Dictionary</h3>
+                <div class="card" style="margin-bottom:0.8rem;">
+                    <p class="text-sm"><span class="text-gold" style="font-weight:700;">1,023</span> Gardiner signs across <span class="text-gold">26</span> categories (A through Aa).</p>
+                    <p class="text-sm text-muted" style="margin-top:0.25rem;">Search by name, sound, or description. Every sign includes phonetic values and meanings.</p>
+                    <p class="text-sm text-muted" style="margin-top:0.25rem;">All offline via Room. No internet required.</p>
+                </div>
+                <div class="phone-frame phone-frame-sm" style="margin:0 auto;">
+                    <div class="phone-notch"></div>
+                    <div class="phone-status"><span>9:41</span><span>&#x25CF;&#x25CF;&#x25CF;</span></div>
+                    <div class="phone-screen">
+                        <div class="phone-content" style="padding:0;">
+                            <!-- Tab row: Browse | Learn | Write -->
+                            <div style="display:flex; border-bottom:1px solid var(--border); font-size:0.38rem; font-weight:600;">
+                                <div style="flex:1; text-align:center; padding:0.25rem 0; color:var(--gold); border-bottom:1.5px solid var(--gold);">Browse</div>
+                                <div style="flex:1; text-align:center; padding:0.25rem 0; color:var(--text-muted);">Learn</div>
+                                <div style="flex:1; text-align:center; padding:0.25rem 0; color:var(--text-muted);">Write</div>
+                            </div>
+                            <div style="padding:0.3rem;">
+                                <!-- Search bar -->
+                                <div style="display:flex; align-items:center; gap:0.15rem; background:var(--surface); border:1px solid var(--border); border-radius:5px; padding:0.15rem 0.25rem; margin-bottom:0.22rem;">
+                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                    <span style="font-size:0.32rem; color:var(--text-muted);">Search signs...</span>
+                                </div>
+                                <!-- Category chips -->
+                                <div style="display:flex; gap:0.12rem; margin-bottom:0.22rem; overflow:hidden;">
+                                    <span style="font-size:0.28rem; padding:0.08rem 0.22rem; border-radius:8px; background:rgba(212,175,55,0.15); color:var(--gold); border:1px solid rgba(212,175,55,0.3);">All</span>
+                                    <span style="font-size:0.28rem; padding:0.08rem 0.22rem; border-radius:8px; color:var(--text-muted); border:1px solid var(--border);">A</span>
+                                    <span style="font-size:0.28rem; padding:0.08rem 0.22rem; border-radius:8px; color:var(--text-muted); border:1px solid var(--border);">B</span>
+                                    <span style="font-size:0.28rem; padding:0.08rem 0.22rem; border-radius:8px; color:var(--text-muted); border:1px solid var(--border);">C</span>
+                                    <span style="font-size:0.28rem; padding:0.08rem 0.22rem; border-radius:8px; color:var(--text-muted); border:1px solid var(--border);">D</span>
+                                </div>
+                                <!-- Sign grid 2x3 -->
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.15rem;">
+                                    <div style="background:var(--surface); border:1px solid var(--border); border-radius:5px; padding:0.18rem; text-align:center;">
+                                        <span class="hieroglyph" style="font-size:0.7rem;">&#x13000;</span>
+                                        <div style="font-size:0.28rem; color:var(--sand); font-family:monospace;">A1</div>
+                                    </div>
+                                    <div style="background:var(--surface); border:1px solid var(--border); border-radius:5px; padding:0.18rem; text-align:center;">
+                                        <span class="hieroglyph" style="font-size:0.7rem;">&#x13001;</span>
+                                        <div style="font-size:0.28rem; color:var(--sand); font-family:monospace;">A2</div>
+                                    </div>
+                                    <div style="background:var(--surface); border:1px solid var(--border); border-radius:5px; padding:0.18rem; text-align:center;">
+                                        <span class="hieroglyph" style="font-size:0.7rem;">&#x13002;</span>
+                                        <div style="font-size:0.28rem; color:var(--sand); font-family:monospace;">A3</div>
+                                    </div>
+                                    <div style="background:var(--surface); border:1px solid var(--border); border-radius:5px; padding:0.18rem; text-align:center;">
+                                        <span class="hieroglyph" style="font-size:0.7rem;">&#x13003;</span>
+                                        <div style="font-size:0.28rem; color:var(--sand); font-family:monospace;">A4</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="phone-gesture"></div>
+                </div>
+            </div>
+
+            <div class="reveal-right reveal-d3">
+                <h3 style="margin-bottom:0.5rem;">Write</h3>
+                <div class="write-demo" style="margin-bottom:0.8rem;">
+                    <div class="write-input">"Eternal life"</div>
+                    <div class="write-arrow">&darr;</div>
+                    <div class="write-output">&#x131F3;&#x13264;&#x13079;&#x13208;&#x13350;</div>
+                    <div class="write-pronunciation">ankh djet</div>
+                </div>
+                <div class="card" style="margin-bottom:0.8rem;">
+                    <p class="text-sm">Word-level transliteration. Not letter substitution.</p>
+                    <p class="text-sm text-muted" style="margin-top:0.25rem;">TTS maps transliteration to speech: x&rarr;kh, S&rarr;sh, D&rarr;dj, T&rarr;ch.</p>
+                </div>
+                <div class="phone-frame phone-frame-sm" style="margin:0 auto;">
+                    <div class="phone-notch"></div>
+                    <div class="phone-status"><span>9:41</span><span>&#x25CF;&#x25CF;&#x25CF;</span></div>
+                    <div class="phone-screen">
+                        <div class="phone-content" style="padding:0;">
+                            <!-- Tab row -->
+                            <div style="display:flex; border-bottom:1px solid var(--border); font-size:0.38rem; font-weight:600;">
+                                <div style="flex:1; text-align:center; padding:0.25rem 0; color:var(--text-muted);">Browse</div>
+                                <div style="flex:1; text-align:center; padding:0.25rem 0; color:var(--text-muted);">Learn</div>
+                                <div style="flex:1; text-align:center; padding:0.25rem 0; color:var(--gold); border-bottom:1.5px solid var(--gold);">Write</div>
+                            </div>
+                            <div style="padding:0.3rem;">
+                                <!-- Input field -->
+                                <div style="background:var(--surface); border:1px solid var(--border); border-radius:5px; padding:0.22rem 0.25rem; margin-bottom:0.18rem;">
+                                    <span style="font-size:0.36rem; color:var(--ivory);">sun god</span>
+                                </div>
+                                <!-- Convert button -->
+                                <div style="background:linear-gradient(135deg,var(--gold),var(--gold-dark)); border-radius:5px; padding:0.18rem; text-align:center; margin-bottom:0.22rem;">
+                                    <span style="font-size:0.34rem; font-weight:600; color:var(--night);">Convert</span>
+                                </div>
+                                <!-- Result box -->
+                                <div style="background:var(--surface); border:1px solid var(--border); border-radius:5px; padding:0.3rem; text-align:center; margin-bottom:0.18rem;">
+                                    <div style="font-family:var(--font-hiero); font-size:1rem; color:var(--gold);">&#x131F3;&#x13264;&#x13239;</div>
+                                </div>
+                                <!-- Breakdown row -->
+                                <div style="font-size:0.3rem; color:var(--sand); font-style:italic; text-align:center; margin-bottom:0.15rem;">ra netjer</div>
+                                <!-- Action icons row -->
+                                <div style="display:flex; justify-content:center; gap:0.5rem;">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><rect x="9" y="2" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="phone-gesture"></div>
+                </div>
+            </div>
+        </div>
+
+        <span class="depi-footer">DEPI &middot; Software Development &middot; 2026</span>
+        <span class="slide-number">05 / 14</span>
+    </section>
+
+    <!-- ═══════════ SLIDE 06: EXPLORE + THOTH + STORIES ═══════════
+         HIGH density (70%). 3 columns = 3 top-level chunks. -->
+    <section class="slide" data-slide="6">
+        <div class="dot-pattern"></div>
+        <div class="l-corner"></div>
+
+        <span class="badge badge-gold reveal">MORE FEATURES</span>
+        <h2 class="reveal reveal-d1" style="margin-bottom:1rem;">Explore. Ask. <span class="gold-gradient">Read.</span></h2>
+
+        <div class="slide-three-col">
+            <div class="reveal reveal-d2" style="text-align:left;">
+                <h3 style="margin-bottom:0.4rem;"><span class="hieroglyph" style="font-size:0.95rem;">&#x13250;</span> Explore</h3>
+                <ul style="list-style:none; margin-bottom:0.6rem;">
+                    <li class="text-sm text-muted" style="margin-bottom:0.15rem;">&#8227; 260+ heritage sites</li>
+                    <li class="text-sm text-muted" style="margin-bottom:0.15rem;">&#8227; 93.8% landmark ID (52 sites)</li>
+                    <li class="text-sm text-muted" style="margin-bottom:0.15rem;">&#8227; 1,220+ curated images</li>
+                    <li class="text-sm text-muted">&#8227; Smart categories and search</li>
+                </ul>
+                <div class="phone-frame phone-frame-sm" style="margin:0 auto;">
+                    <div class="phone-notch"></div>
+                    <div class="phone-status"><span>9:41</span><span>&#x25CF;&#x25CF;&#x25CF;</span></div>
+                    <div class="phone-screen">
+                        <div class="phone-content" style="padding:0;">
+                            <!-- Top bar -->
+                            <div style="display:flex; align-items:center; justify-content:space-between; padding:0.35rem 0.45rem 0.2rem;">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                                <span style="font-size:0.44rem; color:var(--text); font-weight:500;">Explore</span>
+                                <span style="font-size:0.3rem; color:var(--gold); font-weight:600;">Identify</span>
+                            </div>
+                            <div style="padding:0 0.3rem;">
+                                <!-- Search -->
+                                <div style="display:flex; align-items:center; gap:0.12rem; background:var(--surface); border:1px solid var(--border); border-radius:5px; padding:0.12rem 0.2rem; margin-bottom:0.15rem;">
+                                    <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                    <span style="font-size:0.28rem; color:var(--text-muted);">Search landmarks...</span>
+                                </div>
+                                <!-- Category chips -->
+                                <div style="display:flex; gap:0.1rem; margin-bottom:0.18rem; overflow:hidden;">
+                                    <span style="font-size:0.24rem; padding:0.06rem 0.18rem; border-radius:6px; background:rgba(212,175,55,0.15); color:var(--gold); border:1px solid rgba(212,175,55,0.3);">All</span>
+                                    <span style="font-size:0.24rem; padding:0.06rem 0.18rem; border-radius:6px; color:var(--text-muted); border:1px solid var(--border);">Pharaonic</span>
+                                    <span style="font-size:0.24rem; padding:0.06rem 0.18rem; border-radius:6px; color:var(--text-muted); border:1px solid var(--border);">Islamic</span>
+                                </div>
+                                <!-- Featured header -->
+                                <div style="font-size:0.32rem; font-weight:600; color:var(--gold); margin-bottom:0.12rem;">Featured</div>
+                                <!-- Landmark cards -->
+                                <div style="background:var(--surface); border:1px solid var(--border); border-radius:5px; padding:0.2rem; margin-bottom:0.12rem;">
+                                    <div style="background:#1a1510; border-radius:3px; height:28px; display:flex; align-items:center; justify-content:center; margin-bottom:0.12rem; position:relative;">
+                                        <span style="font-size:0.32rem; color:var(--dust);">&#x25B2; &#x25B2; &#x25B2;</span>
+                                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" style="position:absolute; top:2px; right:3px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                    </div>
+                                    <div style="font-size:0.34rem; color:var(--ivory); font-weight:500;">Great Pyramid of Giza</div>
+                                    <div style="display:flex; gap:0.08rem; margin-top:0.06rem;">
+                                        <span style="font-size:0.22rem; padding:0.03rem 0.12rem; border-radius:4px; background:rgba(212,175,55,0.1); color:var(--gold); border:1px solid rgba(212,175,55,0.2);">Giza</span>
+                                        <span style="font-size:0.22rem; padding:0.03rem 0.12rem; border-radius:4px; color:var(--dust); border:1px solid var(--border);">Pharaonic</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="phone-gesture"></div>
+                </div>
+            </div>
+
+            <div class="reveal reveal-d4" style="text-align:left;">
+                <h3 style="margin-bottom:0.4rem;"><span class="hieroglyph" style="font-size:0.95rem;">&#x130ED;</span> Thoth AI</h3>
+                <ul style="list-style:none; margin-bottom:0.6rem;">
+                    <li class="text-sm text-muted" style="margin-bottom:0.15rem;">&#8227; Named after the god of knowledge</li>
+                    <li class="text-sm text-muted" style="margin-bottom:0.15rem;">&#8227; Multi-turn conversation</li>
+                    <li class="text-sm text-muted" style="margin-bottom:0.15rem;">&#8227; Edit messages, retry on failure</li>
+                    <li class="text-sm text-muted">&#8227; Bilingual EN/AR</li>
+                </ul>
+                <div class="phone-frame phone-frame-sm" style="margin:0 auto;">
+                    <div class="phone-notch"></div>
+                    <div class="phone-status"><span>9:41</span><span>&#x25CF;&#x25CF;&#x25CF;</span></div>
+                    <div class="phone-screen">
+                        <div class="phone-content" style="padding:0;">
+                            <!-- Top bar: Thoth title in gold -->
+                            <div style="display:flex; align-items:center; justify-content:space-between; padding:0.35rem 0.45rem 0.2rem; border-bottom:1px solid var(--border);">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                                <span style="font-size:0.48rem; color:var(--gold); font-weight:600; font-family:var(--font-display);">Thoth</span>
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+                            </div>
+                            <div style="padding:0.25rem 0.3rem;">
+                                <!-- User bubble (gold bg, right-aligned) -->
+                                <div style="display:flex; justify-content:flex-end; margin-bottom:0.15rem;">
+                                    <div style="background:rgba(212,175,55,0.15); border:1px solid rgba(212,175,55,0.2); border-radius:7px 7px 2px 7px; padding:0.15rem 0.25rem; max-width:78%; font-size:0.32rem; color:var(--ivory);">Who built the Great Pyramid?</div>
+                                </div>
+                                <!-- Bot bubble (surface bg, left-aligned with ibis avatar) -->
+                                <div style="display:flex; align-items:flex-start; gap:0.12rem; margin-bottom:0.15rem;">
+                                    <div style="width:14px; height:14px; border-radius:50%; background:rgba(212,175,55,0.15); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                        <span style="font-family:var(--font-hiero); font-size:0.38rem; color:var(--gold);">&#x13153;</span>
+                                    </div>
+                                    <div style="background:var(--surface); border:1px solid var(--border); border-radius:7px 7px 7px 2px; padding:0.15rem 0.25rem; max-width:78%; font-size:0.32rem; color:var(--text);">Pharaoh Khufu, around 2560 BC. Took roughly 20 years.</div>
+                                </div>
+                                <!-- User bubble 2 -->
+                                <div style="display:flex; justify-content:flex-end; margin-bottom:0.15rem;">
+                                    <div style="background:rgba(212,175,55,0.15); border:1px solid rgba(212,175,55,0.2); border-radius:7px 7px 2px 7px; padding:0.15rem 0.25rem; max-width:78%; font-size:0.32rem; color:var(--ivory);">How tall originally?</div>
+                                </div>
+                                <!-- Bot bubble 2 -->
+                                <div style="display:flex; align-items:flex-start; gap:0.12rem; margin-bottom:0.12rem;">
+                                    <div style="width:14px; height:14px; border-radius:50%; background:rgba(212,175,55,0.15); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                        <span style="font-family:var(--font-hiero); font-size:0.38rem; color:var(--gold);">&#x13153;</span>
+                                    </div>
+                                    <div style="background:var(--surface); border:1px solid var(--border); border-radius:7px 7px 7px 2px; padding:0.15rem 0.25rem; max-width:78%; font-size:0.32rem; color:var(--text);">146.6m. Now 138.5m after erosion.</div>
+                                </div>
+                            </div>
+                            <!-- Input bar -->
+                            <div style="display:flex; align-items:center; gap:0.12rem; padding:0.15rem 0.25rem; background:var(--surface-alt); border-top:1px solid var(--border);">
+                                <div style="flex:1; background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:0.1rem 0.18rem;">
+                                    <span style="font-size:0.26rem; color:var(--text-muted);">Ask Thoth anything...</span>
+                                </div>
+                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="phone-gesture"></div>
+                </div>
+            </div>
+
+            <div class="reveal reveal-d6" style="text-align:left;">
+                <h3 style="margin-bottom:0.4rem;"><span class="hieroglyph" style="font-size:0.95rem;">&#x1339E;</span> Stories</h3>
+                <ul style="list-style:none; margin-bottom:0.6rem;">
+                    <li class="text-sm text-muted" style="margin-bottom:0.15rem;">&#8227; 12 mythology tales</li>
+                    <li class="text-sm text-muted" style="margin-bottom:0.15rem;">&#8227; Scene illustrations per chapter</li>
+                    <li class="text-sm text-muted" style="margin-bottom:0.15rem;">&#8227; Voice narration via TTS</li>
+                    <li class="text-sm text-muted">&#8227; Progress tracking and badges</li>
+                </ul>
+                <div class="phone-frame phone-frame-sm" style="margin:0 auto;">
+                    <div class="phone-notch"></div>
+                    <div class="phone-status"><span>9:41</span><span>&#x25CF;&#x25CF;&#x25CF;</span></div>
+                    <div class="phone-screen">
+                        <div class="phone-content" style="padding:0;">
+                            <!-- Top bar -->
+                            <div style="padding:0.35rem 0.45rem 0.15rem; background:var(--surface);">
+                                <span style="font-size:0.48rem; color:var(--gold); font-weight:600; font-family:var(--font-display);">Stories</span>
+                            </div>
+                            <div style="padding:0.2rem 0.3rem;">
+                                <!-- Difficulty chips -->
+                                <div style="display:flex; gap:0.1rem; margin-bottom:0.18rem;">
+                                    <span style="font-size:0.24rem; padding:0.06rem 0.18rem; border-radius:6px; background:rgba(212,175,55,0.15); color:var(--gold); border:1px solid rgba(212,175,55,0.3);">All</span>
+                                    <span style="font-size:0.24rem; padding:0.06rem 0.18rem; border-radius:6px; color:var(--text-muted); border:1px solid var(--border);">Beginner</span>
+                                    <span style="font-size:0.24rem; padding:0.06rem 0.18rem; border-radius:6px; color:var(--text-muted); border:1px solid var(--border);">Advanced</span>
+                                </div>
+                                <!-- Story card 1 (with progress) -->
+                                <div style="display:flex; align-items:center; gap:0.2rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:0.2rem; margin-bottom:0.12rem;">
+                                    <div style="width:26px; height:26px; border-radius:5px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                        <span style="font-family:var(--font-hiero); font-size:0.5rem; color:var(--night);">&#x13080;</span>
+                                    </div>
+                                    <div style="flex:1; min-width:0;">
+                                        <div style="font-size:0.32rem; color:var(--ivory); font-weight:500;">Eye of Horus</div>
+                                        <div style="display:flex; gap:0.08rem; align-items:center; margin-top:0.04rem;">
+                                            <span style="font-size:0.22rem; padding:0.02rem 0.1rem; border-radius:3px; background:rgba(212,175,55,0.1); color:var(--gold);">Beginner</span>
+                                            <span style="font-size:0.2rem; color:var(--text-muted);">5 ch.</span>
+                                        </div>
+                                        <div style="height:2px; background:var(--border); border-radius:1px; margin-top:0.06rem;"><div style="height:100%; width:60%; background:var(--gold); border-radius:1px;"></div></div>
+                                        <div style="font-size:0.2rem; color:var(--sand); margin-top:0.02rem;">60%</div>
+                                    </div>
+                                </div>
+                                <!-- Story card 2 -->
+                                <div style="display:flex; align-items:center; gap:0.2rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:0.2rem; margin-bottom:0.12rem;">
+                                    <div style="width:26px; height:26px; border-radius:5px; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                        <span style="font-family:var(--font-hiero); font-size:0.5rem; color:var(--night);">&#x13228;</span>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <div style="font-size:0.32rem; color:var(--ivory); font-weight:500;">Isis & Osiris</div>
+                                        <div style="display:flex; gap:0.08rem; align-items:center; margin-top:0.04rem;">
+                                            <span style="font-size:0.22rem; padding:0.02rem 0.1rem; border-radius:3px; background:rgba(212,175,55,0.1); color:var(--gold);">Beginner</span>
+                                            <span style="font-size:0.2rem; color:var(--text-muted);">7 ch.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Story card 3 (locked/premium) -->
+                                <div style="display:flex; align-items:center; gap:0.2rem; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:0.2rem; opacity:0.6;">
+                                    <div style="width:26px; height:26px; border-radius:5px; background:linear-gradient(135deg,#A63A28,#5C1F16); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                        <span style="font-family:var(--font-hiero); font-size:0.5rem; color:#F5F0E8;">&#x13143;</span>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <div style="font-size:0.32rem; color:var(--text-muted); font-weight:500;">Journey of Ra</div>
+                                        <div style="display:flex; gap:0.08rem; align-items:center; margin-top:0.04rem;">
+                                            <span style="font-size:0.22rem; padding:0.02rem 0.1rem; border-radius:3px; background:rgba(166,58,40,0.15); color:#A63A28;">Advanced</span>
+                                            <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                            <span style="font-size:0.2rem; color:var(--text-muted); font-style:italic;">Premium</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="phone-gesture"></div>
+                </div>
+            </div>
+        </div>
+
+        <span class="depi-footer">DEPI &middot; Software Development &middot; 2026</span>
+        <span class="slide-number">06 / 14</span>
+    </section>
+
+    <!-- ═══════════ SLIDE 07: LIVE DEMO ═══════════
+         LOW density (20%). Breathing point.
+         Narrative arc: attention reset after 3 dense slides (04, 05, 06). -->
+    <section class="slide" data-slide="7">
+        <div class="dot-pattern dot-pattern-gold"></div>
+        <div class="glow-ring" style="top:50%; left:50%; transform:translate(-50%,-50%);"></div>
+        <div class="meteor" style="top:20%; right:28%; animation-delay:0.5s;"></div>
+        <div class="meteor" style="top:62%; right:15%; animation-delay:2.5s;"></div>
+
+        <div class="reveal-blur" style="margin-bottom:1.5rem;">
+            <span class="hieroglyph-hero">&#x13080;</span>
+        </div>
+        <h2 class="reveal-blur reveal-d1 shimmer" style="margin-bottom:0.4rem;">Live Demo</h2>
+        <p class="reveal-blur reveal-d2 lead" style="margin-bottom:2.5rem;">Let us show you.</p>
+        <div class="reveal-blur reveal-d3 flex gap-3" style="flex-wrap:wrap; justify-content:center;">
+            <span class="demo-badge">Scan a hieroglyph</span>
+            <span class="demo-badge">Ask Thoth a question</span>
+            <span class="demo-badge">Write your name in hieroglyphs</span>
+        </div>
+        <p class="reveal-blur reveal-d4 text-muted text-xs" style="margin-top:2rem;">(Switch to phone)</p>
+
+        <span class="depi-footer">DEPI &middot; Software Development &middot; 2026</span>
+        <span class="slide-number">07 / 14</span>
+    </section>
+
+    <!-- ═══════════ SLIDE 08: ARCHITECTURE ═══════════
+         HIGH density (75%). Two-level diagram.
+         Pulse dots on connections (dark-tech.md spec). -->
+    <section class="slide" data-slide="8">
+        <div class="dot-pattern"></div>
+        <div class="l-corner"></div>
+        <div class="l-corner l-corner-br"></div>
+
+        <span class="badge badge-gold reveal">ARCHITECTURE</span>
+        <h2 class="reveal reveal-d1" style="margin-bottom:0.4rem;">How It <span class="gold-gradient">Works</span></h2>
+        <p class="reveal reveal-d1 text-sm text-sand" style="margin-bottom:1rem; letter-spacing:0.02em;">
+            <span class="text-gold" style="font-weight:600;">Clean Architecture</span> &middot; <span class="text-gold" style="font-weight:600;">MVVM</span> &middot; State via <span class="text-gold" style="font-weight:600;">StateFlow + ViewModels</span> &middot; DI via <span class="text-gold" style="font-weight:600;">Hilt</span>
+        </p>
+
+        <div class="reveal reveal-d2 flex items-center gap-2" style="margin-bottom:0.8rem; flex-wrap:wrap; justify-content:center;">
+            <div class="arch-box arch-box-gold">
+                <div class="arch-label">Android App</div>
+                <div class="arch-sub">Kotlin, Compose, Hilt</div>
+            </div>
+            <div class="arch-arrow"><span class="pulse-dot"></span> &harr; <span class="pulse-dot"></span></div>
+            <div class="arch-box arch-box-gold">
+                <div class="arch-label">Backend API</div>
+                <div class="arch-sub">FastAPI on HF Spaces</div>
+            </div>
+            <div class="arch-arrow"><span class="pulse-dot"></span> &harr; <span class="pulse-dot"></span></div>
+            <div class="arch-box arch-box-gold">
+                <div class="arch-label">ML Models</div>
+                <div class="arch-sub">3 ONNX models</div>
+            </div>
+        </div>
+
+        <div class="reveal reveal-d3 text-xs text-muted" style="margin-bottom:1rem;">
+            Android and Web share the same backend &middot; Database serves landmarks, dictionary, user data
+        </div>
+
+        <div class="reveal reveal-d4 card" style="max-width:56rem; width:100%; padding:1rem;">
+            <div style="text-align:center; margin-bottom:0.5rem;">
+                <span class="text-sm text-sand" style="font-weight:600; letter-spacing:0.05em;">18 APP MODULES</span>
+            </div>
+            <div style="margin-bottom:0.5rem;">
+                <div class="text-xs text-gold" style="font-weight:600; margin-bottom:0.3rem; letter-spacing:0.05em;">FEATURE (10)</div>
+                <div class="arch-module-grid">
+                    <span class="arch-module arch-module-feature">auth</span>
+                    <span class="arch-module arch-module-feature">chat</span>
+                    <span class="arch-module arch-module-feature">scan</span>
+                    <span class="arch-module arch-module-feature">dictionary</span>
+                    <span class="arch-module arch-module-feature">explore</span>
+                    <span class="arch-module arch-module-feature">feedback</span>
+                    <span class="arch-module arch-module-feature">landing</span>
+                    <span class="arch-module arch-module-feature">settings</span>
+                    <span class="arch-module arch-module-feature">stories</span>
+                    <span class="arch-module arch-module-feature">dashboard</span>
+                </div>
+            </div>
+            <div>
+                <div class="text-xs text-sand" style="font-weight:600; margin-bottom:0.3rem; letter-spacing:0.05em;">CORE (8)</div>
+                <div class="arch-module-grid">
+                    <span class="arch-module arch-module-core">common</span>
+                    <span class="arch-module arch-module-core">data</span>
+                    <span class="arch-module arch-module-core">domain</span>
+                    <span class="arch-module arch-module-core">network</span>
+                    <span class="arch-module arch-module-core">database</span>
+                    <span class="arch-module arch-module-core">designsystem</span>
+                    <span class="arch-module arch-module-core">ml</span>
+                    <span class="arch-module arch-module-core">ui</span>
+                    <span class="arch-module arch-module-core">firebase</span>
+                </div>
+            </div>
+        </div>
+
+        <span class="depi-footer">DEPI &middot; Software Development &middot; 2026</span>
+        <span class="slide-number">08 / 14</span>
+    </section>
+
+    <!-- ═══════════ SLIDE 09: TECH STACK ═══════════
+         MEDIUM density (60%). Single scannable table.
+         Border-beam animation from magicui wraps the card. -->
+    <section class="slide" data-slide="9">
+        <div class="dot-pattern"></div>
+        <div class="l-corner"></div>
+
+        <span class="badge badge-gold reveal">TECH STACK</span>
+        <h2 class="reveal reveal-d1" style="margin-bottom:1rem;">Built <span class="gold-gradient">With</span></h2>
+
+        <div class="reveal reveal-d2 card" style="max-width:54rem; width:100%; padding:0;">
+            <table class="tech-table">
+                <thead><tr><th>Layer</th><th>Technology</th><th>Why</th></tr></thead>
+                <tbody>
+                    <tr><td>Language</td><td>Kotlin 2.1</td><td>Type-safe, concise, Jetpack-native</td></tr>
+                    <tr><td>UI</td><td>Jetpack Compose + Material 3</td><td>Declarative UI with Egyptian gold theme</td></tr>
+                    <tr><td>DI</td><td>Hilt (Dagger)</td><td>Compile-time injection, per-module scoping</td></tr>
+                    <tr><td>Database</td><td>Room</td><td>Offline dictionary and chat history</td></tr>
+                    <tr><td>Network</td><td>Retrofit + kotlinx.serialization</td><td>Type-safe API calls, JSON parsing</td></tr>
+                    <tr><td>Images</td><td>Coil 3</td><td>Kotlin-first, shares OkHttp client</td></tr>
+                    <tr><td>Camera</td><td>CameraX</td><td>Native capture for scanning</td></tr>
+                    <tr><td>ML</td><td>ONNX Runtime</td><td>On-device inference, no server uploads</td></tr>
+                    <tr><td>Auth</td><td>Firebase + Google Sign-In</td><td>OAuth, analytics, crash reporting</td></tr>
+                    <tr><td>Nav</td><td>Type-safe Compose Nav 2.8+</td><td>Compile-time route safety</td></tr>
+                    <tr><td>Target</td><td>API 35 (min 26)</td><td>Android 8.0+ (97% coverage)</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <span class="depi-footer">DEPI &middot; Software Development &middot; 2026</span>
+        <span class="slide-number">09 / 14</span>
+    </section>
+
+    <!-- ═══════════ SLIDE 10: ML DEEP DIVE ═══════════
+         HIGH density (75%). Split: model cards left, pipeline right.
+         Data-viz: every stat has context (class count, site count). -->
+    <section class="slide" data-slide="10">
+        <div class="dot-pattern"></div>
+        <div class="l-corner"></div>
+        <div class="l-corner l-corner-br"></div>
+
+        <span class="badge badge-gold reveal">MACHINE LEARNING</span>
+        <h2 class="reveal reveal-d1" style="margin-bottom:1rem;">AI On <span class="gold-gradient">Device</span></h2>
+
+        <div class="slide-split" style="align-items:start;">
+            <div>
+                <div class="card reveal-left reveal-d2" style="margin-bottom:0.7rem;">
+                    <div class="flex items-center gap-2" style="margin-bottom:0.2rem;">
+                        <span class="hieroglyph" style="font-size:1rem;">&#x13080;</span>
+                        <h4>Hieroglyph Classifier</h4>
+                    </div>
+                    <p class="text-sm"><span class="text-gold" style="font-weight:700;">98.2%</span> across <span class="text-gold">171</span> Gardiner sign classes</p>
+                    <p class="text-xs text-muted" style="margin-top:0.15rem;">CNN with transfer learning. Trained on labeled glyph images.</p>
+                </div>
+                <div class="card reveal-left reveal-d3" style="margin-bottom:0.7rem;">
+                    <div class="flex items-center gap-2" style="margin-bottom:0.2rem;">
+                        <span class="hieroglyph" style="font-size:1rem;">&#x13250;</span>
+                        <h4>Landmark Identifier</h4>
+                    </div>
+                    <p class="text-sm"><span class="text-gold" style="font-weight:700;">93.8%</span> across <span class="text-gold">52</span> Egyptian sites</p>
+                    <p class="text-xs text-muted" style="margin-top:0.15rem;">Trained on curated site photography from Wikimedia.</p>
+                </div>
+                <div class="card reveal-left reveal-d4">
+                    <div class="flex items-center gap-2" style="margin-bottom:0.2rem;">
+                        <span class="hieroglyph" style="font-size:1rem;">&#x1329B;</span>
+                        <h4>Glyph Detector</h4>
+                    </div>
+                    <p class="text-sm">Locates individual signs in inscription photos</p>
+                    <p class="text-xs text-muted" style="margin-top:0.15rem;">Bounding box output. Feeds the classifier.</p>
+                </div>
+            </div>
+
+            <div>
+                <div class="ml-pipeline reveal-right reveal-d3">
+                    <div class="ml-pipeline-step">Training (TensorFlow / Keras)</div>
+                    <div class="ml-pipeline-arrow">&darr;</div>
+                    <div class="ml-pipeline-step">Export to ONNX</div>
+                    <div class="ml-pipeline-arrow">&darr;</div>
+                    <div class="ml-pipeline-step">Android (ONNX Runtime)</div>
+                    <div class="ml-pipeline-arrow">&darr;</div>
+                    <div class="ml-pipeline-step" style="border-color:rgba(212,175,55,0.3);">On-device inference</div>
+                </div>
+                <div class="privacy-card reveal-right reveal-d5" style="margin-top:0.8rem;">
+                    <p style="margin-bottom:0.2rem;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></p>
+                    <p class="text-sm" style="color:var(--ivory);">Images never leave the device.</p>
+                    <p class="text-xs text-muted">All inference runs on-phone via ONNX Runtime. No server uploads.</p>
+                </div>
+            </div>
+        </div>
+
+        <span class="depi-footer">DEPI &middot; Software Development &middot; 2026</span>
+        <span class="slide-number">10 / 14</span>
+    </section>
+
+    <!-- ═══════════ SLIDE 11: CHALLENGES ═══════════
+         MEDIUM density (60%). Story slide.
+         Humanizer: incident-report voice. State the bug. State the fix. Stop. -->
+    <section class="slide" data-slide="11">
+        <div class="dot-pattern"></div>
+        <div class="l-corner"></div>
+
+        <span class="badge badge-gold reveal">REAL ENGINEERING</span>
+        <h2 class="reveal reveal-d1" style="margin-bottom:1rem;">What <span class="gold-gradient">Broke</span> (and how we fixed it)</h2>
+
+        <div style="max-width:56rem; width:100%; display:flex; flex-direction:column; gap:0.7rem;">
+            <div class="challenge-pair reveal reveal-d2">
+                <div class="card challenge-problem">
+                    <div class="challenge-tag challenge-tag-red">BUG</div>
+                    <h4 style="font-size:0.82rem;">Auth token leak</h4>
+                    <p class="text-xs text-muted" style="margin-top:0.25rem;">AuthInterceptor sent Bearer tokens to every request. Wikipedia's image CDN was receiving our auth headers. Bad.</p>
+                </div>
+                <div class="card challenge-solution">
+                    <div class="challenge-tag challenge-tag-green">FIX</div>
+                    <h4 style="font-size:0.82rem;">Scope to API base URL</h4>
+                    <p class="text-xs text-muted" style="margin-top:0.25rem;">Check the request URL against base before attaching tokens. External requests skip auth entirely.</p>
+                </div>
+            </div>
+
+            <div class="challenge-pair reveal reveal-d4">
+                <div class="card challenge-problem">
+                    <div class="challenge-tag challenge-tag-red">CRASH</div>
+                    <h4 style="font-size:0.82rem;">Chat duplicate IDs</h4>
+                    <p class="text-xs text-muted" style="margin-top:0.25rem;">IDs used <code style="color:var(--sand); font-size:0.65rem;">sessionId_timestamp</code>. Two messages in the same millisecond = collision. Crash on history load.</p>
+                </div>
+                <div class="card challenge-solution">
+                    <div class="challenge-tag challenge-tag-green">FIX</div>
+                    <h4 style="font-size:0.82rem;">Add array index to ID</h4>
+                    <p class="text-xs text-muted" style="margin-top:0.25rem;">New format: <code style="color:var(--sand); font-size:0.65rem;">sessionId_index_timestamp</code>. Index guarantees uniqueness within a batch.</p>
+                </div>
+            </div>
+
+            <div class="challenge-pair reveal reveal-d6">
+                <div class="card challenge-problem">
+                    <div class="challenge-tag challenge-tag-red">DESIGN</div>
+                    <h4 style="font-size:0.82rem;">18-module dependency graph</h4>
+                    <p class="text-xs text-muted" style="margin-top:0.25rem;">Feature modules need core but can't see each other. Cross-feature navigation without direct dependencies.</p>
+                </div>
+                <div class="card challenge-solution">
+                    <div class="challenge-tag challenge-tag-green">FIX</div>
+                    <h4 style="font-size:0.82rem;">Domain contracts + type-safe nav</h4>
+                    <p class="text-xs text-muted" style="margin-top:0.25rem;">Domain layer defines contracts. Compose Nav 2.8+ for routes. Hilt scoping enforces boundaries.</p>
+                </div>
+            </div>
+        </div>
+
+        <span class="depi-footer">DEPI &middot; Software Development &middot; 2026</span>
+        <span class="slide-number">11 / 14</span>
+    </section>
+
+    <!-- ═══════════ SLIDE 12: COMPETITION & NUMBERS ═══════════
+         HIGH density (70%). Data wall.
+         Data-viz: every stat has a context label below it. -->
+    <section class="slide" data-slide="12">
+        <div class="dot-pattern"></div>
+        <div class="l-corner"></div>
+
+        <span class="badge badge-gold reveal">WHAT EXISTS VS WADJET</span>
+        <h2 class="reveal reveal-d1" style="margin-bottom:0.8rem;">By The <span class="gold-gradient">Numbers</span></h2>
+
+        <div class="reveal reveal-d2 card" style="max-width:60rem; width:100%; padding:0; margin-bottom:1rem; overflow-x:auto;">
+            <table class="compare-table">
+                <thead><tr><th>Feature</th><th>Google Lens</th><th>Hieroglyph Apps</th><th>Wikipedia</th><th>Wadjet</th></tr></thead>
+                <tbody>
+                    <tr><td>Scan hieroglyphs</td><td>General OCR</td><td>Some</td><td>No</td><td>98.2%, 171 classes</td></tr>
+                    <tr><td>Dictionary</td><td>No</td><td>Limited</td><td>Text only</td><td>1,023 signs, offline</td></tr>
+                    <tr><td>Write hieroglyphs</td><td>No</td><td>Some</td><td>No</td><td>Transliteration + TTS</td></tr>
+                    <tr><td>Explore landmarks</td><td>No</td><td>No</td><td>Scattered</td><td>260+ sites, categorized</td></tr>
+                    <tr><td>AI chat guide</td><td>No</td><td>No</td><td>No</td><td>Thoth (multi-turn)</td></tr>
+                    <tr><td>Mythology</td><td>No</td><td>No</td><td>Articles</td><td>12 interactive tales</td></tr>
+                    <tr><td>Bilingual EN/AR</td><td>No</td><td>Rare</td><td>Separate</td><td>Full RTL support</td></tr>
+                    <tr><td>Offline</td><td>Partial</td><td>Varies</td><td>No</td><td>Dictionary + ML</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="grid-4 max-w-5xl reveal reveal-d4" style="margin-bottom:0.5rem;">
+            <div class="stat-block"><div class="stat-number stat-number-sm" data-count="1023" data-separator=",">0</div><div class="stat-label">Gardiner signs</div></div>
+            <div class="stat-block"><div class="stat-number stat-number-sm" data-count="260" data-suffix="+">0</div><div class="stat-label">heritage sites</div></div>
+            <div class="stat-block"><div class="stat-number stat-number-sm" data-count="12">0</div><div class="stat-label">mythology tales</div></div>
+            <div class="stat-block"><div class="stat-number stat-number-sm" data-count="1220" data-suffix="+" data-separator=",">0</div><div class="stat-label">curated images</div></div>
+        </div>
+        <div class="grid-4 max-w-5xl reveal reveal-d5">
+            <div class="stat-block"><div class="stat-number stat-number-sm" data-count="98.2" data-suffix="%" data-decimals="1">0</div><div class="stat-label">glyph accuracy</div></div>
+            <div class="stat-block"><div class="stat-number stat-number-sm" data-count="93.8" data-suffix="%" data-decimals="1">0</div><div class="stat-label">landmark accuracy</div></div>
+            <div class="stat-block"><div class="stat-number stat-number-sm" style="font-size:1.4rem;">EN/AR</div><div class="stat-label">bilingual</div></div>
+            <div class="stat-block"><div class="stat-number stat-number-sm" data-count="88" data-prefix="~" data-suffix=" MB">0</div><div class="stat-label">APK size</div></div>
+        </div>
+
+        <span class="depi-footer">DEPI &middot; Software Development &middot; 2026</span>
+        <span class="slide-number">12 / 14</span>
+    </section>
+
+    <!-- ═══════════ SLIDE 13: FUTURE VISION ═══════════
+         MEDIUM density (55%). Forward-looking.
+         reveal-scale from animate-ui spring easing. -->
+    <section class="slide" data-slide="13">
+        <div class="dot-pattern"></div>
+        <div class="l-corner"></div>
+        <div class="meteor" style="top:15%; right:20%; animation-delay:1s;"></div>
+        <div class="meteor" style="top:55%; right:35%; animation-delay:3s;"></div>
+
+        <span class="badge badge-gold reveal">WHAT'S NEXT</span>
+        <h2 class="reveal reveal-d1" style="margin-bottom:1rem;">Future <span class="gold-gradient">Vision</span></h2>
+
+        <div class="grid-2x3 max-w-5xl">
+            <div class="card reveal-scale reveal-d1">
+                <div class="card-icon"><span class="hieroglyph">&#x13272;</span></div>
+                <h4>Live camera scan</h4>
+                <p class="text-xs text-muted" style="margin-top:0.2rem;">Real-time glyph recognition. AR overlay on camera feed. No shutter button.</p>
+            </div>
+            <div class="card reveal-scale reveal-d2">
+                <div class="card-icon"><span class="hieroglyph">&#x1309B;</span></div>
+                <h4>Deep translation</h4>
+                <p class="text-xs text-muted" style="margin-top:0.2rem;">Full grammatical parsing. Understand sentences, not isolated signs.</p>
+            </div>
+            <div class="card reveal-scale reveal-d3">
+                <div class="card-icon"><span class="hieroglyph">&#x13239;</span></div>
+                <h4>Offline ML</h4>
+                <p class="text-xs text-muted" style="margin-top:0.2rem;">Ship ONNX models inside the APK. Scanning works with zero connectivity.</p>
+            </div>
+            <div class="card reveal-scale reveal-d4">
+                <div class="card-icon"><span class="hieroglyph">&#x13250;</span></div>
+                <h4>Museum partnerships</h4>
+                <p class="text-xs text-muted" style="margin-top:0.2rem;">Scan museum exhibits for stories, context, and pronunciation.</p>
+            </div>
+            <div class="card reveal-scale reveal-d5">
+                <div class="card-icon"><span class="hieroglyph">&#x1339B;</span></div>
+                <h4>50+ stories</h4>
+                <p class="text-xs text-muted" style="margin-top:0.2rem;">Pharaohs' chronicles. Daily-life tales. Temple rituals.</p>
+            </div>
+            <div class="card reveal-scale reveal-d6">
+                <div class="card-icon"><span class="hieroglyph">&#x131B4;</span></div>
+                <h4>Education mode</h4>
+                <p class="text-xs text-muted" style="margin-top:0.2rem;">Structured curriculum for schools. Quizzes, lesson plans, progress tracking.</p>
+            </div>
+        </div>
+
+        <span class="depi-footer">DEPI &middot; Software Development &middot; 2026</span>
+        <span class="slide-number">13 / 14</span>
+    </section>
+
+    <!-- ═══════════ SLIDE 14: THANK YOU ═══════════
+         LOW density (25%). Bookend with slide 01.
+         Same glow + meteors + dot pattern. -->
+    <section class="slide" data-slide="14">
+        <div class="dot-pattern dot-pattern-gold"></div>
+        <div class="glow-ring" style="top:50%; left:50%; transform:translate(-50%,-50%);"></div>
+        <div class="meteor" style="top:22%; right:20%; animation-delay:0.8s;"></div>
+        <div class="meteor" style="top:62%; right:38%; animation-delay:2.8s;"></div>
+
+        <div class="reveal-blur" style="margin-bottom:1.5rem;">
+            <img src="%%LOGO_BASE64%%" alt="Wadjet" class="logo-img logo-img-sm">
+        </div>
+        <h2 class="reveal-blur reveal-d1" style="margin-bottom:0.2rem;">
+            Thank You <span class="hieroglyph" style="font-size:1.4rem;">&#x13079;</span>
+        </h2>
+        <div class="divider reveal-blur reveal-d2"></div>
+        <div class="reveal-blur reveal-d3" style="margin-bottom:1.3rem;">
+            <p style="font-size:1rem; font-weight:500; margin-bottom:0.15rem;">Nader Mohamed</p>
+            <p class="text-sm text-muted">BSc Artificial Intelligence, Kafr El Sheikh University</p>
+            <p class="text-sm text-muted">DEPI Software Development Track, 2026</p>
+        </div>
+        <div class="reveal-blur reveal-d4 flex gap-3" style="margin-bottom:0.8rem;">
+            <a href="https://github.com/Nadercr7/wadjet_android" class="btn btn-gold" target="_blank" rel="noopener">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                Source Code
+            </a>
+            <a href="https://nadercr7-wadjet-v2.hf.space/" class="btn btn-ghost" target="_blank" rel="noopener">Try Web App</a>
+        </div>
+        <div class="reveal-blur reveal-d5">
+            <p class="text-xs text-muted" style="letter-spacing:0.04em;">
+                <span class="text-sand">github.com/Nadercr7/wadjet_android</span>
+                <span style="margin:0 0.5rem; color:var(--border);">&middot;</span>
+                Full README &middot; Architecture docs &middot; Build instructions
+            </p>
+        </div>
+        <div class="reveal-fade reveal-d6" style="margin-top:2rem;">
+            <span class="hieroglyph-lg">&#x13080; &#x13079; &#x1305F; &#x130A3; &#x13250; &#x1339B; &#x130ED; &#x1339E;</span>
+        </div>
+
+        <span class="depi-footer">DEPI &middot; Software Development &middot; 2026</span>
+        <span class="slide-number">14 / 14</span>
+    </section>
+
+    <!-- ═══════════ JAVASCRIPT ═══════════ -->
+    <script>
+    class WadjetPresentation {
+        constructor() {
+            this.slides = document.querySelectorAll('.slide');
+            this.navDots = document.getElementById('navDots');
+            this.progressBar = document.getElementById('progressBar');
+            this.keyHint = document.getElementById('keyHint');
+            this.currentSlide = 0;
+            this.totalSlides = this.slides.length;
+            this.animatedCounters = new Set();
+
+            this.createNavDots();
+            this.setupIntersectionObserver();
+            this.setupKeyboardNav();
+            this.setupScrollListener();
+            this.setupParallax();
+            this.setupFullscreen();
+            this.hideKeyHintAfterDelay();
+        }
+
+        createNavDots() {
+            for (let i = 0; i < this.totalSlides; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+                dot.addEventListener('click', () => this.goToSlide(i));
+                dot.title = 'Slide ' + (i + 1);
+                this.navDots.appendChild(dot);
+            }
+        }
+
+        setupIntersectionObserver() {
+            const slideObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        const idx = Array.from(this.slides).indexOf(entry.target);
+                        if (idx !== -1) {
+                            this.currentSlide = idx;
+                            this.updateNav();
+                        }
+                        this.triggerCounters(entry.target);
+                    }
+                });
+            }, { threshold: 0.35 });
+            this.slides.forEach(slide => slideObserver.observe(slide));
+        }
+
+        triggerCounters(slide) {
+            const counters = slide.querySelectorAll('[data-count]');
+            counters.forEach(el => {
+                if (this.animatedCounters.has(el)) return;
+                this.animatedCounters.add(el);
+                const target = parseFloat(el.dataset.count);
+                const decimals = parseInt(el.dataset.decimals) || 0;
+                const prefix = el.dataset.prefix || '';
+                const suffix = el.dataset.suffix || '';
+                const separator = el.dataset.separator || '';
+                this.animateCounter(el, target, decimals, prefix, suffix, separator, 1500);
+            });
+        }
+
+        animateCounter(element, target, decimals, prefix, suffix, separator, duration) {
+            const start = performance.now();
+            const easeOutExpo = t => t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+            const tick = (now) => {
+                const elapsed = now - start;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = easeOutExpo(progress);
+                let current = eased * target;
+                if (decimals > 0) { current = current.toFixed(decimals); }
+                else { current = Math.round(current); }
+                let display = String(current);
+                if (separator && decimals === 0) { display = Number(current).toLocaleString('en-US'); }
+                element.textContent = prefix + display + suffix;
+                if (progress < 1) requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+        }
+
+        setupKeyboardNav() {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') {
+                    e.preventDefault();
+                    this.goToSlide(Math.min(this.currentSlide + 1, this.totalSlides - 1));
+                } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+                    e.preventDefault();
+                    this.goToSlide(Math.max(this.currentSlide - 1, 0));
+                } else if (e.key === 'Home') {
+                    e.preventDefault(); this.goToSlide(0);
+                } else if (e.key === 'End') {
+                    e.preventDefault(); this.goToSlide(this.totalSlides - 1);
+                } else if (e.key === 'f' || e.key === 'F') {
+                    e.preventDefault(); this.toggleFullscreen();
+                }
+            });
+        }
+
+        setupFullscreen() {
+            const btn = document.getElementById('fsBtn');
+            if (btn) btn.addEventListener('click', () => this.toggleFullscreen());
+        }
+
+        toggleFullscreen() {
+            const root = document.documentElement;
+            const inFs = document.fullscreenElement || document.webkitFullscreenElement;
+            if (!inFs) {
+                if (root.requestFullscreen) root.requestFullscreen();
+                else if (root.webkitRequestFullscreen) root.webkitRequestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            }
+        }
+
+        setupScrollListener() {
+            window.addEventListener('scroll', () => {
+                const scrolled = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+                this.progressBar.style.width = (scrolled * 100) + '%';
+            }, { passive: true });
+        }
+
+        setupParallax() {
+            const decoratives = document.querySelectorAll('.glow-ring');
+            let ticking = false;
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    requestAnimationFrame(() => {
+                        const scrollY = window.scrollY;
+                        decoratives.forEach(el => {
+                            const rect = el.parentElement.getBoundingClientRect();
+                            const offset = (scrollY + rect.top) * 0.04;
+                            const existingTransform = el.getAttribute('data-base-transform') || '';
+                            if (!el.getAttribute('data-base-transform')) {
+                                el.setAttribute('data-base-transform', el.style.transform || '');
+                            }
+                            const base = el.getAttribute('data-base-transform');
+                            el.style.transform = base + ` translateY(${offset}px)`;
+                        });
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            }, { passive: true });
+        }
+
+        goToSlide(index) {
+            if (index < 0 || index >= this.totalSlides) return;
+            this.slides[index].scrollIntoView({ behavior: 'smooth' });
+        }
+
+        updateNav() {
+            const dots = this.navDots.querySelectorAll('.nav-dot');
+            dots.forEach((dot, i) => dot.classList.toggle('active', i === this.currentSlide));
+            const scrolled = this.currentSlide / (this.totalSlides - 1);
+            this.progressBar.style.width = (scrolled * 100) + '%';
+        }
+
+        hideKeyHintAfterDelay() {
+            setTimeout(() => { if (this.keyHint) this.keyHint.classList.add('hidden'); }, 5000);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => { new WadjetPresentation(); });
+    </script>
+</body>
+</html>
