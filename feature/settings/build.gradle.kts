@@ -37,6 +37,7 @@ dependencies {
     implementation(project(":core:common"))
 
     // Compose
+    implementation(libs.androidx.appcompat)
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.material3)
 

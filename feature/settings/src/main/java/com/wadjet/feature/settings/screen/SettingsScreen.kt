@@ -175,6 +175,10 @@ fun SettingsScreen(
                 )
             }
 
+            // ── Language (G-01: per-app locale EN/AR) ──
+            item { SectionHeader(stringResource(R.string.quick_settings_language)) }
+            item { LanguageSection() }
+
             // ── Storage ──
             item { SectionHeader(stringResource(R.string.settings_section_storage)) }
             item {

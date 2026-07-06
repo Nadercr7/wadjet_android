@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Wadjet" parent="android:Theme.Material.NoActionBar">
+    <!-- AppCompat parent is required: MainActivity extends AppCompatActivity so that
+         AppCompatDelegate.setApplicationLocales works on pre-Android-13 devices (G-01). -->
+    <style name="Theme.Wadjet" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">#FF0A0A0A</item>
     </style>
 </resources>

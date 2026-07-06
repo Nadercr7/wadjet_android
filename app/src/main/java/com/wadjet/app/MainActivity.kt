@@ -1,7 +1,7 @@
 package com.wadjet.app
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
@@ -65,7 +65,9 @@ import javax.inject.Inject
 import javax.inject.Named
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+// AppCompatActivity (not ComponentActivity) so AppCompatDelegate.setApplicationLocales
+// works on all supported API levels (per-app language, G-01).
+class MainActivity : AppCompatActivity() {
 
     @Inject lateinit var authRepository: AuthRepository
     @Inject @Named("webClientId") lateinit var webClientId: String

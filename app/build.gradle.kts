@@ -135,6 +135,7 @@ dependencies {
 
     // AndroidX
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity.compose)
     implementation(libs.core.splashscreen)
     implementation(libs.kotlinx.serialization.json)
