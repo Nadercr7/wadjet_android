@@ -60,7 +60,7 @@ class ExploreViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel() = ExploreViewModel(repository).also { viewModel = it }
+    private fun createViewModel() = ExploreViewModel(repository, mockk(relaxed = true)).also { viewModel = it }
 
     @Test
     fun `init loads landmarks and cities`() = runTest {

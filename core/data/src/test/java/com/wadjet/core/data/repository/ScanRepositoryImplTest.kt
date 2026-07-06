@@ -72,7 +72,15 @@ class ScanRepositoryImplTest {
 
     @Before
     fun setup() {
-        repository = ScanRepositoryImpl(scanApi, audioApi, scanResultDao, json)
+        repository = ScanRepositoryImpl(
+            scanApi,
+            audioApi,
+            scanResultDao,
+            json,
+            mockk<com.wadjet.core.data.audio.TtsAudioCache>(relaxed = true) {
+                every { get(any(), any(), any()) } returns null
+            },
+        )
     }
 
     @Test

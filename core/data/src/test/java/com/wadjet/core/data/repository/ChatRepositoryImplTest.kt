@@ -5,6 +5,7 @@ import com.wadjet.core.network.api.ChatApiService
 import com.wadjet.core.network.model.ClearChatResponse
 import com.wadjet.core.network.model.SttResponse
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -30,7 +31,16 @@ class ChatRepositoryImplTest {
 
     @Before
     fun setup() {
-        repository = ChatRepositoryImpl(chatApi, audioApi, okHttpClient, json, baseUrl)
+        repository = ChatRepositoryImpl(
+            chatApi,
+            audioApi,
+            mockk<com.wadjet.core.data.audio.TtsAudioCache>(relaxed = true) {
+                every { get(any(), any(), any()) } returns null
+            },
+            okHttpClient,
+            json,
+            baseUrl,
+        )
     }
 
     @Test

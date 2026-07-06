@@ -11,6 +11,7 @@ import com.wadjet.core.network.model.DictionaryResponse
 import com.wadjet.core.network.model.SignDetailDto
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -41,7 +42,16 @@ class DictionaryRepositoryImplTest {
 
     @Before
     fun setup() {
-        repository = DictionaryRepositoryImpl(dictionaryApi, writeApi, audioApi, signDao, categoryDao)
+        repository = DictionaryRepositoryImpl(
+            dictionaryApi,
+            writeApi,
+            audioApi,
+            signDao,
+            categoryDao,
+            mockk<com.wadjet.core.data.audio.TtsAudioCache>(relaxed = true) {
+                every { get(any(), any(), any()) } returns null
+            },
+        )
     }
 
     @Test
