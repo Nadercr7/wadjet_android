@@ -22,8 +22,8 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Area: F-ml
 - Evidence: `feature/scan/.../ScanViewModel.kt:229-248` (`compressImage` uses `BitmapFactory.decodeFile`, ignores EXIF, re-encodes JPEG q85 with no EXIF); identical copy in `feature/explore/.../IdentifyViewModel.kt:118-137`. Always called (`ScanViewModel.kt:144`).
 - Expected (web) behaviour: server `app/api/scan.py:70-92` relies on `ImageOps.exif_transpose` — needs the EXIF tag the client destroys. Web browser uploads preserve EXIF.
-- Status: OPEN
-- Verification: code-read only (no device).
+- Status: **FIXED** (commit 94e71fe) — `uprightBitmap()` applies the ExifInterface orientation matrix before JPEG re-encode in both ScanViewModel and IdentifyViewModel.
+- Verification: emulator, test image `glyphs_exif6.jpg` (stored 500×1200 portrait, EXIF orientation=6). Scan → server reported `image_size 600×250` (upright landscape, aspect preserved) and detected 6 glyphs at horizontal bbox positions → orientation was baked in client-side.
 
 ## [F-02] 16.6 MB unused ONNX models + unused onnxruntime-android dependency (pure APK bloat)
 - Date: 2026-07-06
@@ -56,13 +56,15 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Date: 2026-07-06 | Severity: major | Area: E-db
 - Evidence: `core/database/.../DatabaseModule.kt:28`. DB v7, migrations only 4→5, 5→6, 6→7; any other path (incl. downgrade) drops the DB.
 - Expected: explicit migrations only, or `fallbackToDestructiveMigrationOnDowngrade()`.
-- Status: OPEN | Verification: code-read.
+- Status: **FIXED** (commit b19b629) — downgrade-only fallback; MIGRATION_7_8 registered (with E-02).
+- Verification: real v7→v8 upgrade exercised on emulator: built the pre-Batch-2 commit (DB v7) in a worktree, installed it, wrote a story_progress row at v7, then installed the v8 build over it. Result: `PRAGMA user_version`=8, `story_cache` created by the migration's own SQL (orphan table dropped first so CREATE actually ran), and the v7 `story_progress` row survived intact — no destructive wipe, no "Migration didn't properly handle" crash.
 
 ## [E-02] Story content never cached → stories unusable offline
 - Date: 2026-07-06 | Severity: major | Area: E-db / M-offline
 - Evidence: `core/data/.../StoriesRepositoryImpl.kt:48-116` — only `story_progress` persisted; list/reader fail offline.
 - Expected: cache story summaries/content in Room like signs/landmarks.
-- Status: OPEN | Verification: code-read.
+- Status: **FIXED** (commit 320cea4) — `story_cache` table (raw DTO JSON + `sort_order` to preserve server list order, since premium gating is positional); network-first with cache fallback in getStories/getStory.
+- Verification: emulator — airplane mode + force-stop + cold relaunch: Stories list rendered from cache in exact server order (premium badges on same items), and previously-opened story reader worked fully offline. NOTE: Android premium lock is positional (`StoriesScreen.kt:72` FREE_STORY_LIMIT=3) while web has no gating at all → NEEDS-DECISION logged.
 
 ## [E-03] No @Index on queried columns (signs.category/type, landmarks.type/city, scan_results.firestore_id)
 - Date: 2026-07-06 | Severity: major | Area: E-db / I-perf
@@ -90,7 +92,8 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Date: 2026-07-06 | Severity: major (external verification needed) | Area: J-security / N-firebase
 - Evidence: `StoriesRepositoryImpl.kt:182,219,260`. Rules live server-side, not in repo.
 - Expected: rules restrict `users/{uid}/**` to `request.auth.uid == uid`.
-- Status: NEEDS-DECISION | Verification: not possible locally.
+- LIVE UPDATE 2026-07-06: emulator logcat shows the client's own write is REJECTED — `Write failed at users/{uid}/story_progress/creation-from-nun: PERMISSION_DENIED` (signed-in user, own uid). So the Firestore progress mirror NEVER works; only the backend save (D-02) persists. Either fix the rules server-side or drop the dead Firestore write path (candidate for D-05 auth unification work).
+- Status: NEEDS-DECISION | Verification: live PERMISSION_DENIED observed on emulator.
 
 ## [J-03] allowBackup=true backs up Room DB + plaintext prefs to cloud
 - Date: 2026-07-06 | Severity: minor | Area: J-security
@@ -137,14 +140,15 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Date: 2026-07-06 | Severity: blocker (build) | Area: A-build
 - Evidence: both incremental and `clean assembleDebug` fail at `:app:hiltJavaCompileDebug` with 14× `[Dagger/MissingBinding]` (every `core:network` binding). Diagnosis: `:core:network:compileDebugJavaWithJavac` output restored FROM-CACHE contained ONLY `BuildConfig.class` — none of the KSP-generated Hilt factories or `hilt_aggregated_deps/_com_wadjet_core_network_di_NetworkModule` (compare `core:data`, which has them). Re-running that task with `--no-build-cache --rerun-tasks` compiles all factories correctly → the code is fine; the local Gradle build cache (`~/.gradle/caches/build-cache-1`, migrated from the old laptop) holds a corrupt entry.
 - Expected: `assembleDebug` green. Remediation (Phase 2): purge the poisoned build-cache entry (or temporarily build with `--no-build-cache`); consider `org.gradle.caching=false` until cache is regenerated.
-- Status: OPEN (diagnosed; remediation = purge cache entry, Phase 2)
-- Verification: `assembleDebug --no-build-cache` → **BUILD SUCCESSFUL** (1m13s); APK produced. Task-level rerun produced `NetworkModule_Provide*Factory.class` on disk. Code at HEAD is sound; only the local build cache is corrupt.
+- Status: **FIXED** (Phase 2, no commit needed — environment fix): purged `~/.gradle/caches/build-cache-1`.
+- Verification: plain `gradlew assembleDebug` and `installDebug` both BUILD SUCCESSFUL afterwards; app installed and launched on Pixel_8 emulator.
 
 ## [H-01] BLOCKER: Arabic story narration unreachable — lang hardcoded "en", always narrates textEn
 - Date: 2026-07-06 | Severity: blocker (Arabic UX) | Area: H-audio / G-i18n
 - Evidence: `StoriesRepositoryImpl.kt:165-166` + `StoryReaderViewModel.kt:180` — `textAr` fetched/rendered but never narrated; local fallback receives English text so Arabic branch (`StoryReaderScreen.kt:134`) unreachable.
 - Expected (web): `story_reader.html:603` passes real `lang`.
-- Status: OPEN | Verification: code-read.
+- Status: **FIXED** (commit 44d2189) — lang threaded through StoriesRepository; narrates textAr with lang=ar when app locale is Arabic.
+- Verification: emulator (app in Arabic): POST /api/audio/speak body contained Arabic paragraph + "lang":"ar"; 200 audio/wav; MediaPlayer played.
 
 ## [H-02] Wrong TTS voice: Android context "hieroglyph_pronunciation" unknown to server → falls back to default voice
 - Date: 2026-07-06 | Severity: major | Area: H-audio
@@ -190,7 +194,8 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Date: 2026-07-06 | Severity: blocker | Area: G-i18n / B-parity
 - Evidence: zero hits for `setApplicationLocales`/`LocaleManager`/`LocaleListCompat`; no `locales_config.xml`/`android:localeConfig`; no locale key in `UserPreferencesDataStore.kt`; `MainActivity` extends `ComponentActivity` (`MainActivity.kt:68`) so the pre-13 AppCompat API isn't even available; Settings has no language row (`SettingsScreen.kt:140-247`). Orphaned strings `quick_settings_language/english/arabic` defined but never referenced. `User.preferredLang` fetched from backend but never applied (`SettingsViewModel.kt:61` passes null).
 - Expected (web): prominent EN↔AR toggle (`partials/nav.html:42-45,84`).
-- Status: OPEN | Verification: exhaustive grep.
+- Status: **FIXED** (commit a4aaa6d) — AppCompatActivity + Theme.AppCompat, `setApplicationLocales`, `locales_config.xml`, autoStoreLocales service, Language section in Settings + Quick Settings.
+- Verification: emulator — EN→AR switch flips whole app to RTL + Cairo font; persists across cold start (autoStoreLocales); AR→EN returns; session survives (after C-01).
 
 ## [G-02] MAJOR: values-ar files in 10 of 12 modules are ENGLISH placeholders, not Arabic
 - Date: 2026-07-06 | Severity: major (blocker for Arabic DoD) | Area: G-i18n
@@ -230,7 +235,8 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Date: 2026-07-06 | Severity: major | Area: C-nav
 - Evidence: both `WadjetNavGraph.kt:471-477` (SettingsScreen signedOut effect) and `MainActivity.kt:130-137` (isAuthenticated observer) navigate to Welcome with popUpTo inclusive, no launchSingleTop.
 - Expected: single source of truth (global auth observer).
-- Status: OPEN | Verification: code-read.
+- Status: **FIXED** (commit ba9da31) — observer now navigates only on authenticated→unauthenticated TRANSITION (fixes recreation race that dumped logged-in users to Welcome on every language switch); duplicate Settings-route redirect removed.
+- Verification: emulator — language switch (both directions) keeps user on Landing; cold restart stays logged in. Root-cause evidence: tokens intact + authorized API call after recreation while UI showed Welcome.
 
 ## [C-02] UI state lost on rotation: showArabic, selectedGlyph, aiNotesExpanded, selectedAnnotation use remember (not rememberSaveable)
 - Date: 2026-07-06 | Severity: minor | Area: C-nav / C-state
@@ -252,23 +258,26 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Date: 2026-07-06 | Severity: blocker | Area: D-network
 - Evidence: `AudioApiService.kt:20-24` `@POST("api/audio/stt")`; backend real path is `/api/stt` (`audio.py:16` prefix `/api` + `:57` `@router.post("/stt")`). Sibling `speak` path IS correct.
 - Expected: Android calls `api/stt` (or backend moves route).
-- Status: OPEN | Verification: cross-repo code-read.
+- Status: **FIXED** (commit 619803f) | Verification: build green; live backend check POST /api/audio/stt=404 vs POST /api/stt=403 (route exists, auth-gated). Runtime mic capture not exercisable on emulator — path fix verified at contract level.
 
 ## [D-02] Save story progress 422s on every call — glyphs_learned type mismatch (list vs JSON string)
 - Date: 2026-07-06 | Severity: major | Area: D-network
 - Evidence: `UserModels.kt:99-105` sends `List<String>`; backend `schemas.py:107` expects `str` (JSON-encoded). Pydantic v2 won't coerce → 422. Read side is consistent (string).
-- Status: OPEN | Verification: cross-repo code-read.
+- Status: **FIXED** (commit a360268) — DTO field is `String`; call site JSON-encodes the list.
+- Verification: emulator + live backend — chapter navigation logged request body `{"story_id":"creation-from-nun","chapter_index":0,"glyphs_learned":"[]",...}` → **200** with persisted row `{"id":5,...}` (previously 422).
 
 ## [D-03] Scan glyph count always 0 — DTO expects `glyph_count`, backend emits `num_detections`
 - Date: 2026-07-06 | Severity: major | Area: D-network
 - Evidence: `ScanModels.kt:8` vs `hieroglyph_pipeline.py:86`. (Backend `scan.py:923` has the same self-bug persisting history glyph_count=0.)
-- Status: OPEN | Verification: cross-repo code-read.
+- Status: **FIXED** (commit 349af0b) — `@SerialName("num_detections")`.
+- Verification: emulator + live backend — scan of test image returned `"num_detections":6` and Results screen showed "Detected (6)".
 
 ## [D-04] Logout never revokes server refresh token
 - Date: 2026-07-06 | Severity: major | Area: D-network / J-security
 - Evidence: `AuthInterceptor.kt:50-59` attaches `wadjet_refresh` cookie only on `/auth/refresh`; no CookieJar; backend `auth.py:216` reads the cookie to delete the token → deletes nothing. Token stays valid up to 7 days after sign-out.
 - Expected: send refresh cookie on `/auth/logout` too.
-- Status: OPEN | Verification: cross-repo code-read.
+- Status: **FIXED** (commit 9229f58) — cookie attached when path ends with `/auth/refresh` OR `/auth/logout`.
+- Verification: emulator + live backend — Sign Out logged `POST /api/auth/logout` WITH `Cookie: wadjet_refresh=...` → 200 and server responded `set-cookie: wadjet_refresh=""; Max-Age=0` (token revoked server-side).
 
 ## [D-05] Dual Firebase+backend auth: account must exist in BOTH stores; verify/reset handled only via Firebase
 - Date: 2026-07-06 | Severity: major (architectural) | Area: D-network / B-parity
@@ -278,13 +287,21 @@ _Phase 1 findings are appended below once the audit sweep completes._
 ## [D-06] Landmark pagination metadata missing — totalPages always 1
 - Date: 2026-07-06 | Severity: major | Area: D-network
 - Evidence: `LandmarkModels.kt:7-13` expects `per_page`/`total_pages`; backend `explore.py:954-960` returns `total/page/has_more` instead. Any paging keyed off totalPages stops at page 1.
-- Status: OPEN | Verification: cross-repo code-read. (Check ExploreViewModel loadMore logic during fix.)
+- Status: **FIXED** (commit eccbc53) — totalPages computed as ceil(total/per_page) when backend omits total_pages.
+- Verification: emulator + live backend — landmarks response `total:164, per_page:24` → scroll past page 1 fired `GET /api/landmarks?page=2&per_page=24` → 200 (previously stuck at page 1).
 
 ## [D-07] Minor network issues (bundle)
 - Date: 2026-07-06 | Severity: minor | Area: D-network
 - Items: (a) landmark list `lang`/`featured` query params ignored by backend (`explore.py:901-913`) — featured filter never applied server-side; (b) saveProgress response shape differs from OkResponse DTO (harmless with defaults); (c) debug builds default to production base URL (overridable via `debug.base.url`); (d) backend endpoints never called: `/api/detect`, `/api/read`, non-streaming `/api/chat`, backend verify/reset, single-chapter stories, `/api/health`.
 - Positives: robust Json config (ignoreUnknownKeys+coerceInputValues); sound error handling (`bodyOrThrow`, `suspendRunCatching` rethrows CancellationException); sane timeouts (SSE-tolerant read 60s); 401→TokenAuthenticator single-retry refresh; tokens in EncryptedSharedPreferences.
 - Status: OPEN | Verification: cross-repo code-read.
+
+## [D-08] Transient network failure during token refresh permanently logs the user out
+- Date: 2026-07-06 (found live during Phase 2 emulator testing) | Severity: blocker | Area: D-network / B-parity
+- Evidence: reproduced on emulator — 401→refresh raced an airplane-mode toggle; `TokenAuthenticator`'s catch-all treated the resulting IOException as a dead session and called `tokenManager.invalidateSession()` (Firebase auth store observed emptied to a 65-byte file). Random permanent logouts in normal flaky-network use.
+- Expected: only an explicit 401/403 from `/auth/refresh` means the session is dead; network errors must keep tokens and retry later.
+- Status: **FIXED** (commit 42ba655) — `sealed interface RefreshOutcome { Success / Rejected / NetworkError }`; only `Rejected` invalidates the session.
+- Verification: code + regression on emulator (airplane-mode cold start, offline browsing, force-stop/relaunch — session persisted throughout). The original race is timing-dependent and was not deterministically re-reproduced post-fix; no spurious logout observed in ~30 min of mixed online/offline testing.
 
 ## [L-01] Status/nav bar icons invisible in system light mode — enableEdgeToEdge() with auto style on forced-dark app
 - Date: 2026-07-06 | Severity: major | Area: L-ui
@@ -320,3 +337,22 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Items: (a) dark-only theme is a product decision but themes.xml parent is framework Material.NoActionBar (non-idiomatic); (b) fixed-height FeatureCard 120dp may clip at large font scale (`WelcomeScreen.kt:291`); (c) WadjetButton hardcodes height 48dp (prefer heightIn); (d) `errorContainer` hex inline in `WadjetTheme.kt:32`.
 - Positives: palette matches web CSS exactly (gold #D4AF37 family, Night #0A0A0A); no dynamic color override; zero hardcoded hex in feature modules; loading/empty/error states consistently implemented (shimmer, ErrorState w/ retry, OfflineIndicator); no LazyColumn-in-Column crash patterns; sp/dp used correctly; headings have semantics.
 - Status: OPEN | Verification: code-read.
+
+
+## [A-03] Native libs not 16 KB page-aligned (system compat warning on API 36 emulator)
+- Date: 2026-07-06 | Severity: minor (will become major for Play targets) | Area: A-build
+- Evidence: system dialog on install: libonnxruntime.so, libonnxruntime4j_jni.so, libdatastore_shared_counter.so, libandroidx.graphics.path.so, libsurface_util_jni.so, libimage_processing_util_jni.so not 16 KB aligned. Most come from the UNUSED onnxruntime dep (F-02, deferred) and older androidx artifacts.
+- Expected: 16 KB-aligned .so (AGP packaging flag / newer artifact versions); removing unused ONNX (F-02) eliminates the two worst.
+- Status: OPEN (largely blocked on F-02 deferral) | Verification: emulator dialog observed.
+
+## [B-03] Verify-email gate shows even for already-verified accounts on fresh sign-in
+- Date: 2026-07-06 | Severity: minor | Area: B-parity / C-nav
+- Evidence: sign-in with a VERIFIED account still lands on VerifyEmailSheet ("I've verified my email" then passes). Firebase user's emailVerified is stale until reload; gate checks before reloading. Also backend login response returns email_verified:false for the same account (Firebase-verified only) — live D-05 dual-store drift evidence.
+- Expected: reload Firebase user before gating; treat verified accounts as verified immediately.
+- Status: OPEN | Verification: emulator, reproduced twice.
+
+## [G-06] Story reader renders textEn even when app is in Arabic
+- Date: 2026-07-06 | Severity: major | Area: G-i18n / B-parity
+- Evidence: reader in Arabic mode shows English paragraphs right-aligned (".before all things" punctuation artifact). textAr exists (H-01 narration proved backend sends real Arabic).
+- Expected (web): reader displays lang-appropriate text.
+- Status: OPEN (fold into Batch 3 stories localization) | Verification: emulator screenshot.
