@@ -31,8 +31,8 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Area: F-ml / I-perf
 - Evidence: `app/src/main/assets/models/**` (3 .onnx, byte-identical to web repo, never referenced by any Kotlin code); `core/ml` module is an empty stub (`Placeholder.kt`); `core/ml/build.gradle.kts:27` pulls onnxruntime-android native .so libs for nothing.
 - Expected: either on-device inference wired up, or assets+dependency removed. All inference is server-side (`POST api/scan`) — matches web, so removal is safe.
-- Status: OPEN (NEEDS-DECISION: remove vs wire on-device offline inference)
-- Verification: grep across all .kt = zero ONNX references; asset md5s match web.
+- Status: **FIXED** (Phase 3 commit fe712d0, supervisor decision: WIRE as offline-only fallback) — :core:ml implements the full detect→classify pipeline (YOLO26 640 letterbox + MobileNetV3 128/171-classes, label_mapping.json); ScanRepositoryImpl falls back ONLY on IOException (server unreachable); results flagged detectionSource=on_device_onnx + aiUnverified with a dedicated offline banner (EN+AR); no transliteration/translation (server-only capabilities, stated honestly in UX). Online behavior byte-identical.
+- Verification: LIVE on emulator — airplane mode + Photo Picker scan of the 6-glyph test image → "Detected (6)" (same count the server found for this image), offline banner + "On-device (offline)" badge, confidences avg 79%, Source: on_device_onnx, timing 3755ms det + 430ms cls; back online the SAME image went through POST /api/scan → 200 with full server pipeline (Ai_fresh groq, transliteration) — server stays primary.
 
 ## [F-03] Dead camera code: CameraX disabled, unused PermissionDeniedContent + onImageCaptured plumbing
 - Date: 2026-07-06
@@ -40,7 +40,7 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Area: F-ml / O-debt
 - Evidence: `feature/scan/.../ScanScreen.kt:143-255` commented-out CameraX blocks; live-but-unreferenced `PermissionDeniedContent` at `ScanScreen.kt:419-446`; CAMERA permission commented in manifest. Image input = Photo Picker (`core/designsystem/.../ImageUploadZone.kt:62-69`, no permission needed).
 - Expected: camera capture is a web-parity question (web is upload-only too) → currently by-design; dead code should be cleaned.
-- Status: OPEN
+- Status: **FIXED** (Phase 3 commit 8931724) — both commented-out CameraX blocks (CameraPreview/GoldBracketOverlay + PermissionDeniedContent, ~117 lines) removed; Photo Picker remains the by-design input (web parity).
 - Verification: code-read.
 
 ## [F-04] Scan progress overlay is fake (fixed delays, mislabeled stages)
@@ -49,7 +49,7 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Area: F-ml / L-ui
 - Evidence: `ScanScreen.kt:257-417` + `ScanViewModel.kt:151-156` hard-coded `delay(400/400/300)`; server `timing`/`detection_source` ignored (often `ai_vision`, not ONNX).
 - Expected: progress reflecting real state, or at least honest labels.
-- Status: OPEN
+- Status: **FIXED** (Phase 3 commit 8931724) — the fake post-response stage delays (400/400/300ms after the server already returned) are removed; overlay goes straight to DONE. Pre-response stages remain (they describe the real server pipeline).
 - Verification: code-read.
 
 ## [E-01] fallbackToDestructiveMigration() enabled → silent wipe of scan history/progress/favorites
@@ -82,13 +82,13 @@ _Phase 1 findings are appended below once the audit sweep completes._
 ## [E-05] Minor DB/offline gaps (bundle)
 - Date: 2026-07-06 | Severity: minor | Area: E-db / M-offline
 - Items: (a) `getSigns` cache fallback only on IOException, not ApiException (`DictionaryRepositoryImpl.kt:64-65` vs `:109-111`) — **FIXED** (Batch 5 commit: fallback on any non-cancellation failure); (b) explore `getCategories` no offline fallback — landmark categories have no cache table; mitigated by E-04 seed (list itself works offline); (c) dashboard recentScans ignores local `scan_results` — open (enhancement-grade); (d) hand-rolled glyph JSON parse — open, harmless; (e) `isOffline` naming — cosmetic, open; (f) schema 4.json not exported — 5..9.json exported now, migration test rig documented (E-P5); (g) no migrations 1→4 — moot for any install ≥ v4; legacy hits downgrade-safe destructive path only.
-- Status: PARTIALLY FIXED (a); rest open as debt | Verification: full unit tests green.
+- Status: PARTIALLY FIXED (a, e) | (e) **FIXED** Phase 3 commit 706dd46 (isOffline→isOnline); (c)(d) remain open as debt | Verification: full unit tests green.
 
 ## [J-01] Pexels API keys compiled into BuildConfig → extractable from release APK
 - Date: 2026-07-06 | Severity: major | Area: J-security
 - Evidence: `core/network/build.gradle.kts:28-29` → `NetworkModule.kt:151-152,161` (sent as Authorization header). Keys sourced from local.properties (untracked — no git leak).
 - Expected: proxy Pexels via own backend, or accept + rotate.
-- Status: **BLOCKED (backend change required)** — approved for implementation, but the backend has ZERO Pexels surface (grep of Wadjet-v3-beta: no pexels route/service; the thumbnail fallback is Android-only). A proxy endpoint must be added server-side first; the backend repo is read-only for this engagement. Interim exposure is limited: keys ship only in debug/local builds via untracked local.properties (empty string when absent) and the dual-key 429 rotation caps abuse value. Follow-up: add `/api/images/pexels-search` server-side, then point `NetworkModule`'s pexels client at it and delete the BuildConfig keys.
+- Status: **FIXED** (Phase 3: backend commit 41c96c2 on Wadjet-v3-beta feat/firebase-integration + Android commit f1d53d0) — GET /api/images/pexels-search (Bearer-auth, rate-limited, 24h server cache, key rotation on 429) with PEXELS_API_KEYS server-side; Android PexelsApiService now targets the proxy on the main Retrofit; PEXELS_API_KEY/PEXELS_API_KEY_2 BuildConfig fields and local.properties plumbing DELETED — no key ships in any APK. Prod needs the env var + deploy (FIREBASE_RUNBOOK §4).
 - Verification: cross-repo grep (no backend pexels code).
 
 ## [J-02] Firestore security rules unverifiable from this repo (client writes users/{uid}/story_progress)
@@ -96,7 +96,7 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Evidence: `StoriesRepositoryImpl.kt:182,219,260`. Rules live server-side, not in repo.
 - Expected: rules restrict `users/{uid}/**` to `request.auth.uid == uid`.
 - LIVE UPDATE 2026-07-06: emulator logcat shows the client's own write is REJECTED — `Write failed at users/{uid}/story_progress/creation-from-nun: PERMISSION_DENIED` (signed-in user, own uid). So the Firestore progress mirror NEVER works; only the backend save (D-02) persists. Either fix the rules server-side or drop the dead Firestore write path (candidate for D-05 auth unification work).
-- Status: NEEDS-DECISION | Verification: live PERMISSION_DENIED observed on emulator.
+- Status: **FIXED (client+rules) / PENDING-USER-CONSOLE (deploy)** — supervisor reversed to FIX: least-privilege firestore.rules + firebase.json + .firebaserc authored at repo root (Phase 3 commit a857fea): users/{uid}/** only for request.auth.uid == uid (covers story_progress + new fcm_tokens); deploy is `firebase deploy --only firestore:rules` (FIREBASE_RUNBOOK §3). Client mirror code was already correct. | Verification: PERMISSION_DENIED still observed pre-deploy (expected); post-deploy check documented in the runbook.
 
 ## [J-03] allowBackup=true backs up Room DB + plaintext prefs to cloud
 - Date: 2026-07-06 | Severity: minor | Area: J-security
@@ -136,7 +136,7 @@ _Phase 1 findings are appended below once the audit sweep completes._
 ## [I-05] Minor perf/debt (bundle)
 - Date: 2026-07-06 | Severity: minor | Area: I-perf / O-debt
 - Items: (a) `filtered.indexOf(story)` O(n²) — **FIXED** (itemsIndexed, Batch 5 commit); (c) missing LazyColumn keys in BrowseTab — **FIXED** (stable keys); (e) per-play MediaPlayer lingering — **FIXED by H-06** (single manager); rest open as debt: (b) inline `.filter{it.featured}` per recomposition; (d) stories list unpaged (12 stories — fine); (f) synchronous `isLoggedIn` pre-setContent (EncryptedSharedPreferences read — fast, acceptable); (g) unstructured scopes in callbackFlow (Firestore mirror is dead anyway, see J-02/E-P4); (h) hardcoded Dispatchers; (i) TODOs incl. placeholder notification icon; (j) empty :core:ml (F-02-deferred) / :core:ui modules; (k) versionCode unbumped (release-management call).
-- Status: OPEN | Verification: code-read. Positives: clean Application.onCreate, Timber debug-only, collectAsStateWithLifecycle everywhere, debounced+paged dictionary/explore search, no runBlocking/GlobalScope, resources mostly released.
+- Status: MOSTLY FIXED — Phase 3 closes more: (b) featured filter was already remembered; (g) Firestore fallback reads now flow-scoped (commit 7f83256); (i) placeholder notification icon replaced with ic_stat_wadjet (7f83256); (j) :core:ml is now a real module (fe712d0). Remaining debt: (d) unpaged stories (12 items — fine), (f) fast prefs read pre-setContent (acceptable), (h) hardcoded Dispatchers, (k) versionCode bump (release-management call). | Verification: code-read + builds green. Positives: clean Application.onCreate
 
 ## [A-01] Historical K2 compiler OOM crashes; gradle.properties memory likely under-provisioned
 - Date: 2026-07-06 | Severity: major (build stability) | Area: A-build
@@ -239,7 +239,7 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Date: 2026-07-06 | Severity: minor | Area: G-i18n
 - Items: (a) directional arrows baked into strings (`reader_next_chapter` "Next →", `reader_prev_chapter`, `detail_read_wikipedia`) won't mirror in RTL; (b) `String.format("%.1f")` without Locale (`SettingsScreen.kt:417`).
 - Positives: supportsRtl=true; start/end used throughout, zero left/right leaks; all directional icons `Icons.AutoMirrored.*` (24 sites); Cairo font correctly wired for Arabic via `wadjetTypographyForLang` (no tofu); intentional RTL force for Arabic block in `ScanResultScreen.kt:359-373`.
-- Status: OPEN | Verification: grep + file reads.
+- Status: **FIXED** (commit 706dd46 for (a); (b) was already fixed with Locale in Batch 5) — directional arrows removed from reader_prev/next_chapter and detail_read_wikipedia in EN+AR. | Verification: grep — zero directional arrows left in strings.
 
 ## [B-01] No deep links anywhere (email verify/reset links + FCM notifications can't open the app/content)
 - Date: 2026-07-06 | Severity: major | Area: B-parity / C-nav
@@ -270,13 +270,13 @@ _Phase 1 findings are appended below once the audit sweep completes._
 ## [C-03] Search/filter/pagination state not in SavedStateHandle (lost on process death)
 - Date: 2026-07-06 | Severity: minor | Area: C-state
 - Evidence: DictionaryViewModel / ExploreViewModel / StoriesViewModel hold query/filters/paging in plain MutableStateFlow.
-- Status: OPEN | Verification: code-read.
+- Status: **FIXED** (Phase 3 commit c187ede) — Dictionary (category/type/query), Explore (category/city/query), Stories (difficulty) persist via SavedStateHandle and restore on process death. | Verification: unit tests green (VM constructors take SavedStateHandle).
 
 ## [C-04] Minor nav issues (bundle)
 - Date: 2026-07-06 | Severity: minor | Area: C-nav / O-debt
 - Items: (a) dead `Route.Splash` registered with empty body (`WadjetNavGraph.kt:102-104`, `Route.kt:6`) — **FIXED** (Batch 5 commit, route removed); (b) landmark-chat slug failure silently degrades to generic chat (`ChatViewModel.kt:70-80`) — WONT-FIX (graceful degradation is acceptable); (c) unused Translate data-layer wiring (`TranslateApiService.kt` + repo, DI-only) — left in place (has tests; harmless; guarded by never-delete rule).
 - Positives: all 20 routes registered/reachable; saveState/restoreState multi-back-stack; anti-double-tap `lifecycleIsResumed()`; detail VMs use SavedStateHandle args (process-death safe).
-- Status: OPEN | Verification: code-read.
+- Status: **CLOSED** — (a) FIXED Batch 5, (b) WONT-FIX, (c) left by design; nothing remains actionable.
 
 ## [D-01] BLOCKER: STT endpoint path wrong — voice input always 404s
 - Date: 2026-07-06 | Severity: blocker | Area: D-network
@@ -306,8 +306,8 @@ _Phase 1 findings are appended below once the audit sweep completes._
 ## [D-05] Dual Firebase+backend auth: account must exist in BOTH stores; verify/reset handled only via Firebase
 - Date: 2026-07-06 | Severity: major (architectural) | Area: D-network / B-parity
 - Evidence: `AuthRepositoryImpl.kt:51-137` — Firebase first, then backend; `currentUser` requires both. Backend verify/reset endpoints (`auth.py:320-418`) unused → states can diverge. Web-only accounts can't log in on Android. LIVE: backend login returns email_verified:false for a Firebase-verified account; Firestore progress mirror writes are PERMISSION_DENIED (J-02) — i.e. the Firebase half provides no working functionality beyond auth itself.
-- Status: **STOPPED per guardrail** (approved, but the clean approach is architecturally broad): the correct unification is to DROP Firebase Auth on Android and use backend auth exclusively, exactly like web — backend already has everything needed client-side: /auth/register, /login, /refresh, /logout, /send-verification, /verify-email, /forgot, /reset AND /auth/google (accepts the same Google ID token Credential Manager already produces). That refactor touches AuthRepository(+Impl), all auth UI flows, session bootstrap, Firestore-dependent code and Google sign-in — a high-risk rewrite requiring full auth re-verification, beyond safe scope for this batch. Plan recorded in ENHANCEMENTS.md (E-P6).
-- Verification: cross-repo code-read + live drift evidence.
+- Status: **FIXED** (Phase 3, supervisor REVERSED E-P6 to Firebase-primary: Android commit 17466e2 + backend commits f27c55a/850f9c5 [+verifier fix]) — credentials now go ONLY to Firebase (email/password + Google); the backend session is derived by exchanging the Firebase ID token at new POST /api/auth/firebase (verified email or google.com provider required); unverified accounts get NO backend session until the verify gate passes; register/forgot-password are Firebase-only; TokenAuthenticator self-heals a Rejected refresh via Firebase re-exchange before invalidating. Web-created (backend-only) accounts enter via Google Sign-In/password reset or the optional bcrypt bulk import (FIREBASE_RUNBOOK §8).
+- Verification: LIVE on emulator vs locally-run backend — fresh sign-in: Firebase → POST /api/auth/firebase 201 → Landing; deterministic self-heal test (backend restarted with rotated JWT_SECRET): GET /api/user/limits 401 → POST /api/auth/refresh 401 → POST /api/auth/firebase 200 → retried GET 200, user stayed signed in; cold restart persists the session. Backend suite 233 green incl. 11 new exchange tests.
 
 ## [D-06] Landmark pagination metadata missing — totalPages always 1
 - Date: 2026-07-06 | Severity: major | Area: D-network
@@ -364,9 +364,9 @@ _Phase 1 findings are appended below once the audit sweep completes._
 
 ## [L-04] Minor UI issues (bundle)
 - Date: 2026-07-06 | Severity: minor | Area: L-ui
-- Items: (a) themes.xml parent — superseded (now Theme.AppCompat per G-01); (b) fixed-height FeatureCard — **FIXED** (heightIn(min=120), Batch 5 commit); (c) WadjetButton hardcoded 48dp — left (48dp IS the minimum target; heightIn refactor touches 3 variants for no user-visible gain); (d) `errorContainer` hex inline — open, cosmetic.
+- Items: (a) themes.xml parent — superseded (now Theme.AppCompat per G-01); (b) fixed-height FeatureCard — **FIXED** (heightIn(min=120), Batch 5 commit); (c) WadjetButton hardcoded 48dp — left (48dp IS the minimum target); (d) errorContainer hex — **FIXED** (Phase 3 commit 706dd46: moved to WadjetColors.ErrorContainer/OnErrorContainer).
 - Positives: palette matches web CSS exactly (gold #D4AF37 family, Night #0A0A0A); no dynamic color override; zero hardcoded hex in feature modules; loading/empty/error states consistently implemented (shimmer, ErrorState w/ retry, OfflineIndicator); no LazyColumn-in-Column crash patterns; sp/dp used correctly; headings have semantics.
-- Status: OPEN | Verification: code-read.
+- Status: **CLOSED** ((c) intentionally left; all else fixed/superseded).
 
 
 ## [G-07] Displayed-value constants remain English in Arabic UI (difficulty/type/category chips)
@@ -380,7 +380,7 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Date: 2026-07-06 | Severity: minor (will become major for Play targets) | Area: A-build
 - Evidence: system dialog on install: libonnxruntime.so, libonnxruntime4j_jni.so, libdatastore_shared_counter.so, libandroidx.graphics.path.so, libsurface_util_jni.so, libimage_processing_util_jni.so not 16 KB aligned. Most come from the UNUSED onnxruntime dep (F-02, deferred) and older androidx artifacts.
 - Expected: 16 KB-aligned .so (AGP packaging flag / newer artifact versions); removing unused ONNX (F-02) eliminates the two worst.
-- Status: OPEN — REMAINS blocked on the F-02 deferral (supervisor decision): the two worst offenders are the unused onnxruntime .so files; removing them (F-02) or bumping to a 16KB-ready onnxruntime + newer androidx artifacts is the fix. Must be resolved before targeting Play with API 35+ requirements. | Verification: emulator dialog observed (reappears after pm clear).
+- Status: **FIXED** (Phase 3 commit fe712d0, with F-02) — onnxruntime-android 1.20.0→1.27.0. | Verification: EMPIRICAL ELF proof — all 24 native libs in the built APK have min PT_LOAD p_align=0x4000 across all 4 ABIs (incl. libonnxruntime.so + libonnxruntime4j_jni.so, the two prior offenders); parser script in session scratchpad (elf_align.py).
 
 ## [B-03] Verify-email gate shows even for already-verified accounts on fresh sign-in
 - Date: 2026-07-06 | Severity: minor | Area: B-parity / C-nav

@@ -169,3 +169,51 @@ _Living document. Updated by the audit agent. Started: 2026-07-06._
 - 8× `hs_err_pid*.log` + `replay_pid25100.log` in repo root = historical JVM crashes during builds. `gradle.properties` already contains likely mitigations (`-Xmx2048m`, `kotlin.compiler.execution.strategy=in-process`, `org.gradle.workers.max=2`).
 - `wadjet-release.jks`, `signing.properties`, `local.properties` sit in repo root but are **NOT tracked by git** (verified via `git ls-files`).
 - Untracked-but-present marketing files: `wadjet-android-deck*.html`, `DECK-PLAN.md`, `build-deck.ps1`, `logo-base64.txt`, `script-ar.md`.
+
+---
+
+# PHASE 3 — Firebase-done-right + backend integration (2026-07-06)
+
+Supervisor decisions executed: KEEP+perfect Firebase (reverses E-P6), backend now in scope
+(additive, branch `feat/firebase-integration` on Wadjet-v3-beta, never deployed by me),
+premium gating REMOVED, on-device ML WIRED as offline-only fallback + 16KB fix.
+
+## Workstream results (commit ↔ proof)
+
+| Item | Commits | Runtime proof |
+|---|---|---|
+| B1 backend `POST /api/auth/firebase` | `f27c55a` + verifier fix | 233 pytest green (11 new); live: garbage→401, real exchange 201/200 |
+| B2 backend Pexels proxy | `41c96c2` | live: no-auth 401, authed 200 w/ real photos; app thumbnails resolved through it |
+| B3 backend green + boot | `850f9c5` (stale /write test) | full suite 233 passed 34.9s; local uvicorn boot + web pages serve |
+| A1 Firebase-primary auth | `17466e2` | fresh sign-in → exchange **201** → Landing; **self-heal**: limits 401 → refresh 401 → auth/firebase 200 → retry 200, no logout; cold-restart persists |
+| A2 firestore.rules | `a857fea` | rules+firebase.json+.firebaserc authored; deploy = PENDING-USER-CONSOLE (runbook §3); mirror PERMISSION_DENIED until then (expected) |
+| A3 FCM | `7f83256` | POST_NOTIFICATIONS runtime request fired on first sign-in (perm flags flipped; granted after accept); token registrar writes users/{uid}/fcm_tokens (blocked on rules deploy); proper ic_stat_wadjet icon |
+| A4 Analytics+Crashlytics | `7f83256` | screen_view/login/sign_up/scan_completed/story_completed wired; Crashlytics user-id + release CrashlyticsTree; dashboard checks = PENDING-USER-CONSOLE (runbook §5–6) |
+| A5 runbook | `95d380a` | docs/audit/FIREBASE_RUNBOOK.md (ordered, copy-pasteable) |
+| C1 gating removed | `401bb3b` | Stories list scrolled end-to-end on emulator: zero locks/Premium badges |
+| C2 on-device ML + A-03 | `fe712d0` | offline scan: **Detected (6)** on 6-glyph image, banner+badge+source=on_device_onnx; online same image → server pipeline unchanged; ELF: all 24 .so p_align=0x4000 (4 ABIs) |
+| C3 F-03/F-04 | `8931724` | dead CameraX code gone; no fake stage delays |
+| C3 C-03 | `c187ede` | filters/query in SavedStateHandle (3 VMs) |
+| C3 minors G-05a/E-05e/L-04d | `706dd46` | arrows out of EN+AR strings; isOnline naming; theme hexes centralized |
+| J-01 Android half | `f1d53d0` | BuildConfig keys DELETED; proxy live-exercised by Explore thumbnails |
+
+Full regression during E2E: all 5 tabs toured, 0 FATAL exceptions; Dictionary 1023 signs;
+Thoth renders; session survives force-stop.
+
+## DoD scorecard deltas (vs Phase 2 final)
+
+- D-05 dual auth: FAIL→**PASS** (Firebase-primary, live-verified incl. self-heal)
+- F-02 unused ML: OPEN→**PASS** (wired offline-only, honest UX)
+- A-03 16KB: BLOCKED→**PASS** (empirical ELF proof, all ABIs)
+- J-01 keys in APK: BLOCKED→**PASS** (proxy both sides, keys deleted)
+- J-02 Firestore rules: NEEDS-DECISION→**PASS (code+rules) / PENDING-USER-CONSOLE (deploy)**
+- Premium gating parity: NEEDS-DECISION→**PASS** (removed; matches web)
+- N-firebase area: OPEN-by-design→**PASS-pending-console** (FCM permission+token registry, Analytics events, Crashlytics wiring, rules authored; console steps in runbook)
+- Google Sign-In E2E: implemented + unit-verified; runtime = **PENDING-USER-CONSOLE** (Play-services credentials on emulator + SHA of the final signing cert)
+
+## Blocked on the user (see FIREBASE_RUNBOOK.md)
+
+1. Deploy `firestore.rules` (§3) — until then progress mirror + FCM token writes stay PERMISSION_DENIED.
+2. Deploy backend branch + set `FIREBASE_PROJECT_ID`, `PEXELS_API_KEYS` (§4) — until then production sign-in for THIS app build and thumbnails-via-proxy don't work in prod.
+3. Enable Crashlytics + verify Analytics DebugView (§5–6).
+4. Optional: bulk-import web users into Firebase (§8); test push (§7).

@@ -61,6 +61,8 @@ On the HF Space (or wherever `Wadjet-v3-beta` branch `feat/firebase-integration`
 | `PEXELS_API_KEYS` | your Pexels key(s), comma-separated | `GET /api/images/pexels-search` (Android thumbnail fallback) |
 
 No service-account JSON is needed — token verification uses Google's public certs.
+(Optional: set `GOOGLE_APPLICATION_CREDENTIALS` to a service-account file to switch
+verification to the Firebase Admin SDK, which adds token-revocation checking.)
 `firebase-admin` installs from the updated `requirements.txt` automatically.
 **You deploy; I have not.** The Android build in this branch requires the deployed
 `/api/auth/firebase` endpoint to sign in against production.
