@@ -284,3 +284,62 @@ fails for the debug-signed emulator build because prod assetlinks lists only the
 (security model working; a Play build verifies); (2) my first App-Links test used a wrong story
 slug (`the-osiris-myth`) — routing was correct, the URL was mine; the real slug `osiris-myth`
 opened the reader.
+
+---
+
+# PHASE 6 — final signed release APK (2026-07-07)
+
+Produced the public-download release artifact. Verify-only + version bump; no features.
+
+## Artifact
+- Path: `app/build/outputs/apk/release/app-release.apk`
+- Size: 135,634,001 bytes (~129.3 MB)
+- versionCode **2**, versionName **1.1.0** (commit 35497d9) — installs as an update over 1.0.0
+- SHA-256: `bbc13b76dd31bf141760191ed22eecee3de0870fdaeb5dc7735746376a31da61`
+- Signer: v2 scheme, **release cert `1C:94:2D:…:B5:FB:D9:02`** (matches prod assetlinks.json)
+- BASE_URL = production (https://nadercr7-wadjet-v2.hf.space)
+- 16KB alignment: all native .so `p_align=0x4000` across 4 ABIs (ELF-checked on the release APK)
+
+## Build notes
+- Cache purged + `--no-build-cache`; R8 minify + resource shrink ON.
+- **lintVital workaround (commit 14b8e71)**: `lint { checkReleaseBuilds = false }` — lintVitalAnalyzeRelease
+  crashes with "Found class KaCallableMemberCall, but interface was expected" (a Kotlin-analysis-API
+  mismatch inside the lint tool, analyzing core:designsystem/BorderBeam.kt; the log itself calls it
+  "a bug in lint"). It is NOT R8 and NOT our code; R8/package/sign are unaffected. Debug `./gradlew lint`
+  still runs.
+
+## R8 SAFETY — ran the release build end-to-end (installed, not just built). ZERO keep rules needed.
+| Path (R8 risk) | Result |
+|---|---|
+| Launch | clean, no ClassNotFound/NoClassDefFound |
+| Email/password sign-in vs PROD | Landing "Welcome back"; POST /api/auth/firebase 200; `login` analytics — kotlinx-serialization DTOs survived R8 |
+| 5-tab tour (Explore/Stories/Thoth/Hieroglyphs/Home) | all render (Retrofit + serialization + Pexels proxy) |
+| Scan ONLINE (server) | AI Vision, Detected(6), `scan_completed{detection_source=ai_vision}` — multipart + ScanResponse deserialize OK |
+| Scan OFFLINE (on-device ONNX) | Detected(6), `scan_completed{detection_source=on_device_onnx}` — **ONNX Runtime native reflection survived R8**, no UnsatisfiedLinkError |
+| Story read | "The Golden Age" (Osiris) rendered |
+| Chat (Thoth) | SSE response streamed |
+| TTS | "Listen" → MediaPlayer active (speak POST → cache → AudioPlaybackManager) |
+| **0 FATAL** across the whole session | crash buffer clean |
+
+The existing app/proguard-rules.pro (serialization $$serializer + serializer(), Retrofit, Room,
+ONNX ai.onnxruntime.**, Hilt, Crashlytics, Credential Manager/googleid, enums) already covered
+everything — no new rule added.
+
+## App Links (release cert now matches prod assetlinks)
+```
+pm verify-app-links --re-verify → pm get-app-links:
+  nadercr7-wadjet-v2.hf.space: verified
+```
+Cold `VIEW https://nadercr7-wadjet-v2.hf.space/stories/eye-of-ra` → in-app reader "The Wrath of
+the Eye". This is the Phase-5 NEEDS-RELEASE-BUILD item now **PASS** on the release artifact.
+
+## Google Sign-In
+Flow launches cleanly on the release build (CredentialManager → GoogleIdService,
+TYPE_GOOGLE_ID_TOKEN_CREDENTIAL matched, googleid keep-rules intact under R8, no FATAL).
+Still cannot COMPLETE on the emulator (no Google account provisioned) → **NEEDS-PHYSICAL-DEVICE**.
+
+## DoD deltas
+- App Links auto-verify: NEEDS-RELEASE-BUILD → **PASS** (verified on the release APK).
+- Release artifact R8-safe: **PASS** (full E2E, 0 keep rules, 0 FATAL).
+- Google Sign-In: **NEEDS-PHYSICAL-DEVICE** (flow proven to launch under R8).
+- Still the only pending delivery item: E-P9 push send (service-account env — runbook §7).
