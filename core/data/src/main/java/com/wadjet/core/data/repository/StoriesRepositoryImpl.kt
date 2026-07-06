@@ -22,8 +22,13 @@ import com.wadjet.core.network.model.InteractRequest
 import com.wadjet.core.network.model.InteractionDto
 import com.wadjet.core.network.model.SaveProgressRequest
 import com.wadjet.core.network.model.SpeakRequest
+import com.wadjet.core.network.model.StoryFullDto
+import com.wadjet.core.network.model.StorySummaryDto
+import com.wadjet.core.database.dao.StoryCacheDao
 import com.wadjet.core.database.dao.StoryProgressDao
+import com.wadjet.core.database.entity.StoryCacheEntity
 import com.wadjet.core.database.entity.StoryProgressEntity
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -31,6 +36,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -43,35 +51,107 @@ class StoriesRepositoryImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
     private val storyProgressDao: StoryProgressDao,
+    private val storyCacheDao: StoryCacheDao,
 ) : StoriesRepository {
 
+    private val cacheJson = Json { ignoreUnknownKeys = true }
+
     override suspend fun getStories(): Result<List<StorySummary>> = suspendRunCatching {
-        val response = storiesApi.getStories()
-        if (response.isSuccessful) {
-            response.body()?.stories?.map { dto ->
-                StorySummary(
+        try {
+            val response = storiesApi.getStories()
+            if (response.isSuccessful) {
+                val dtos = response.body()?.stories ?: emptyList()
+                cacheSummaries(dtos)
+                dtos.map { it.toDomain() }
+            } else {
+                throw ApiException("Failed to load stories: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            // E-02: offline fallback — serve previously fetched stories from Room
+            val cached = storyCacheDao.getAll().mapNotNull { row ->
+                runCatching { cacheJson.decodeFromString<StorySummaryDto>(row.summaryJson).toDomain() }.getOrNull()
+            }
+            if (cached.isEmpty()) throw e
+            Timber.w(e, "getStories: network failed, serving %d cached stories", cached.size)
+            cached
+        }
+    }
+
+    private fun StorySummaryDto.toDomain() = StorySummary(
+        id = id,
+        titleEn = title.en,
+        titleAr = title.ar,
+        subtitleEn = subtitle.en,
+        subtitleAr = subtitle.ar,
+        coverGlyph = coverGlyph,
+        difficulty = difficulty,
+        estimatedMinutes = estimatedMinutes,
+        chapterCount = chapterCount,
+        glyphsTaught = glyphsTaught,
+    )
+
+    private suspend fun cacheSummaries(dtos: List<StorySummaryDto>) {
+        try {
+            val now = System.currentTimeMillis()
+            val entities = dtos.mapIndexed { index, dto ->
+                StoryCacheEntity(
                     id = dto.id,
-                    titleEn = dto.title.en,
-                    titleAr = dto.title.ar,
-                    subtitleEn = dto.subtitle.en,
-                    subtitleAr = dto.subtitle.ar,
-                    coverGlyph = dto.coverGlyph,
-                    difficulty = dto.difficulty,
-                    estimatedMinutes = dto.estimatedMinutes,
-                    chapterCount = dto.chapterCount,
-                    glyphsTaught = dto.glyphsTaught,
+                    summaryJson = cacheJson.encodeToString(dto),
+                    fullJson = storyCacheDao.getById(dto.id)?.fullJson,
+                    sortOrder = index,
+                    updatedAt = now,
                 )
-            } ?: emptyList()
-        } else {
-            throw ApiException("Failed to load stories: ${response.code()}")
+            }
+            storyCacheDao.upsertAll(entities)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.w(e, "Failed to cache story summaries")
         }
     }
 
     override suspend fun getStory(storyId: String): Result<StoryFull> = suspendRunCatching {
-        val response = storiesApi.getStory(storyId)
-        if (response.isSuccessful) {
-            val dto = response.body() ?: throw ApiException("Empty story response")
-            StoryFull(
+        try {
+            val response = storiesApi.getStory(storyId)
+            if (response.isSuccessful) {
+                val dto = response.body() ?: throw ApiException("Empty story response")
+                cacheFullStory(dto)
+                dto.toDomain()
+            } else {
+                throw ApiException("Failed to load story: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            // E-02: offline fallback — serve the cached full story if we have it
+            val cached = storyCacheDao.getById(storyId)?.fullJson?.let { fullJson ->
+                runCatching { cacheJson.decodeFromString<StoryFullDto>(fullJson).toDomain() }.getOrNull()
+            } ?: throw e
+            Timber.w(e, "getStory(%s): network failed, serving cached copy", storyId)
+            cached
+        }
+    }
+
+    private suspend fun cacheFullStory(dto: StoryFullDto) {
+        try {
+            val existing = storyCacheDao.getById(dto.id)
+            storyCacheDao.upsert(
+                StoryCacheEntity(
+                    id = dto.id,
+                    summaryJson = existing?.summaryJson ?: "",
+                    fullJson = cacheJson.encodeToString(dto),
+                    sortOrder = existing?.sortOrder ?: Int.MAX_VALUE,
+                    updatedAt = System.currentTimeMillis(),
+                ),
+            )
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Timber.w(e, "Failed to cache story %s", dto.id)
+        }
+    }
+
+    private fun StoryFullDto.toDomain(): StoryFull {
+        val dto = this
+        return StoryFull(
                 id = dto.id,
                 titleEn = dto.title.en,
                 titleAr = dto.title.ar,
@@ -110,9 +190,6 @@ class StoriesRepositoryImpl @Inject constructor(
                     )
                 },
             )
-        } else {
-            throw ApiException("Failed to load story: ${response.code()}")
-        }
     }
 
     override suspend fun interact(

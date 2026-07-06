@@ -9,6 +9,7 @@ import com.wadjet.core.database.dao.FavoriteDao
 import com.wadjet.core.database.dao.LandmarkDao
 import com.wadjet.core.database.dao.ScanResultDao
 import com.wadjet.core.database.dao.SignDao
+import com.wadjet.core.database.dao.StoryCacheDao
 import com.wadjet.core.database.dao.StoryProgressDao
 import com.wadjet.core.database.entity.CategoryEntity
 import com.wadjet.core.database.entity.FavoriteEntity
@@ -16,6 +17,7 @@ import com.wadjet.core.database.entity.LandmarkEntity
 import com.wadjet.core.database.entity.ScanResultEntity
 import com.wadjet.core.database.entity.SignEntity
 import com.wadjet.core.database.entity.SignFtsEntity
+import com.wadjet.core.database.entity.StoryCacheEntity
 import com.wadjet.core.database.entity.StoryProgressEntity
 
 @Database(
@@ -27,8 +29,9 @@ import com.wadjet.core.database.entity.StoryProgressEntity
         CategoryEntity::class,
         StoryProgressEntity::class,
         FavoriteEntity::class,
+        StoryCacheEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = true,
 )
 abstract class WadjetDatabase : RoomDatabase() {
@@ -38,6 +41,7 @@ abstract class WadjetDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
     abstract fun storyProgressDao(): StoryProgressDao
     abstract fun favoriteDao(): FavoriteDao
+    abstract fun storyCacheDao(): StoryCacheDao
 
     companion object {
         val MIGRATION_4_5 = object : Migration(4, 5) {
@@ -115,6 +119,20 @@ abstract class WadjetDatabase : RoomDatabase() {
                 )
                 db.execSQL(
                     "INSERT INTO signs_fts(signs_fts) VALUES('rebuild')"
+                )
+            }
+        }
+
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // E-02: offline cache for story content
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS story_cache (" +
+                        "id TEXT NOT NULL PRIMARY KEY, " +
+                        "summary_json TEXT NOT NULL, " +
+                        "full_json TEXT, " +
+                        "sort_order INTEGER NOT NULL DEFAULT 0, " +
+                        "updated_at INTEGER NOT NULL)"
                 )
             }
         }
