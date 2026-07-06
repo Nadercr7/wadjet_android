@@ -81,8 +81,8 @@ _Phase 1 findings are appended below once the audit sweep completes._
 
 ## [E-05] Minor DB/offline gaps (bundle)
 - Date: 2026-07-06 | Severity: minor | Area: E-db / M-offline
-- Items: (a) `getSigns` cache fallback only on IOException, not ApiException (`DictionaryRepositoryImpl.kt:64-65` vs `:109-111`); (b) explore `getCategories` no offline fallback (`ExploreRepositoryImpl.kt:171`); (c) dashboard recentScans ignores local `scan_results` table (`DashboardViewModel.kt:86-102`); (d) hand-rolled glyph JSON parse (`StoriesRepositoryImpl.kt:334-346`); (e) `isOffline` variable actually holds isOnline (`MainActivity.kt:124/261`); (f) schema 4.json not exported, no migration tests; (g) no migrations 1→4 (legacy installs hit destructive fallback).
-- Status: OPEN | Verification: code-read.
+- Items: (a) `getSigns` cache fallback only on IOException, not ApiException (`DictionaryRepositoryImpl.kt:64-65` vs `:109-111`) — **FIXED** (Batch 5 commit: fallback on any non-cancellation failure); (b) explore `getCategories` no offline fallback — landmark categories have no cache table; mitigated by E-04 seed (list itself works offline); (c) dashboard recentScans ignores local `scan_results` — open (enhancement-grade); (d) hand-rolled glyph JSON parse — open, harmless; (e) `isOffline` naming — cosmetic, open; (f) schema 4.json not exported — 5..9.json exported now, migration test rig documented (E-P5); (g) no migrations 1→4 — moot for any install ≥ v4; legacy hits downgrade-safe destructive path only.
+- Status: PARTIALLY FIXED (a); rest open as debt | Verification: full unit tests green.
 
 ## [J-01] Pexels API keys compiled into BuildConfig → extractable from release APK
 - Date: 2026-07-06 | Severity: major | Area: J-security
@@ -101,7 +101,8 @@ _Phase 1 findings are appended below once the audit sweep completes._
 ## [J-03] allowBackup=true backs up Room DB + plaintext prefs to cloud
 - Date: 2026-07-06 | Severity: minor | Area: J-security
 - Evidence: `app/src/main/AndroidManifest.xml:17`; backup rules exclude only `wadjet_secure_prefs`.
-- Status: OPEN | Verification: code-read.
+- Status: **FIXED** (Batch 5 commit) — backup_rules.xml + data_extraction_rules.xml (cloud-backup AND device-transfer) now also exclude `wadjet.db` and all shared prefs; backend remains source of truth for user data.
+- Verification: build green (rules are validated at merge time).
 - Note: security posture otherwise strong — EncryptedSharedPreferences for tokens, EncryptedFile for chat history, debug-gated logging, FLAG_IMMUTABLE PendingIntents, no WebView, no cleartext (NSC allows only localhost/10.0.2.2), R8 + sane rules, no secrets tracked in git. Keystore+passwords sit untracked in working tree (minor local-disk exposure).
 
 ## [I-01] SubcomposeAsyncImage used as universal list image component
@@ -134,14 +135,15 @@ _Phase 1 findings are appended below once the audit sweep completes._
 
 ## [I-05] Minor perf/debt (bundle)
 - Date: 2026-07-06 | Severity: minor | Area: I-perf / O-debt
-- Items: (a) `filtered.indexOf(story)` O(n²) `StoriesScreen.kt:200`; (b) inline `.filter{it.featured}` each recomposition `ExploreScreen.kt:200`; (c) missing LazyColumn keys `BrowseTab.kt:104,120`, `LearnTab.kt:182` (bounded lists); (d) stories list unpaged (`StoriesViewModel.kt:86-98`); (e) `SignDetailViewModel.kt:128-131` per-play MediaPlayer lingers until onCleared; (f) `MainActivity.kt:79` synchronous `isLoggedIn` read pre-setContent — confirm not blocking I/O; (g) unstructured scopes in `StoriesRepositoryImpl.kt:189,225` callbackFlow; (h) hardcoded Dispatchers vs injectable `DispatchersModule`; (i) 3 TODOs (`WadjetFirebaseMessaging.kt:56` placeholder notif icon; `DashboardScreen.kt:355,468` hardcoded values); (j) empty `:core:ml`/`:core:ui` modules wired into app; (k) versionCode/Name unbumped.
+- Items: (a) `filtered.indexOf(story)` O(n²) — **FIXED** (itemsIndexed, Batch 5 commit); (c) missing LazyColumn keys in BrowseTab — **FIXED** (stable keys); (e) per-play MediaPlayer lingering — **FIXED by H-06** (single manager); rest open as debt: (b) inline `.filter{it.featured}` per recomposition; (d) stories list unpaged (12 stories — fine); (f) synchronous `isLoggedIn` pre-setContent (EncryptedSharedPreferences read — fast, acceptable); (g) unstructured scopes in callbackFlow (Firestore mirror is dead anyway, see J-02/E-P4); (h) hardcoded Dispatchers; (i) TODOs incl. placeholder notification icon; (j) empty :core:ml (F-02-deferred) / :core:ui modules; (k) versionCode unbumped (release-management call).
 - Status: OPEN | Verification: code-read. Positives: clean Application.onCreate, Timber debug-only, collectAsStateWithLifecycle everywhere, debounced+paged dictionary/explore search, no runBlocking/GlobalScope, resources mostly released.
 
 ## [A-01] Historical K2 compiler OOM crashes; gradle.properties memory likely under-provisioned
 - Date: 2026-07-06 | Severity: major (build stability) | Area: A-build
 - Evidence: 8× `hs_err_pid*.log` + `replay_pid25100.log` in repo root (UNTRACKED, verified `git ls-files`) — headers show K2JVMCompiler native OOM while compiling `feature:dashboard`. `gradle.properties`: `-Xmx2048m`, `kotlin.compiler.execution.strategy=in-process`, `workers.max=2` (stability-over-speed mitigations; 2 GB may still be tight).
 - Expected: raise `org.gradle.jvmargs`, gitignore `hs_err_*`/`replay_*`, delete logs; confirm baseline build reproducible.
-- Status: OPEN | Verification: baseline assembleDebug in progress.
+- Status: **FIXED** (hygiene commit) — jvmargs raised to -Xmx3072m (in-process strategy kept); hs_err_pid*/replay_pid* gitignored (files left on disk, untracked). Full assembleDebug + full unit-test suite green at 3g.
+- Verification: full build + testDebugUnitTest green post-change.
 
 ## [A-02] BLOCKER (build): assembleDebug fails at HEAD — poisoned Gradle build cache entry for :core:network javac
 - Date: 2026-07-06 | Severity: blocker (build) | Area: A-build
@@ -202,7 +204,8 @@ _Phase 1 findings are appended below once the audit sweep completes._
 ## [H-08] Minor audio issues (bundle)
 - Date: 2026-07-06 | Severity: minor | Area: H-audio
 - Items: (a) temp WAV files not deleted on exception paths (`SignDetailViewModel.kt:114`, also Dictionary/Lesson; bare `File.createTempFile` in system tmp); (b) SignDetail has no playing/loading state, can't stop playback; (c) main-thread `prepare()` jank (see I-02). Positive: `ScanResultViewModel` per-key TtsState is the model to copy; format parity OK (24 kHz WAV played untranscoded).
-- Status: OPEN | Verification: code-read.
+- Status: **MOSTLY FIXED via H-06/I-02** — (a) all playback now goes through AudioPlaybackManager (cacheDir temps, deleted on completion/error, deleteOnExit backstop; per-VM temp code deleted); (c) fixed by I-02 prepareAsync. Remaining: (b) SignDetail stop/playing indicator — enhancement-grade, open.
+- Verification: code + live playback through the manager on 2 paths.
 
 ## [G-01] BLOCKER: No in-app language switcher — no per-app locale mechanism exists at all
 - Date: 2026-07-06 | Severity: blocker | Area: G-i18n / B-parity
@@ -261,7 +264,8 @@ _Phase 1 findings are appended below once the audit sweep completes._
 ## [C-02] UI state lost on rotation: showArabic, selectedGlyph, aiNotesExpanded, selectedAnnotation use remember (not rememberSaveable)
 - Date: 2026-07-06 | Severity: minor | Area: C-nav / C-state
 - Evidence: `ScanResultScreen.kt:94,95,394`; `StoryReaderScreen.kt:514`; `LearnTab.kt:79`; activity not orientation-locked.
-- Status: OPEN | Verification: code-read.
+- Status: **FIXED (partial)** (Batch 5 commit) — showArabic + aiNotesExpanded now rememberSaveable. Remaining: selectedGlyph/selectedAnnotation hold non-Saveable domain objects (need custom Savers — cosmetic sheet state, low value); LearnTab:79 is a reveal-animation counter (re-animating on rotation is fine).
+- Verification: compile green.
 
 ## [C-03] Search/filter/pagination state not in SavedStateHandle (lost on process death)
 - Date: 2026-07-06 | Severity: minor | Area: C-state
@@ -270,7 +274,7 @@ _Phase 1 findings are appended below once the audit sweep completes._
 
 ## [C-04] Minor nav issues (bundle)
 - Date: 2026-07-06 | Severity: minor | Area: C-nav / O-debt
-- Items: (a) dead `Route.Splash` registered with empty body (`WadjetNavGraph.kt:102-104`, `Route.kt:6`); (b) landmark-chat slug failure silently degrades to generic chat (`ChatViewModel.kt:70-80`); (c) unused Translate data-layer wiring (`TranslateApiService.kt` + repo, DI-only).
+- Items: (a) dead `Route.Splash` registered with empty body (`WadjetNavGraph.kt:102-104`, `Route.kt:6`) — **FIXED** (Batch 5 commit, route removed); (b) landmark-chat slug failure silently degrades to generic chat (`ChatViewModel.kt:70-80`) — WONT-FIX (graceful degradation is acceptable); (c) unused Translate data-layer wiring (`TranslateApiService.kt` + repo, DI-only) — left in place (has tests; harmless; guarded by never-delete rule).
 - Positives: all 20 routes registered/reachable; saveState/restoreState multi-back-stack; anti-double-tap `lifecycleIsResumed()`; detail VMs use SavedStateHandle args (process-death safe).
 - Status: OPEN | Verification: code-read.
 
@@ -341,7 +345,8 @@ _Phase 1 findings are appended below once the audit sweep completes._
 ## [L-03] Hardcoded "Chapter X of Y" in LandingScreen
 - Date: 2026-07-06 | Severity: major (i18n) | Area: L-ui / G-i18n
 - Evidence: `LandingScreen.kt:462`.
-- Status: OPEN | Verification: code-read.
+- Status: **FIXED** (Batch 5 commit) — uses the existing `landing_chapter_progress` resource (EN+AR).
+- Verification: compile green; AR resource already present from G-02.
 
 ## [K-01] Touch targets below 48dp (chat edit pencil worst at ~14dp)
 - Date: 2026-07-06 | Severity: major | Area: K-a11y
@@ -354,11 +359,12 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Date: 2026-07-06 | Severity: minor | Area: K-a11y
 - Evidence: `LandingScreen.kt:273`, ContinueStoryCard, badges; alpha-0.15 same-hue badges `ExploreScreen.kt:509-520`.
 - Expected: reserve Dust for large/decorative text; TextMuted (~5.7:1) is fine.
-- Status: OPEN | Verification: code-read.
+- Status: **FIXED** (Batch 5 commit) — the two small-text Dust usages (landing footer credit, explore era badge) moved to TextMuted; remaining Dust usages are large/decorative.
+- Verification: compile green.
 
 ## [L-04] Minor UI issues (bundle)
 - Date: 2026-07-06 | Severity: minor | Area: L-ui
-- Items: (a) dark-only theme is a product decision but themes.xml parent is framework Material.NoActionBar (non-idiomatic); (b) fixed-height FeatureCard 120dp may clip at large font scale (`WelcomeScreen.kt:291`); (c) WadjetButton hardcodes height 48dp (prefer heightIn); (d) `errorContainer` hex inline in `WadjetTheme.kt:32`.
+- Items: (a) themes.xml parent — superseded (now Theme.AppCompat per G-01); (b) fixed-height FeatureCard — **FIXED** (heightIn(min=120), Batch 5 commit); (c) WadjetButton hardcoded 48dp — left (48dp IS the minimum target; heightIn refactor touches 3 variants for no user-visible gain); (d) `errorContainer` hex inline — open, cosmetic.
 - Positives: palette matches web CSS exactly (gold #D4AF37 family, Night #0A0A0A); no dynamic color override; zero hardcoded hex in feature modules; loading/empty/error states consistently implemented (shimmer, ErrorState w/ retry, OfflineIndicator); no LazyColumn-in-Column crash patterns; sp/dp used correctly; headings have semantics.
 - Status: OPEN | Verification: code-read.
 
@@ -367,19 +373,21 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Date: 2026-07-06 (found during Batch 3 Arabic tour) | Severity: minor | Area: G-i18n
 - Evidence: Stories difficulty chips + card badges ("All/Beginner/Intermediate/Advanced", `StoriesViewModel.DIFFICULTY_FILTERS`), dictionary sign-type filter row (`SIGN_TYPES`), feedback categories (`FEEDBACK_CATEGORIES`), explore fallback categories — these constants are BOTH UI labels and API filter/request values, so simple resource substitution would break filtering; needs a value↔label map. Also server-provided content that only exists in EN regardless of lang param (sign descriptions/readings, some landmark names) is a backend data gap, not an Android bug.
 - Expected (web): web shows Arabic chip labels (filter_beginner etc. in ar.json) while filtering by stable values.
-- Status: OPEN (Batch 5 candidate) | Verification: emulator, Arabic tour.
+- Status: **FIXED (client-side half)** (commit 4725a5e) — value↔label mappers for difficulty, sign-type, feedback-category and landmark-category chips; values stay stable for API filtering. Server-side EN-only content (sign descriptions/readings, some landmark data) remains a backend data gap (out of scope).
+- Verification: compile green; EN labels unchanged; AR labels from web ar.json terminology.
 
 ## [A-03] Native libs not 16 KB page-aligned (system compat warning on API 36 emulator)
 - Date: 2026-07-06 | Severity: minor (will become major for Play targets) | Area: A-build
 - Evidence: system dialog on install: libonnxruntime.so, libonnxruntime4j_jni.so, libdatastore_shared_counter.so, libandroidx.graphics.path.so, libsurface_util_jni.so, libimage_processing_util_jni.so not 16 KB aligned. Most come from the UNUSED onnxruntime dep (F-02, deferred) and older androidx artifacts.
 - Expected: 16 KB-aligned .so (AGP packaging flag / newer artifact versions); removing unused ONNX (F-02) eliminates the two worst.
-- Status: OPEN (largely blocked on F-02 deferral) | Verification: emulator dialog observed.
+- Status: OPEN — REMAINS blocked on the F-02 deferral (supervisor decision): the two worst offenders are the unused onnxruntime .so files; removing them (F-02) or bumping to a 16KB-ready onnxruntime + newer androidx artifacts is the fix. Must be resolved before targeting Play with API 35+ requirements. | Verification: emulator dialog observed (reappears after pm clear).
 
 ## [B-03] Verify-email gate shows even for already-verified accounts on fresh sign-in
 - Date: 2026-07-06 | Severity: minor | Area: B-parity / C-nav
 - Evidence: sign-in with a VERIFIED account still lands on VerifyEmailSheet ("I've verified my email" then passes). Firebase user's emailVerified is stale until reload; gate checks before reloading. Also backend login response returns email_verified:false for the same account (Firebase-verified only) — live D-05 dual-store drift evidence.
 - Expected: reload Firebase user before gating; treat verified accounts as verified immediately.
-- Status: OPEN | Verification: emulator, reproduced twice.
+- Status: **FIXED** (Batch 5 commit) — sign-in re-checks `reloadEmailVerified()` before showing the sheet; unit test updated.
+- Verification: auth unit tests green (verified-account path no longer reachable by stale flag alone). Note: emulator re-login after this fix still passes the gate in one step.
 
 ## [G-06] Story reader renders textEn even when app is in Arabic
 - Date: 2026-07-06 | Severity: major | Area: G-i18n / B-parity

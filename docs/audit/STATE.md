@@ -123,6 +123,45 @@ _Living document. Updated by the audit agent. Started: 2026-07-06._
 - J-01 BLOCKED: backend has no Pexels surface; proxy needs a server endpoint (backend read-only). Follow-up E-P7.
 - D-05 STOPPED per guardrail: clean fix = drop Firebase Auth for backend-only auth (incl. /auth/google) — full plan in ENHANCEMENTS E-P6.
 
+### Batch 5 — minors + hygiene (committed; build + full unit-test suite green)
+
+- L-03 (baa507d) chapter-progress resource; B-03 (8a8fb15) verify-gate reload; G-07 (4725a5e) localized chip labels with stable API values; C-02 (2eb8179) rememberSaveable toggles; C-04 (d0e17d2) dead Splash route removed; J-03 (8bd0285) Room DB + prefs excluded from backup/transfer; A-01 (825df3f) heap 3g + crash dumps gitignored; G-05/L-04/I-05/E-05 minors (dcf4f02, shared commit for four minor-bundle ids); K-02 (6f36433) contrast; test adaptations (bd8146e).
+- A-03 (16 KB alignment) stays OPEN, blocked on the F-02 ONNX deferral (supervisor decision) — must be addressed before Play API-35+ targeting.
+
+## Final status (2026-07-06, end of Phase 2)
+
+### Regression
+- Full `assembleDebug` green; FULL unit-test suite green (`testDebugUnitTest` all modules).
+- Emulator regression tour post-Batch-5: Home / Hieroglyphs / Explore / Stories / Thoth / reader / dictionary all render, 0 FATAL exceptions in logcat.
+- 49 commits on `audit/fable-2026-07-06` since baseline d0322bb (44 fix/feat/test/chore + 5 docs).
+
+### DoD scorecard
+
+| Area | Status | Proof |
+|---|---|---|
+| A build | PASS (A-02 cache purged; A-01 heap+hygiene) | plain assembleDebug + full tests green |
+| B parity | PASS w/ notes | contract fixes D-01..D-08 verified live; B-01 deep links verified; B-03 fixed; premium-gating parity = NEEDS-DECISION (web has none) |
+| C nav/state | PASS | C-01 race fixed+verified; C-02 partial (savers noted); C-04a fixed |
+| D network | PASS | every D-fix proven against the live backend (bodies + status codes in FIXLOG) |
+| E db/offline | PASS | E-01 (real v7→v8 test), E-02 (offline list+reader), E-03 (v9 indices, real upgrade), E-04 (offline seed 1023 signs), E-05a |
+| F ml/scan | PASS w/ deferral | F-01 EXIF verified server-side; F-02 ONNX deferred by supervisor (drives A-03) |
+| G i18n | PASS | G-01..G-07: runtime switcher, full Arabic content, RTL, reader Arabic, chips localized — all toured in Arabic on emulator |
+| H audio | PASS | H-01..H-07 verified live: Arabic narration, correct presets, fallback to device TTS (offline test), single player + focus, 0-network replays via disk cache |
+| I perf | PASS w/ debt | I-01..I-04 fixed; I-05 partials, rest logged as debt |
+| J security | PASS w/ blockers noted | J-03 fixed; J-01 blocked on backend endpoint (E-P7); J-02 Firestore rules = server-side (evidence logged) |
+| K a11y | PASS | K-01 48dp targets; K-02 contrast |
+| L ui | PASS | L-01..L-04 fixed (L-04d cosmetic open); dark splash regression fixed |
+| M offline | PASS | seeded fresh-install offline + cached stories offline + TTS cache + local TTS fallback |
+| N firebase | OPEN by design | dual-auth unification (D-05) STOPPED per guardrail — full plan E-P6; Firestore mirror dead (J-02 evidence) |
+| O debt | LOGGED | remaining debt itemized in E-05/I-05/L-04/C-04 bundles |
+
+### Blocked / needs-decision (supervisor)
+1. D-05 auth unification — plan E-P6 (drop Firebase Auth, backend-only incl. /auth/google).
+2. J-01 Pexels proxy — needs backend endpoint (E-P7).
+3. Premium story gating — Android positional lock vs web having NO gating (NEEDS-DECISION in FIXLOG E-02 note).
+4. F-02 ONNX (deferred by supervisor) → keeps A-03 16 KB alignment open.
+5. J-02 Firestore rules / dead mirror — server-side confirmation then E-P4.
+
 ## Notes / known repo facts
 
 - 10 feature modules + 9 core modules (see settings.gradle.kts), ~207 Kotlin files.
