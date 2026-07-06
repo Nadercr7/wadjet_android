@@ -128,12 +128,9 @@ class ScanViewModel @Inject constructor(
 
             scanRepository.scanImage(compressed)
                 .onSuccess { result ->
-                    _state.update { it.copy(scanStep = ScanStep.TRANSLITERATING) }
-                    kotlinx.coroutines.delay(400)
-                    _state.update { it.copy(scanStep = ScanStep.TRANSLATING) }
-                    kotlinx.coroutines.delay(400)
+                    // F-04: no fake staged delays — the server already finished the whole
+                    // pipeline when this returns; go straight to DONE.
                     _state.update { it.copy(scanStep = ScanStep.DONE) }
-                    kotlinx.coroutines.delay(300)
 
                     // Save to Room
                     val thumbnailPath = saveThumbnail(compressed)
