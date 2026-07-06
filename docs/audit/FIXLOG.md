@@ -154,36 +154,43 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Date: 2026-07-06 | Severity: major | Area: H-audio
 - Evidence: `EgyptianPronunciation.kt:27` + `DictionaryRepositoryImpl.kt:230-243`; server `tts_service.py:29-91` VOICE_PRESETS has no such key → "Charon" default, empty director notes. Also `ScanResultViewModel.kt:78`.
 - Expected (web): context `pronunciation` → voice `Rasalgethi` + "say clearly and slowly" note.
-- Status: OPEN | Verification: cross-repo code-read.
+- Status: **FIXED** (commit 3a82fe1) — CONTEXT constant is now the server preset key "pronunciation".
+- Verification: emulator + live backend — dictionary sign pronounce sent `{"text":"rah","lang":"en","context":"pronunciation"}` → 200, audio played.
 
 ## [H-03] Dead voice/style request fields — server ignores them (Pydantic drops extras)
 - Date: 2026-07-06 | Severity: major (masks H-02) | Area: H-audio / D-network
 - Evidence: `WriteModels.kt:56-62` SpeakRequest adds `voice`("Orus")/`style`; server `SpeakRequest` = text/lang/context only (`audio.py:120-163`). Intended voice never applied anywhere.
 - Expected: drop dead fields; align context strings to server presets.
-- Status: OPEN | Verification: cross-repo code-read.
+- Status: **FIXED** (commit b5bdc77) — SpeakRequest is text/lang/context only; voice/style removed through domain interfaces, repos and ViewModels; unused VOICE/STYLE constants deleted.
+- Verification: emulator — live speak bodies contain exactly text/lang/context (narration + pronunciation captures).
 
 ## [H-04] Arabic lang never passed for dictionary/chat TTS; on-device ar fallback unchecked
 - Date: 2026-07-06 | Severity: major | Area: H-audio / G-i18n
-- Evidence: `DictionaryRepositoryImpl.kt:230-233` lang="en" hardcoded; `ChatViewModel.kt:318`/`ChatRepositoryImpl.kt:112` default "en" even for Arabic replies (web sends chatLang, `chat.html:264`); `ChatScreen.kt:163`/`StoryReaderScreen.kt:135` ignore `setLanguage` result → silent failure when device lacks ar voice; uses `ar` not `ar-EG`.
-- Status: OPEN | Verification: cross-repo code-read.
+- Evidence: `DictionaryRepositoryImpl.kt:230-233` lang="en" hardcoded; `ChatViewModel.kt:318`/`ChatRepositoryImpl.kt:112` default "en" even for Arabic replies (web sends chatLang, `chat.html:264`); `ChatScreen.kt:163`/`StoryReaderScreen.kt:135` ignore `setLanguage` result → silent failure when device lacks ar voice; uses `ar` not `ar-EG`. LIVE: landmarks list also requested with hardcoded `lang=en` (LandmarkApiService default, repo never passed it).
+- Note: dictionary phonetic lang="en" is CORRECT (web always uses lang 'en' for Egyptological pronunciation, app.js:500).
+- Status: **FIXED** (commits 0602adf, 78d1bb2) — chat speak detects Arabic script → lang=ar; local TTS voice verified via `trySetLanguageFor` (ar-EG → ar, skip if unavailable); new `AppLanguage` helper (AppCompat per-app locales) threads lang into landmark list/detail and replaces raw Locale.getDefault() checks.
+- Verification: emulator — in Arabic mode `GET /api/landmarks?...&lang=ar` observed (was lang=en); chat-lang detection + setLanguage checks code-reviewed and compiled (server-failure path exercised via H-05 test).
 
 ## [H-05] TTS fallback gaps: story narration stops silently on network error; Lesson TTS fails silently; SignDetail no local fallback
 - Date: 2026-07-06 | Severity: major | Area: H-audio / M-offline
 - Evidence: `StoryReaderViewModel.kt:198-221` (.onFailure → false → loop breaks, no fallback/toast); `LessonViewModel.kt:61-84` (no ttsEnabled check, no fallback, no error); `SignDetailViewModel.kt:118-124` (error string only).
 - Expected (web): always degrades to browser SpeechSynthesis.
-- Status: OPEN | Verification: code-read.
+- Status: **FIXED** (commit 0f7f494) — `AudioPlaybackManager.speakLocal()` (device TTS, script-aware voice) is the fallback for server failure/204 in Dictionary, Lesson, SignDetail, Scan, ScanResult and story narration (narration falls back per-paragraph and continues). Lesson now also respects the TTS-enabled setting. Removed dead `localTtsText` plumbing that no screen consumed.
+- Verification: emulator — airplane mode + uncached sign pronounce: server call impossible, audio still played via device TTS (active audio output confirmed).
 
 ## [H-06] No audio focus + fragmented MediaPlayers → concurrent playback possible
 - Date: 2026-07-06 | Severity: major | Area: H-audio
 - Evidence: no `requestAudioFocus`/`setAudioAttributes` anywhere; `AudioPlaybackManager` singleton only injected in Chat/StoryReader; Dictionary/SignDetail/Lesson/ScanResult each own private MediaPlayers.
 - Expected: single playback manager + audio focus handling.
-- Status: OPEN | Verification: code-read.
+- Status: **FIXED** (commit 58fbdfc) — AudioPlaybackManager is the only MediaPlayer owner app-wide (5 private MediaPlayers removed); requests AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK per playback, stops on focus loss, USAGE_MEDIA/CONTENT_TYPE_SPEECH attributes, temp WAVs in cacheDir.
+- Verification: emulator — story narration and dictionary pronunciation both play through the manager; starting one playback stops the other by construction (single player).
 
 ## [H-07] No audio caching client-side (no OkHttp Cache; temp WAVs deleted after playback)
 - Date: 2026-07-06 | Severity: major (cost/latency) | Area: H-audio / D-network
 - Evidence: `NetworkModule.kt:47-73` no Cache; server sends `Cache-Control: max-age=86400` (ignored). Web keeps in-memory blob cache (`app.js:465-494`).
 - Expected: OkHttp Cache and/or keyed audio file cache.
-- Status: OPEN | Verification: cross-repo code-read.
+- Status: **FIXED** (commit 2de725f) — `TtsAudioCache` (SHA-256 of lang|context|text → WAV in cacheDir/tts_cache, 30MB LRU) wired into all four speak paths (chat, dictionary, scan, stories). OkHttp cache alone could not work: speak is a POST.
+- Verification: emulator — replaying a narrated paragraph and a sign pronunciation produced audio with ZERO network requests (logcat), on two separate paths.
 
 ## [H-08] Minor audio issues (bundle)
 - Date: 2026-07-06 | Severity: minor | Area: H-audio
@@ -201,18 +208,22 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Date: 2026-07-06 | Severity: major (blocker for Arabic DoD) | Area: G-i18n
 - Evidence: only `app` (24/24) and `feature:chat` (34/35) contain real Arabic script. auth ~19% translated; designsystem/dashboard/dictionary/explore/feedback/landing/scan/settings/stories = 0 Arabic values, English copies wrapped in `tools:ignore="MissingTranslation"`. Overall Arabic completeness ~15-20%.
 - Note: refines supervisor ground truth — files exist, translations mostly don't.
-- Status: OPEN | Verification: per-module key/value comparison (table in agent report; summarized here).
+- Status: **FIXED** (commit 68806bf) — all 10 modules rewritten with real Arabic, terminology aligned with the web's authoritative `app/i18n/ar.json` (فحص/القاموس/المعالم/حكايات/تحوت/علامات جاردنر…); auth completed; `tools:ignore="MissingTranslation"` wrappers removed; script check confirms 1:1 key parity and no untranslated values (intentional latin: language names, EN/AR codes, format-only strings).
+- Verification: emulator in Arabic — Home, bottom nav, Stories, Dictionary (tabs/search/labels), Explore, Quick Settings all render Arabic; RTL layout correct; mojibake eliminated by the rewrite.
 
 ## [G-03] 5 ar keys missing entirely in feature:dictionary + mojibake in placeholder ar files
 - Date: 2026-07-06 | Severity: major | Area: G-i18n
 - Evidence: `feature/dictionary/values-ar/strings.xml` lacks `lesson_speak`, `write_mode_gardiner`, `write_mode_phonetic`, `write_mode_smart`, `write_palette_label`. Encoding corruption (â™¡/âœ“/Â·/â€¦/�) in dashboard:11,19,21, settings:26, auth `forgot_back_to_login`, stories `reader_prev_chapter`.
-- Status: OPEN | Verification: file reads.
+- Correction during fix: dashboard/settings files were actually clean UTF-8; real mojibake confirmed in auth `forgot_back_to_login` and stories `reader_prev/next_chapter` (and dictionary `browse_search_placeholder`).
+- Status: **FIXED** (commit afc387c adds the 5 missing keys; commit 68806bf rewrite removed all mojibake) | Verification: parity script — 0 missing keys, 0 mojibake.
 
 ## [G-04] ~45 hardcoded user-facing strings in ViewModels (errors/snackbars/toasts stay English)
 - Date: 2026-07-06 | Severity: major | Area: G-i18n
 - Evidence: AuthViewModel (~11), SettingsViewModel:63,87,100,135, FeedbackViewModel:57,61, DashboardViewModel:94-115, ChatViewModel:162-414, StoryReaderViewModel:151-270, Dictionary/Lesson/SignDetail "Generating pronunciation…", ScanViewModel:135-199, IdentifyViewModel:51-105.
 - Expected: string resources (ViewModels emit resource IDs or use a resource provider).
-- Status: OPEN | Verification: grep sweep.
+- Status: **FIXED** (commits f3df668 + 9a2fdaf) — new `StringResolver` (core:common) resolves resources against AppCompat per-app locales (application context alone lags on API < 33); ~50 literals across 14 ViewModels moved to string resources with EN+AR values; `AuthViewModel.validatePassword` returns @StringRes ids.
+- Remaining (split to G-07): displayed-value constants `DIFFICULTY_FILTERS`, `SIGN_TYPES`, `FEEDBACK_CATEGORIES`, `FALLBACK_CATEGORIES` double as API filter values and need a value↔label mapping.
+- Verification: full build green; auth unit tests green.
 
 ## [G-05] Minor i18n/RTL issues (bundle)
 - Date: 2026-07-06 | Severity: minor | Area: G-i18n
@@ -339,6 +350,12 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Status: OPEN | Verification: code-read.
 
 
+## [G-07] Displayed-value constants remain English in Arabic UI (difficulty/type/category chips)
+- Date: 2026-07-06 (found during Batch 3 Arabic tour) | Severity: minor | Area: G-i18n
+- Evidence: Stories difficulty chips + card badges ("All/Beginner/Intermediate/Advanced", `StoriesViewModel.DIFFICULTY_FILTERS`), dictionary sign-type filter row (`SIGN_TYPES`), feedback categories (`FEEDBACK_CATEGORIES`), explore fallback categories — these constants are BOTH UI labels and API filter/request values, so simple resource substitution would break filtering; needs a value↔label map. Also server-provided content that only exists in EN regardless of lang param (sign descriptions/readings, some landmark names) is a backend data gap, not an Android bug.
+- Expected (web): web shows Arabic chip labels (filter_beginner etc. in ar.json) while filtering by stable values.
+- Status: OPEN (Batch 5 candidate) | Verification: emulator, Arabic tour.
+
 ## [A-03] Native libs not 16 KB page-aligned (system compat warning on API 36 emulator)
 - Date: 2026-07-06 | Severity: minor (will become major for Play targets) | Area: A-build
 - Evidence: system dialog on install: libonnxruntime.so, libonnxruntime4j_jni.so, libdatastore_shared_counter.so, libandroidx.graphics.path.so, libsurface_util_jni.so, libimage_processing_util_jni.so not 16 KB aligned. Most come from the UNUSED onnxruntime dep (F-02, deferred) and older androidx artifacts.
@@ -355,4 +372,5 @@ _Phase 1 findings are appended below once the audit sweep completes._
 - Date: 2026-07-06 | Severity: major | Area: G-i18n / B-parity
 - Evidence: reader in Arabic mode shows English paragraphs right-aligned (".before all things" punctuation artifact). textAr exists (H-01 narration proved backend sends real Arabic).
 - Expected (web): reader displays lang-appropriate text.
-- Status: OPEN (fold into Batch 3 stories localization) | Verification: emulator screenshot.
+- Status: **FIXED** (commit 877e999) — `localized(en, ar)` helpers pick the Arabic variant (blank-safe fallback) for story titles (list, landing continue-card, reader top bar), chapter titles, paragraphs WITH matching wordAr annotations, tooltips, all four interaction types and feedback banners.
+- Verification: emulator in Arabic — "الخلق من نون" reader shows Arabic chapter title (المياه الأزلية), Arabic paragraphs, Arabic annotation prompt; narration reads the same Arabic text (lang=ar → 200 → played).

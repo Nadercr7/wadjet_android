@@ -87,6 +87,24 @@ _Living document. Updated by the audit agent. Started: 2026-07-06._
 - Emulator: AVD RAM raised 2048→4096 MB (`-memory 4096`, cold boot) after lowmemorykiller killed the app as TOP at 2 GB. UI driving via scratchpad `ui.py` (uiautomator dump → tap).
 - New live findings this batch: J-02 update (Firestore story_progress write PERMISSION_DENIED for own uid → mirror is dead), B-03 (verify gate on verified accounts), G-06 (reader shows EN text in Arabic).
 
+### Batch 3 — Arabic + audio (all committed & verified on emulator)
+
+| Fix | Commit | Runtime proof |
+|---|---|---|
+| G-06 reader Arabic content | 877e999 | Arabic titles/paragraphs/annotations/interactions rendered in reader |
+| H-02 pronunciation preset | 3a82fe1 | speak body `context:"pronunciation"` -> 200, played |
+| H-03 drop voice/style | b5bdc77 | live speak bodies = text/lang/context only |
+| H-04 lang threading + voice checks | 0602adf, 78d1bb2 | `GET /api/landmarks?...&lang=ar` in Arabic (was en) |
+| H-06 single player + audio focus | 58fbdfc | narration + dictionary both via manager |
+| H-05 local TTS fallback | 0f7f494 | airplane mode + uncached sign -> device voice played |
+| H-07 TTS disk cache 30MB LRU | 2de725f | replays on 2 paths: audio plays, 0 network requests |
+| G-03 five missing ar keys | afc387c | parity script: 0 missing keys |
+| G-02 real Arabic, 10 modules | 68806bf | full Arabic tour: Home/nav/Stories/Dictionary/Explore/QuickSettings |
+| G-04 VM strings -> resources | f3df668, 9a2fdaf | build + auth tests green; StringResolver locale-aware |
+
+- New finding G-07 (minor): value-constants chips (difficulty/sign types/feedback categories) still EN — value<->label mapping needed (Batch 5 candidate).
+- Arabic narration end-to-end re-verified after all audio refactors: Arabic paragraph -> lang=ar -> 200 audio/wav -> played; replay served from client cache.
+
 ## Notes / known repo facts
 
 - 10 feature modules + 9 core modules (see settings.gradle.kts), ~207 Kotlin files.
