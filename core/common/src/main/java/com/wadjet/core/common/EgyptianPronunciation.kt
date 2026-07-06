@@ -12,17 +12,6 @@ package com.wadjet.core.common
  */
 object EgyptianPronunciation {
 
-    /** TTS voice for hieroglyphic content — Orus (voice of Thoth, god of writing). */
-    const val VOICE = "Orus"
-
-    /** TTS style instruction for authentic ancient Egyptian character. */
-    const val STYLE =
-        "Speak as a wise ancient Egyptian sage and master scribe of the House of Life. " +
-            "Voice should be calm, measured, and deeply knowing — " +
-            "like a scholar who has spent a lifetime studying sacred hieroglyphs. " +
-            "Pronounce each word with quiet reverence and weight, " +
-            "unhurried, as if sharing timeless wisdom passed down through millennia."
-
     /**
      * Server context tag signaling hieroglyphic pronunciation mode.
      * Must be a key of the backend's VOICE_PRESETS (tts_service.py) —

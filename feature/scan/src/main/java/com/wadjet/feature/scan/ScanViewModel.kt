@@ -72,9 +72,7 @@ class ScanViewModel @Inject constructor(
             val isHieroglyphic = key == "translit"
             val ttsText = if (isHieroglyphic) EgyptianPronunciation.toSpeech(text) else text
             val ctx = if (isHieroglyphic) EgyptianPronunciation.CONTEXT else "scan_pronunciation"
-            val voice = if (isHieroglyphic) EgyptianPronunciation.VOICE else null
-            val style = if (isHieroglyphic) EgyptianPronunciation.STYLE else null
-            scanRepository.speak(ttsText, lang, ctx, voice, style).onSuccess { bytes ->
+            scanRepository.speak(ttsText, lang, ctx).onSuccess { bytes ->
                 if (bytes != null) {
                     playWavBytes(key, bytes)
                 } else {

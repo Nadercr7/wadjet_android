@@ -182,7 +182,7 @@ class StoryReaderViewModel @Inject constructor(
                 val narrationText =
                     if (isArabic && paragraph.textAr.isNotBlank()) paragraph.textAr else paragraph.textEn
                 val narrationLang = if (isArabic && paragraph.textAr.isNotBlank()) "ar" else "en"
-                val spoken = speakAndWait(narrationText, narrationLang, chapter.ttsVoice, chapter.ttsStyle)
+                val spoken = speakAndWait(narrationText, narrationLang)
                 if (!spoken || !_state.value.isNarrating) break
             }
             _state.update { it.copy(isNarrating = false, isSpeaking = false, narratingParagraphIndex = -1) }
@@ -200,11 +200,11 @@ class StoryReaderViewModel @Inject constructor(
      * Speaks text via server TTS and suspends until playback finishes.
      * Returns true if playback completed, false if it should fall back to local TTS / failed.
      */
-    private suspend fun speakAndWait(text: String, lang: String, voice: String?, style: String?): Boolean {
+    private suspend fun speakAndWait(text: String, lang: String): Boolean {
         return suspendCancellableCoroutine { cont ->
             cont.invokeOnCancellation { stopSpeaking() }
             viewModelScope.launch {
-                storiesRepository.speakChapter(text, lang = lang, voice = voice, style = style)
+                storiesRepository.speakChapter(text, lang = lang)
                     .onSuccess { bytes ->
                         if (bytes != null) {
                             playWavBytesAndWait(bytes) { if (cont.isActive) cont.resume(true) }

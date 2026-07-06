@@ -151,9 +151,9 @@ fun WriteTab(
             Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
                 IconButton(onClick = {
                     // Build TTS text from ONLY the reconstructed Ancient Egyptian
-                    // pronunciation — never the English input word. The server uses
-                    // the hieroglyph_pronunciation context + Orus voice + scribe style,
-                    // so we must send pure Egyptological sounds for authentic output.
+                    // pronunciation — never the English input word. The server picks
+                    // the voice from the "pronunciation" context preset, so we must
+                    // send pure Egyptological sounds for authentic output.
                     // EgyptianPronunciation.toSpeech handles short-input padding
                     // internally for consistent voice/quality across all callers.
                     val transliterationText = result.glyphs

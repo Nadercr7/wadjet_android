@@ -232,8 +232,6 @@ class DictionaryRepositoryImpl @Inject constructor(
             text = text,
             lang = "en",
             context = EgyptianPronunciation.CONTEXT,
-            voice = EgyptianPronunciation.VOICE,
-            style = EgyptianPronunciation.STYLE,
         ))
         when (response.code()) {
             200 -> response.body()?.bytes()
