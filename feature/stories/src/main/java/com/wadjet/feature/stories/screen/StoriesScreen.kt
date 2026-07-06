@@ -25,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -50,7 +49,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,8 +67,6 @@ import com.wadjet.feature.stories.DIFFICULTY_FILTERS
 import com.wadjet.feature.stories.R
 import com.wadjet.feature.stories.StoriesUiState
 import kotlinx.coroutines.delay
-
-private const val FREE_STORY_LIMIT = 3
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -190,15 +186,15 @@ fun StoriesScreen(
                         items = filtered,
                         key = { _, story -> story.id },
                     ) { itemIndex, story ->
-                        val isLocked = itemIndex >= FREE_STORY_LIMIT
+                        // C1 (Phase 3): all stories are free — parity with the web app,
+                        // which has no gating. The old positional lock is removed.
                         val progress = state.progress[story.id]
                         FadeUp(visible = itemIndex < visibleCount) {
                             StoryCard(
                                 story = story,
                                 progress = progress,
-                                isLocked = isLocked,
                                 isFavorite = story.id in state.favorites,
-                                onClick = { if (!isLocked) onStoryTap(story.id) },
+                                onClick = { onStoryTap(story.id) },
                                 onToggleFavorite = { onToggleFavorite(story.id) },
                             )
                         }
@@ -214,7 +210,6 @@ fun StoriesScreen(
 private fun StoryCard(
     story: StorySummary,
     progress: StoryProgress?,
-    isLocked: Boolean,
     isFavorite: Boolean,
     onClick: () -> Unit,
     onToggleFavorite: () -> Unit,
@@ -236,7 +231,7 @@ private fun StoryCard(
             .semantics(mergeDescendants = true) {}
             .clip(MaterialTheme.shapes.medium)
             .background(WadjetColors.Surface)
-            .clickable(enabled = !isLocked, onClick = onClick)
+            .clickable(onClick = onClick)
             .padding(16.dp),
     ) {
         Row(verticalAlignment = Alignment.Top) {
@@ -276,7 +271,7 @@ private fun StoryCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = localized(story.titleEn, story.titleAr),
-                    color = if (isLocked) WadjetColors.TextMuted else WadjetColors.Text,
+                    color = WadjetColors.Text,
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -312,7 +307,7 @@ private fun StoryCard(
                     )
                 }
 
-                if (!isLocked && progressFraction > 0f) {
+                if (progressFraction > 0f) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -336,42 +331,22 @@ private fun StoryCard(
                     }
                 }
 
-                if (isLocked) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Lock,
-                            contentDescription = stringResource(R.string.stories_locked_desc),
-                            tint = WadjetColors.TextMuted,
-                            modifier = Modifier.size(14.dp),
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = stringResource(R.string.stories_premium),
-                            color = WadjetColors.TextMuted,
-                            style = MaterialTheme.typography.bodySmall,
-                            fontStyle = FontStyle.Italic,
-                        )
-                    }
-                }
             }
 
             // Favorite button
-            if (!isLocked) {
-                IconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                        onToggleFavorite()
-                    },
-                    modifier = Modifier.size(48.dp), // K-01: minimum touch target
-                ) {
-                    Icon(
-                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = if (isFavorite) stringResource(DesignR.string.action_remove_favorite) else stringResource(DesignR.string.action_add_favorite),
-                        tint = if (isFavorite) WadjetColors.Error else WadjetColors.TextMuted,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
+            IconButton(
+                onClick = {
+                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                    onToggleFavorite()
+                },
+                modifier = Modifier.size(48.dp), // K-01: minimum touch target
+            ) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = if (isFavorite) stringResource(DesignR.string.action_remove_favorite) else stringResource(DesignR.string.action_add_favorite),
+                    tint = if (isFavorite) WadjetColors.Error else WadjetColors.TextMuted,
+                    modifier = Modifier.size(20.dp),
+                )
             }
         }
     }
