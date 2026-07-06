@@ -42,6 +42,18 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="wadjet" />
             </intent-filter>
+            <!-- E-P8: verified https App Links — web story URLs open the app.
+                 Auto-verification needs /.well-known/assetlinks.json served by
+                 the backend with the signing cert's SHA-256 (FIREBASE_RUNBOOK §9). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="nadercr7-wadjet-v2.hf.space"
+                    android:pathPrefix="/stories" />
+            </intent-filter>
         </activity>
 
         <!-- Persists the user's in-app language choice across restarts (G-01);

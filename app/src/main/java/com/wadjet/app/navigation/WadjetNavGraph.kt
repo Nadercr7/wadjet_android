@@ -67,6 +67,9 @@ import com.wadjet.app.navigation.lifecycleIsResumed
 import com.wadjet.core.ui.LocalAnimatedVisibilityScope
 import com.wadjet.core.ui.LocalSharedTransitionScope
 
+// E-P8: web origin for https App Links (must match the manifest intent-filter host)
+private const val WEB_BASE = "https://nadercr7-wadjet-v2.hf.space"
+
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun WadjetNavGraph(
@@ -398,6 +401,8 @@ fun WadjetNavGraph(
             )
         }
         composable<Route.Stories>(
+            // E-P8: https App Link for the web stories list URL
+            deepLinks = listOf(androidx.navigation.navDeepLink<Route.Stories>(basePath = "$WEB_BASE/stories")),
             enterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
             exitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
             popEnterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
@@ -421,8 +426,12 @@ fun WadjetNavGraph(
         }
 
         composable<Route.StoryReader>(
-            // B-01: wadjet://story/{storyId}
-            deepLinks = listOf(androidx.navigation.navDeepLink<Route.StoryReader>(basePath = "wadjet://story")),
+            // B-01: wadjet://story/{storyId}; E-P8: https App Link mirrors the
+            // web reader URL (https://…/stories/{storyId})
+            deepLinks = listOf(
+                androidx.navigation.navDeepLink<Route.StoryReader>(basePath = "wadjet://story"),
+                androidx.navigation.navDeepLink<Route.StoryReader>(basePath = "$WEB_BASE/stories"),
+            ),
         ) {
             val viewModel: StoryReaderViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
