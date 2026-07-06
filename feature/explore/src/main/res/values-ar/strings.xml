@@ -31,7 +31,8 @@
     <string name="detail_recommendations">قد يعجبك أيضًا</string>
     <string name="detail_related_sites">مواقع ذات صلة</string>
     <string name="detail_wikipedia">ويكيبيديا</string>
-    <string name="detail_read_wikipedia">اقرأ على ويكيبيديا ←</string>
+    <!-- G-05 -->
+    <string name="detail_read_wikipedia">اقرأ على ويكيبيديا</string>
     <string name="detail_highlights">أبرز المعالم</string>
     <string name="detail_notable_pharaohs">فراعنة بارزون</string>
     <string name="detail_notable_tombs">مقابر بارزة</string>

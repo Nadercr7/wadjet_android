@@ -18,8 +18,9 @@
     <string name="reader_stop_narrate">إيقاف</string>
     <string name="reader_narrate">تشغيل السرد</string>
     <string name="reader_loading">جاري تحميل القصة…</string>
-    <string name="reader_prev_chapter">→ السابق</string>
-    <string name="reader_next_chapter">التالي ←</string>
+    <!-- G-05 -->
+    <string name="reader_prev_chapter">السابق</string>
+    <string name="reader_next_chapter">التالي</string>
     <string name="reader_story_complete">تمت القصة!</string>
     <string name="reader_score_label">النتيجة</string>
     <string name="reader_glyphs_label">الرموز</string>

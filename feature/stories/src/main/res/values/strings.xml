@@ -18,8 +18,9 @@
     <string name="reader_stop_narrate">Stop</string>
     <string name="reader_narrate">Narrate</string>
     <string name="reader_loading">Loading story…</string>
-    <string name="reader_prev_chapter">← Previous</string>
-    <string name="reader_next_chapter">Next →</string>
+    <!-- G-05: no baked-in directional arrows — they don't mirror in RTL -->
+    <string name="reader_prev_chapter">Previous</string>
+    <string name="reader_next_chapter">Next</string>
     <string name="reader_story_complete">Story Complete</string>
     <string name="reader_score_label">Score</string>
     <string name="reader_glyphs_label">Glyphs</string>

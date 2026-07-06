@@ -31,6 +31,8 @@ object WadjetColors {
     val Success = Color(0xFF4CAF50)
     val Error = Color(0xFFEF4444)
     val Warning = Color(0xFFF59E0B)
+    val ErrorContainer = Color(0xFF93000A)
+    val OnErrorContainer = Color(0xFFFFDAD6)
 
     // Difficulty — Egyptian pigment palette
     val DifficultyBeginner = Color(0xFFD4AF37)       // Gold — like new gold jewelry

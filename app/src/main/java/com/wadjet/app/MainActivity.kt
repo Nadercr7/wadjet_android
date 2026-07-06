@@ -171,7 +171,7 @@ private fun WadjetApp(
             ?.substringBefore('/')?.substringBefore('?')?.substringAfterLast('.')
         if (analytics != null && !screen.isNullOrBlank()) analytics.logScreenView(screen)
     }
-    val isOffline by networkMonitor.isOnline.collectAsStateWithLifecycle(initialValue = true)
+    val isOnline by networkMonitor.isOnline.collectAsStateWithLifecycle(initialValue = true)
     var showQuickSettings by remember { mutableStateOf(false) }
 
     // Reactive auth state observation — navigate to Welcome ONLY on a real
@@ -327,7 +327,7 @@ private fun WadjetApp(
         ) { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)) {
                 Column {
-                    OfflineIndicator(isOffline = !isOffline)
+                    OfflineIndicator(isOffline = !isOnline)
 
                     WadjetNavGraph(
                         navController = navController,

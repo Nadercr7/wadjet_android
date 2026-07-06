@@ -31,7 +31,8 @@
     <string name="detail_recommendations">Recommendations</string>
     <string name="detail_related_sites">Related Sites</string>
     <string name="detail_wikipedia">Wikipedia</string>
-    <string name="detail_read_wikipedia">Read on Wikipedia →</string>
+    <!-- G-05: no baked-in directional arrow — doesn't mirror in RTL -->
+    <string name="detail_read_wikipedia">Read on Wikipedia</string>
     <string name="detail_highlights">Highlights</string>
     <string name="detail_notable_pharaohs">Notable Pharaohs</string>
     <string name="detail_notable_tombs">Notable Tombs</string>
