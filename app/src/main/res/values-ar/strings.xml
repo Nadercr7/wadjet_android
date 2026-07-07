@@ -3,6 +3,10 @@
     <string name="top_bar_profile">الملف الشخصي</string>
     <string name="top_bar_settings">الإعدادات</string>
 
+    <!-- Scan-result empty state (localized + scribe voice) -->
+    <string name="scan_result_not_found_title">ضاع هذا الفحص</string>
+    <string name="scan_result_not_found_subtitle">تعذّر العثور على هذا الفحص. قد لا يكون محفوظًا بعد الآن.</string>
+
     <!-- U7: first-run onboarding carousel (scribe voice) -->
     <string name="onboarding_skip">تخطٍّ</string>
     <string name="onboarding_next">التالي</string>

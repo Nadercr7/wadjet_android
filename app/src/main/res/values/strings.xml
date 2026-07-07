@@ -3,6 +3,10 @@
     <string name="top_bar_profile">Profile</string>
     <string name="top_bar_settings">Settings</string>
 
+    <!-- Scan-result empty state (localized + scribe voice) -->
+    <string name="scan_result_not_found_title">This scan slipped away</string>
+    <string name="scan_result_not_found_subtitle">We couldn\'t find this scan. It may no longer be saved.</string>
+
     <!-- U7: first-run onboarding carousel (scribe voice) -->
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_next">Next</string>

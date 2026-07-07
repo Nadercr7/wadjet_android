@@ -255,8 +255,9 @@ fun WadjetNavGraph(
                     ) {
                         com.wadjet.core.designsystem.component.EmptyState(
                             glyph = "\uD80C\uDC80",
-                            title = "Scan not found",
-                            subtitle = state.error ?: "This scan result is no longer available",
+                            title = androidx.compose.ui.res.stringResource(com.wadjet.app.R.string.scan_result_not_found_title),
+                            subtitle = state.error
+                                ?: androidx.compose.ui.res.stringResource(com.wadjet.app.R.string.scan_result_not_found_subtitle),
                         )
                     }
                 }
