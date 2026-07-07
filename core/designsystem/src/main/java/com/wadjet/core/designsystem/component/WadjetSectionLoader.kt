@@ -50,7 +50,7 @@ fun WadjetSectionLoader(
         horizontalArrangement = Arrangement.Center,
     ) {
         Image(
-            painter = painterResource(R.drawable.logo_wadjet),
+            painter = painterResource(R.drawable.ic_logo_eye),
             contentDescription = null,
             modifier = Modifier
                 .size(32.dp)

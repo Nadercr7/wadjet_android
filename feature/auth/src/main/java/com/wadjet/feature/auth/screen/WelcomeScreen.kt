@@ -123,7 +123,7 @@ fun WelcomeScreen(
             FadeUp(visible = visibleSections >= 1) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Image(
-                        painter = painterResource(DesignR.drawable.logo_wadjet),
+                        painter = painterResource(DesignR.drawable.ic_logo_eye),
                         contentDescription = stringResource(R.string.welcome_logo_desc),
                         modifier = Modifier.size(120.dp),
                     )
