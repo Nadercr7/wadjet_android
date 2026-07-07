@@ -25,6 +25,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.wadjet.app.screen.HieroglyphsHubScreen
 import com.wadjet.app.screen.HieroglyphsHubViewModel
+import com.wadjet.app.screen.OnboardingScreen
+import com.wadjet.app.screen.OnboardingViewModel
 import com.wadjet.feature.auth.screen.WelcomeScreen
 import com.wadjet.feature.chat.ChatViewModel
 import com.wadjet.feature.chat.screen.ChatScreen
@@ -102,6 +104,19 @@ fun WadjetNavGraph(
                 fadeOut(tween(150))
         },
     ) {
+        // U7: first-run onboarding — shown once, then never again (persisted flag).
+        composable<Route.Onboarding> {
+            val onboardingViewModel: OnboardingViewModel = hiltViewModel()
+            OnboardingScreen(
+                onFinish = {
+                    onboardingViewModel.markSeen()
+                    navController.navigate(Route.Welcome) {
+                        popUpTo<Route.Onboarding> { inclusive = true }
+                    }
+                },
+            )
+        }
+
         composable<Route.Welcome> {
             WelcomeScreen(
                 webClientId = webClientId,

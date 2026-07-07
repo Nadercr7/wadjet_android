@@ -76,6 +76,7 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var networkMonitor: NetworkMonitor
     @Inject lateinit var toastController: ToastController
     @Inject lateinit var analytics: com.wadjet.core.firebase.WadjetAnalytics
+    @Inject lateinit var userPreferences: com.wadjet.core.data.datastore.UserPreferencesDataStore
 
     // A3: POST_NOTIFICATIONS is runtime-gated on API 33+ — without asking,
     // FCM notifications silently never appear.
@@ -99,6 +100,9 @@ class MainActivity : AppCompatActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         val isLoggedIn = authRepository.isLoggedIn
+        // U7: gate first launch on the onboarding carousel (read once off the splash
+        // thread, mirroring the synchronous auth check above).
+        val onboardingSeen = userPreferences.onboardingSeenBlocking()
         // Ask signed-in users on launch; new sign-ins are asked via onAuthenticated below.
         if (isLoggedIn) maybeRequestNotificationPermission()
         // L-01: the app is forced-dark; auto style would follow the SYSTEM theme
@@ -112,6 +116,7 @@ class MainActivity : AppCompatActivity() {
             WadjetTheme {
                 WadjetApp(
                     initialLoggedIn = isLoggedIn,
+                    onboardingSeen = onboardingSeen,
                     authRepository = authRepository,
                     webClientId = webClientId,
                     networkMonitor = networkMonitor,
@@ -129,6 +134,7 @@ class MainActivity : AppCompatActivity() {
 @Composable
 private fun WadjetApp(
     initialLoggedIn: Boolean,
+    onboardingSeen: Boolean,
     authRepository: AuthRepository,
     webClientId: String,
     networkMonitor: NetworkMonitor,
@@ -200,8 +206,13 @@ private fun WadjetApp(
         }
     }
 
-    // Determine start destination based on auth state
-    val startDestination: Route = if (initialLoggedIn) Route.Landing else Route.Welcome
+    // Determine start destination: unseen onboarding wins on first launch, then
+    // auth state decides between the app and the Welcome/sign-in screen.
+    val startDestination: Route = when {
+        !onboardingSeen -> Route.Onboarding
+        initialLoggedIn -> Route.Landing
+        else -> Route.Welcome
+    }
 
     // Show navigation only on top-level destinations
     val showNav = TopLevelDestination.entries.any { dest ->
