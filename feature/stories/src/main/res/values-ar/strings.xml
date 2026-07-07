@@ -34,7 +34,7 @@
     <string name="reader_hint">تلميح: %1$s</string>
     <string name="reader_write_placeholder">مثال: %1$s</string>
     <string name="reader_correct">صحيح!</string>
-    <string name="reader_incorrect">ليست الإجابة الصحيحة — حاول مرة أخرى</string>
+    <string name="reader_incorrect">ليست الإجابة الصحيحة - حاول مرة أخرى</string>
 
     <!-- ViewModel messages (G-04) -->
     <string name="reader_error_interaction">لم تتم العملية. حاول مرة أخرى.</string>

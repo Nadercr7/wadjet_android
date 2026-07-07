@@ -19,7 +19,7 @@
     <string name="hub_dictionary_title">Dictionary</string>
     <string name="hub_dictionary_desc">Browse 1,000+ hieroglyphic signs with meanings &amp; phonetics</string>
     <string name="hub_write_title">Write in Hieroglyphs</string>
-    <string name="hub_write_desc">Type English, get hieroglyphs — powered by AI transliteration</string>
+    <string name="hub_write_desc">Type English, get hieroglyphs - powered by AI transliteration</string>
     <string name="hub_how_scanning_title">How Scanning Works</string>
     <string name="hub_how_step1">Take or upload a photo of hieroglyphs</string>
     <string name="hub_how_step2">AI detects individual glyphs with bounding boxes</string>

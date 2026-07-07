@@ -18,7 +18,7 @@
     <string name="reader_stop_narrate">Stop</string>
     <string name="reader_narrate">Narrate</string>
     <string name="reader_loading">Loading story…</string>
-    <!-- G-05: no baked-in directional arrows — they don't mirror in RTL -->
+    <!-- G-05: no baked-in directional arrows - they don't mirror in RTL -->
     <string name="reader_prev_chapter">Previous</string>
     <string name="reader_next_chapter">Next</string>
     <string name="reader_story_complete">Story Complete</string>
@@ -34,7 +34,7 @@
     <string name="reader_hint">Hint: %1$s</string>
     <string name="reader_write_placeholder">e.g. %1$s</string>
     <string name="reader_correct">Correct!</string>
-    <string name="reader_incorrect">Not quite — try again</string>
+    <string name="reader_incorrect">Not quite - try again</string>
 
     <!-- ViewModel messages (G-04) -->
     <string name="reader_error_interaction">That didn\'t go through. Give it another try.</string>

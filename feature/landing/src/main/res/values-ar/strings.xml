@@ -8,19 +8,19 @@
     <!-- Hieroglyphs path card -->
     <string name="landing_path_hiero_title">الهيروغليفية</string>
     <string name="landing_path_hiero_subtitle">فك رموز مصر القديمة</string>
-    <string name="landing_feature_scan">فحص وتعرّف — اكتشف الرموز من الصور</string>
-    <string name="landing_feature_translate">نقحرة — اقرأ المصرية القديمة بصوت مسموع</string>
-    <string name="landing_feature_dictionary">القاموس — أكثر من ١٠٠٠ علامة جاردنر</string>
-    <string name="landing_feature_write">اكتب — أنشئ نصوصًا بالهيروغليفية</string>
+    <string name="landing_feature_scan">فحص وتعرّف - اكتشف الرموز من الصور</string>
+    <string name="landing_feature_translate">نقحرة - اقرأ المصرية القديمة بصوت مسموع</string>
+    <string name="landing_feature_dictionary">القاموس - أكثر من ١٠٠٠ علامة جاردنر</string>
+    <string name="landing_feature_write">اكتب - أنشئ نصوصًا بالهيروغليفية</string>
     <string name="landing_start_scanning">ابدأ الفحص</string>
 
     <!-- Landmarks path card -->
     <string name="landing_path_landmark_title">المعالم</string>
     <string name="landing_path_landmark_subtitle">استكشف المواقع والآثار</string>
-    <string name="landing_feature_explore">استكشاف — أهرامات ومعابد ومتاحف</string>
-    <string name="landing_feature_identify">تعرّف — صوّر معلمًا والذكاء الاصطناعي يخبرك</string>
-    <string name="landing_feature_ai_desc">وصف بالذكاء الاصطناعي — تاريخ غني لكل موقع</string>
-    <string name="landing_feature_discover">اكتشف — توصيات ومواقع مشابهة</string>
+    <string name="landing_feature_explore">استكشاف - أهرامات ومعابد ومتاحف</string>
+    <string name="landing_feature_identify">تعرّف - صوّر معلمًا والذكاء الاصطناعي يخبرك</string>
+    <string name="landing_feature_ai_desc">وصف بالذكاء الاصطناعي - تاريخ غني لكل موقع</string>
+    <string name="landing_feature_discover">اكتشف - توصيات ومواقع مشابهة</string>
     <string name="landing_start_exploring">ابدأ الاستكشاف</string>
 
     <!-- Quick actions -->
