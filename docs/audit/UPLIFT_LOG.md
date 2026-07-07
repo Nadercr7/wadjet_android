@@ -49,7 +49,23 @@ Commits: `3608408` [U10 fonts], `ce3b465` [U6/U2/U10/U5/U8 core], `46eff2d` [U8 
 - **New direction (owned outright, zero licensing):** author ALL 3D originally as STYLIZED-PREMIUM gilded relief. **Hero = the approved Eye-of-Wadjet logo extruded into a 3D gilded relief** (gold PBR, procedural studio env, slow auto-rotate). Building now (`eye3d` sub-build). Web = `<model-viewer>`/vanilla Three.js lazy-loaded + fallbacks; Android = pre-rendered turntable. To be SHOWN for sign-off before wider rollout.
 - After sign-off: a curated 2-4 original gold accents (ankh / cartouche-wordmark / scarab / sun-disk / extruded hieroglyph relief) only where they serve a surface.
 
-### Still pending in 8B
-Logo Direction B full rollout (nav/loading/OG lockups + Android launcher stays cobra-W monogram) · U5 branded splash (Eye) · U3 bespoke nav icons · U7 onboarding · U11 BETA dial-back · wire the 3D Eye into web hero + Android turntable.
+### Phase 8B — DONE (all but U7)
+Bespoke gold locked: **`#C8A24B`**. 3D palette locked: gold `#C8A24B` + deep-navy lapis `#14294A` + obsidian `#0C0C12`.
 
-## Phase 8C — Deep bets: pending.
+| id | change | commits (web / android) |
+|----|--------|--------|
+| I1 | Canonical Eye master vector + favicon recolor | web `86f0944` / android `dc51a9d` |
+| I2 Direction B | Eye is the primary mark across nav/loaders/hero/footer; cobra-W stays the app icon | web `4d47256` / android `83e8f31` |
+| D1/D2 3D Eye hero | Stela + lapis inset + gentle sway; web `<model-viewer>` (lazy, fallbacks) + Android 48-frame turntable; deep-navy color pass | web `e0d3872`,`2b346d9` / android `ebc863a`,`ab9ac2d` |
+| D4 accents | Ankh + cartouche-"WADJET" + hieroglyph panel (color-matched). Web: footer seal, hub header, scan empty, dashboard. Android: settings seal, hub header | web `9cf37fe`,`5527525` / android `9f9de76` |
+| U5 | Branded splash (gold Eye reveal) | android `7cb9e5d` |
+| U3 | Bespoke Egyptian nav icons (ankh/papyrus/pyramid/book/ibis) | android `9120eb4` |
+| U11 | Em-dash purge (178 web + 38 android) | web `054a01a` / android `a4d30fa` |
+| H1 | Android scribe voice (19 strings) | android `d0c616c` |
+| C1 | EN/AR switcher | already implemented (verified) |
+
+3D authored 100% procedurally (no external/licensed assets): `eye3d.glb` 0.98 MB, accents 0.5-1.0 MB each, all round-trip verified. Turntable 354 KB in the Android base APK (no 3D engine).
+
+**Remaining: U7 first-run onboarding** (a first-run pager + persisted seen-flag + entry wiring) — deferred for a focused, verified implementation.
+
+## Phase 8C — Deep bets: pending (U1 spacing tokens, C4 Play Asset Delivery, Arabic plurals, deep links, a11y, store readiness).
