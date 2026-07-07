@@ -11,7 +11,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -267,6 +271,18 @@ fun SettingsScreen(
                 ) {
                     Text(stringResource(R.string.settings_sign_out_title), color = WadjetColors.Error, style = MaterialTheme.typography.labelLarge)
                 }
+            }
+
+            // Gold cartouche brand seal (static hero-lit 3D accent)
+            item {
+                Image(
+                    painter = painterResource(DesignR.drawable.accent_cartouche),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 72.dp),
+                )
             }
 
             item { Spacer(modifier = Modifier.height(32.dp)) }
