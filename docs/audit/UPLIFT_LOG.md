@@ -68,4 +68,63 @@ Bespoke gold locked: **`#C8A24B`**. 3D palette locked: gold `#C8A24B` + deep-nav
 
 **Remaining: U7 first-run onboarding** (a first-run pager + persisted seen-flag + entry wiring) — deferred for a focused, verified implementation.
 
-## Phase 8C — Deep bets: pending (U1 spacing tokens, C4 Play Asset Delivery, Arabic plurals, deep links, a11y, store readiness).
+## v1.2.0 finalization — the shippable release (uplift/premium → main / master)
+
+Everything below is on `uplift/premium` in both repos, one reversible commit per concern,
+green before and after each (Android `:app:assembleDebug`; Web `pytest` 244 passed + local
+boot). "Made By Mr Robot" untouched. Dark-only by design.
+
+### Stage 1 — U7 first-run onboarding (Android)  — EMULATOR-VERIFIED end-to-end
+Three-page `HorizontalPager` (Read the walls / Walk through Egypt / Ask Thoth) shown once
+before Welcome, gated on a persisted `UserPreferencesDataStore.onboarding_seen` flag read
+off the splash thread. Bespoke glyph icons in a gold ring, `GoldGradientText` titles,
+animated dot indicator, skippable, accessible (labelled icons, page-position announcement,
+48dp targets). No auto-advance. Verified live: pages render premium, last page CTA swaps to
+"Begin", finishing persists the flag, and relaunch skips straight to Welcome. Web mirror:
+the existing public `/welcome` marketing page already serves the same first-visit role.
+Commit `492ba20`.
+
+### Stage 2 — Full humanization (H1/H3 completion, H2 plurals)  — BOTH platforms, EN + AR
+No dedicated humanization skill exists locally (the `25-Humanization` repo is AI-framework
+libraries), so this was a rigorous manual editorial pass. Warm in-character scribe voice on
+empty/error/loading states, Thoth replies, onboarding, and tips; MSA Arabic standardized
+(residual colloquialisms like "أكتر/زي ما/اتعلم/كمّل" removed); zero em-dashes and a
+consistent middot separator replacing " - " hyphen-dashes; "..." → "…". H2 `<plurals>` for
+real Arabic number agreement (zero/one/two/few/many/other), wired via `pluralStringResource`
+/ `getQuantityString`: chat message-count + relative time, stories glyphs + chapters. STATE.md
+"Humanization SKIPPED" line retired. Commits: web `035e8fb`, android `dc2158c`.
+
+### Stage 3 — UI/UX completeness (taste)
+Full-codebase audit: 0 em-dashes in user copy, 0 stray hyphen-dashes, all Android user text
+localized — except the ScanResult "not found" empty state (the one hardcoded-English
+literal), now localized + warmed ("This scan slipped away") EN+AR. Web: middot separator in
+the site-wide `<title>`, every per-page title / OG title, and the dictionary tooltip.
+Commits: android `af180d5`, web `2a00a07`.
+
+### Stage 4 — 8C deep bets
+`docs/audit/RELEASE_1.2.0.md`: humanized Play listing (title, short/full desc EN+AR),
+What's-new, Data-safety summary, verified deep-link inventory, a11y notes, screenshot
+shot-list. Deep links already implemented (wadjet://landmark, wadjet://story, https App
+Links for /stories). a11y verified strong on both (AA contrast, ≥48dp targets, content
+descriptions, reduced-motion, RTL `<html dir>` + skip-link + aria-live on web). Play Asset
+Delivery real-time 3D recorded as a proposed follow-up, not shipped unreviewed. Commit
+`1cd3787`.
+
+### Stage 5 — Verification
+Android `assembleDebug` green throughout; web `pytest` 244 passed (108s) post-humanization
+and again (244 passed) post-template-changes. Web gallery captured live via headless Chrome
+against a local boot: `/welcome` EN (3D Eye hero rendering via SwiftShader WebGL) + AR (RTL,
+MSA copy), plus /scan /explore /chat /stories /dictionary. Android gallery: onboarding ×3 +
+Welcome (deep-navy turntable) + branded splash. Authed Android screens are build-verified
+(Compose exposes no uiautomator nodes for sign-in automation); their humanized copy is shown
+live on the public web mirrors.
+
+### Stage 6 — Release prep
+`versionCode 3 / versionName 1.2.0`, production BASE_URL, R8 minify + resource-shrink, signed
+with `wadjet-release.jks`. Web `landing.android_version` → 1.2.0. Signed APK path/size/sha256,
+`static/downloads/wadjet.apk` LFS refresh, clean `uplift/premium → main` (Android) / `master`
+(web) merges, and the exact push sequence are in the release report.
+
+## Phase 8C / U1 spacing-dimens tokens — deferred (documented): a formal `dimens` scale is a
+low-risk follow-up; current spacing is already consistent via Compose `.dp` literals and the
+gold/text token ramps.
