@@ -34,7 +34,7 @@
     <string name="reader_hint">Hint: %1$s</string>
     <string name="reader_write_placeholder">e.g. %1$s</string>
     <string name="reader_correct">Correct!</string>
-    <string name="reader_incorrect">Not quite - try again</string>
+    <string name="reader_incorrect">Not quite. Try again</string>
 
     <!-- ViewModel messages (G-04) -->
     <string name="reader_error_interaction">That didn\'t go through. Give it another try.</string>
@@ -47,4 +47,14 @@
     <string name="label_difficulty_beginner">Beginner</string>
     <string name="label_difficulty_intermediate">Intermediate</string>
     <string name="label_difficulty_advanced">Advanced</string>
+
+    <!-- H2: plurals for number agreement -->
+    <plurals name="stories_glyph_count_plural">
+        <item quantity="one">%d glyph</item>
+        <item quantity="other">%d glyphs</item>
+    </plurals>
+    <plurals name="stories_chapter_count_plural">
+        <item quantity="one">%d chapter</item>
+        <item quantity="other">%d chapters</item>
+    </plurals>
 </resources>

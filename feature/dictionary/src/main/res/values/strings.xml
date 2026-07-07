@@ -15,19 +15,19 @@
 
     <!-- Learn tab -->
     <string name="learn_alphabet_title">Egyptian Alphabet</string>
-    <string name="learn_alphabet_subtitle">The 25 uniliteral signs - tap any to explore</string>
+    <string name="learn_alphabet_subtitle">The 25 uniliteral signs · tap any to explore</string>
     <string name="learn_lessons_title">Lessons</string>
     <string name="learn_level">Level %1$d</string>
     <string name="lesson_1_title">The Alphabet</string>
-    <string name="lesson_1_desc">Learn the 26 uniliteral signs - the building blocks of hieroglyphic writing.</string>
+    <string name="lesson_1_desc">Learn the 26 uniliteral signs, the building blocks of hieroglyphic writing.</string>
     <string name="lesson_2_title">Common Words</string>
     <string name="lesson_2_desc">Combine signs to read and write frequently used Egyptian words.</string>
     <string name="lesson_3_title">Royal Names</string>
-    <string name="lesson_3_desc">Read cartouches - the oval frames containing pharaoh names.</string>
+    <string name="lesson_3_desc">Read cartouches, the oval frames containing pharaoh names.</string>
     <string name="lesson_4_title">Determinatives</string>
     <string name="lesson_4_desc">Silent signs that hint at a word\'s meaning category.</string>
     <string name="lesson_5_title">Full Sentences</string>
-    <string name="lesson_5_desc">Put it all together - read complete inscriptions.</string>
+    <string name="lesson_5_desc">Put it all together and read complete inscriptions.</string>
 
     <!-- Lesson screen -->
     <string name="lesson_loading">Loading lesson…</string>

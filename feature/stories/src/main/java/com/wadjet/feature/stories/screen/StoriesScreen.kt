@@ -48,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -286,7 +287,7 @@ private fun StoryCard(
                     DifficultyBadge(story.difficulty)
                     if (story.glyphsTaught.isNotEmpty()) {
                         Text(
-                            text = stringResource(R.string.stories_glyph_count, story.glyphsTaught.size),
+                            text = pluralStringResource(R.plurals.stories_glyph_count_plural, story.glyphsTaught.size, story.glyphsTaught.size),
                             color = WadjetColors.Gold,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier
@@ -301,7 +302,7 @@ private fun StoryCard(
                         style = MaterialTheme.typography.bodySmall,
                     )
                     Text(
-                        text = stringResource(R.string.stories_chapter_count, story.chapterCount),
+                        text = pluralStringResource(R.plurals.stories_chapter_count_plural, story.chapterCount, story.chapterCount),
                         color = WadjetColors.TextMuted,
                         style = MaterialTheme.typography.bodySmall,
                     )

@@ -6,7 +6,7 @@
     <string name="explore_empty_search">No results for \"%1$s\"</string>
     <string name="explore_empty_title">No landmarks found</string>
     <string name="explore_empty_search_subtitle">Try a different search term</string>
-    <string name="explore_empty_subtitle">Explore Egypt\'s ancient wonders - check back soon</string>
+    <string name="explore_empty_subtitle">Explore Egypt\'s ancient wonders, check back soon</string>
     <string name="explore_featured">Featured</string>
     <string name="explore_all_landmarks">All Landmarks</string>
     <string name="explore_loading_more">Loading more…</string>

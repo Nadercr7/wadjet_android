@@ -45,11 +45,37 @@
     <string name="chat_error_daily_limit">تم بلوغ الحد اليومي للرسائل (%1$d). حاول مجددًا غدًا.</string>
     <string name="chat_error_send_failed">لم تصل رسالتك إلى تحوت. تحقّق من اتصالك وحاول مرة أخرى.</string>
     <string name="chat_error_generic_reply">تمزّقت البردية قبل أن أُكمل فكرتي. اسألني مرة أخرى.</string>
-    <string name="chat_error_timeout_reply">انتهت مهلة الاتصال. حاول مرة أخرى.</string>
+    <string name="chat_error_timeout_reply">تسلّل الاتصال إلى الرمال. اسألني مرة أخرى بعد قليل.</string>
     <string name="chat_error_timeout">انتهت مهلة الاتصال</string>
     <string name="chat_generating_audio">جاري توليد الصوت…</string>
     <string name="chat_error_stt_unavailable">التحويل الصوتي غير متاح على الخادم. اضغط زر الميكروفون لاستخدام التعرف على الكلام في الجهاز.</string>
     <string name="chat_cleared_toast">تم مسح المحادثة</string>
-    <string name="chat_cleared_message">تم مسح المحادثة. كيف أساعدك؟</string>
+    <string name="chat_cleared_message">بردية جديدة. ماذا نكتشف؟</string>
     <string name="chat_tell_me_about">أخبرني عن %1$s.</string>
+
+    <!-- H2: plurals for Arabic number agreement -->
+    <plurals name="chat_message_count_plural">
+        <item quantity="zero">لا رسائل</item>
+        <item quantity="one">رسالة واحدة</item>
+        <item quantity="two">رسالتان</item>
+        <item quantity="few">%d رسائل</item>
+        <item quantity="many">%d رسالة</item>
+        <item quantity="other">%d رسالة</item>
+    </plurals>
+    <plurals name="time_minutes_ago_plural">
+        <item quantity="zero">الآن</item>
+        <item quantity="one">منذ دقيقة</item>
+        <item quantity="two">منذ دقيقتين</item>
+        <item quantity="few">منذ %d دقائق</item>
+        <item quantity="many">منذ %d دقيقة</item>
+        <item quantity="other">منذ %d دقيقة</item>
+    </plurals>
+    <plurals name="time_hours_ago_plural">
+        <item quantity="zero">الآن</item>
+        <item quantity="one">منذ ساعة</item>
+        <item quantity="two">منذ ساعتين</item>
+        <item quantity="few">منذ %d ساعات</item>
+        <item quantity="many">منذ %d ساعة</item>
+        <item quantity="other">منذ %d ساعة</item>
+    </plurals>
 </resources>

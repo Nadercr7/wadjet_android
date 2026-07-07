@@ -106,6 +106,7 @@ import com.wadjet.core.domain.model.ChatMessage
 import com.wadjet.core.domain.model.ChatMessage.Role
 import com.wadjet.feature.chat.ChatUiState
 import com.wadjet.feature.chat.ConversationSummary
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.wadjet.core.common.audio.trySetLanguageFor
 import com.wadjet.core.designsystem.R as DesignR
@@ -362,7 +363,7 @@ fun ChatScreen(
                                     overflow = TextOverflow.Ellipsis,
                                 )
                                 Text(
-                                    text = stringResource(R.string.chat_message_count, convo.messageCount),
+                                    text = pluralStringResource(R.plurals.chat_message_count_plural, convo.messageCount, convo.messageCount),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = WadjetColors.TextMuted,
                                 )
@@ -787,8 +788,8 @@ private fun formatRelativeTime(context: android.content.Context, timestamp: Long
     val diff = now - timestamp
     return when {
         diff < 60_000 -> context.getString(R.string.time_just_now)
-        diff < 3_600_000 -> context.getString(R.string.time_minutes_ago, diff / 60_000)
-        diff < 86_400_000 -> context.getString(R.string.time_hours_ago, diff / 3_600_000)
+        diff < 3_600_000 -> (diff / 60_000).toInt().let { context.resources.getQuantityString(R.plurals.time_minutes_ago_plural, it, it) }
+        diff < 86_400_000 -> (diff / 3_600_000).toInt().let { context.resources.getQuantityString(R.plurals.time_hours_ago_plural, it, it) }
         diff < 172_800_000 -> context.getString(R.string.time_yesterday)
         else -> {
             val sdf = java.text.SimpleDateFormat("MMM d", Locale.getDefault())

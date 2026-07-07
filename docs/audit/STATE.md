@@ -222,7 +222,14 @@ Thoth renders; session survives force-stop.
 
 # PHASE 4 — approved enhancements E-P8, E-P9, E-P1 (2026-07-06)
 
-Humanization SKIPPED per supervisor (no local skill); existing copy untouched.
+Humanization: COMPLETED in the v1.2.0 uplift (branch `uplift/premium`). No dedicated
+humanization skill exists locally (the `25-Humanization` repo is AI-framework libraries,
+not a copy skill), so this was a rigorous manual editorial pass: warm in-character "scribe"
+voice across empty/error/loading states, Thoth replies, onboarding, and tips on BOTH web and
+Android (EN + AR); MSA Arabic standardized (residual colloquialisms removed); em-dash-free
+punctuation and a consistent middot separator; `…` ellipses; and H2 `<plurals>` for Arabic
+number agreement (chat message-count + relative time, stories glyphs + chapters). Canonical
+name واجِت preserved throughout. See docs/audit/UPLIFT_LOG.md (Stage H2/H4).
 
 ## Per-enhancement results (commit ↔ proof)
 

@@ -34,7 +34,7 @@
     <string name="hub_dictionary_title">القاموس</string>
     <string name="hub_dictionary_desc">تصفّح أكثر من ١٠٠٠ رمز هيروغليفي مع المعاني والنطق</string>
     <string name="hub_write_title">اكتب بالهيروغليفية</string>
-    <string name="hub_write_desc">اكتب بالإنجليزية واحصل على هيروغليفية - بالذكاء الاصطناعي</string>
+    <string name="hub_write_desc">اكتب بالإنجليزية واحصل على هيروغليفية · بالذكاء الاصطناعي</string>
     <string name="hub_how_scanning_title">كيف يعمل المسح</string>
     <string name="hub_how_step1">التقط أو ارفع صورة للهيروغليفية</string>
     <string name="hub_how_step2">الذكاء الاصطناعي يكتشف الرموز الفردية</string>

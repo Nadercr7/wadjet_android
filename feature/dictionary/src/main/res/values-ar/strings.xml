@@ -15,19 +15,19 @@
 
     <!-- Learn tab -->
     <string name="learn_alphabet_title">الأبجدية المصرية</string>
-    <string name="learn_alphabet_subtitle">العلامات الأحادية الـ٢٥ - اضغط أي علامة لاستكشافها</string>
+    <string name="learn_alphabet_subtitle">العلامات الأحادية الـ٢٥ · اضغط أي علامة لاستكشافها</string>
     <string name="learn_lessons_title">الدروس</string>
     <string name="learn_level">المستوى %1$d</string>
     <string name="lesson_1_title">الأبجدية</string>
-    <string name="lesson_1_desc">تعلّم العلامات الأحادية الـ٢٦ - اللبنات الأساسية للكتابة الهيروغليفية.</string>
+    <string name="lesson_1_desc">تعلّم العلامات الأحادية الـ٢٦، اللبنات الأساسية للكتابة الهيروغليفية.</string>
     <string name="lesson_2_title">كلمات شائعة</string>
     <string name="lesson_2_desc">اجمع العلامات لقراءة وكتابة كلمات مصرية شائعة.</string>
     <string name="lesson_3_title">أسماء ملكية</string>
-    <string name="lesson_3_desc">اقرأ الخراطيش - الأطر البيضاوية التي تحمل أسماء الفراعنة.</string>
+    <string name="lesson_3_desc">اقرأ الخراطيش، الأطر البيضاوية التي تحمل أسماء الفراعنة.</string>
     <string name="lesson_4_title">المخصّصات</string>
     <string name="lesson_4_desc">علامات صامتة تشير إلى فئة معنى الكلمة.</string>
     <string name="lesson_5_title">جمل كاملة</string>
-    <string name="lesson_5_desc">اجمع كل ما تعلمته - اقرأ نقوشًا كاملة.</string>
+    <string name="lesson_5_desc">اجمع كل ما تعلمته، ثم اقرأ نقوشًا كاملة.</string>
 
     <!-- Lesson screen -->
     <string name="lesson_loading">جاري تحميل الدرس…</string>
