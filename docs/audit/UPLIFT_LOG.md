@@ -37,7 +37,19 @@ Commits: `3608408` [U10 fonts], `ce3b465` [U6/U2/U10/U5/U8 core], `46eff2d` [U8 
 ---
 
 ## Phase 8B — Showpieces (in progress / pending sign-off)
-- 3D mask: original model built (`mask.glb` 1.41 MB, 48-frame turntable 0.78 MB, hero fallback, gold `#C8A24B`, ~67k tris, 100% procedural, we own it). First render read too cartoonish for a premium hero; art direction being iterated before sign-off. NOT yet integrated.
-- Logo Direction B, U3 nav icons, U7 onboarding, H1 Android scribe voice, C1 EN/AR switcher: pending.
+
+| id | change | status | proof |
+|----|--------|--------|-------|
+| I1 | Canonical Eye-of-Wadjet master vector (Direction B primary mark), gold `#C8A24B`: web `wadjet-eye.svg` + tile; Android `ic_logo_eye.xml`; recolored cobra-W `favicon.svg` to bespoke gold | DONE (web `86f0944`; android pending build) | rendered tile PNG reviewed — clean premium Eye of Horus |
+| H1 | Android scribe voice: 19 content/Thoth error strings (EN+AR) rewritten warm + in-character | DONE, committed `d0c616c` | assembleDebug green; XML validated |
+| C1 | In-app EN/AR switcher | ALREADY IMPLEMENTED (pre-dates this phase; catalog "missing" was stale from Phase-1 audit) | `LanguageSection.kt` wired in `SettingsScreen.kt:191` + quick dialog; `locales_config.xml`; `AppCompatDelegate.setApplicationLocales`; strings present; build green. RTL flip to be functionally confirmed in next signed-in emulator pass |
+
+### 3D showpiece — direction change (supervisor)
+- The from-scratch **Tutankhamun mask** (`mask.glb`) was abandoned: procedural primitive sculpting read cartoonish, would undercut premium. No commercially-licensed mask could be sourced (free3d is mixed-license and bot-blocked; Meshy is paid).
+- **New direction (owned outright, zero licensing):** author ALL 3D originally as STYLIZED-PREMIUM gilded relief. **Hero = the approved Eye-of-Wadjet logo extruded into a 3D gilded relief** (gold PBR, procedural studio env, slow auto-rotate). Building now (`eye3d` sub-build). Web = `<model-viewer>`/vanilla Three.js lazy-loaded + fallbacks; Android = pre-rendered turntable. To be SHOWN for sign-off before wider rollout.
+- After sign-off: a curated 2-4 original gold accents (ankh / cartouche-wordmark / scarab / sun-disk / extruded hieroglyph relief) only where they serve a surface.
+
+### Still pending in 8B
+Logo Direction B full rollout (nav/loading/OG lockups + Android launcher stays cobra-W monogram) · U5 branded splash (Eye) · U3 bespoke nav icons · U7 onboarding · U11 BETA dial-back · wire the 3D Eye into web hero + Android turntable.
 
 ## Phase 8C — Deep bets: pending.
