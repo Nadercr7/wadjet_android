@@ -27,7 +27,7 @@
     <string name="reader_read_again">اقرأ مرة أخرى</string>
     <string name="reader_back_to_stories">العودة إلى الحكايات</string>
     <string name="reader_scene_desc">رسم توضيحي للمشهد</string>
-    <string name="reader_image_failed">فشل تحميل الصورة</string>
+    <string name="reader_image_failed">تعذّر تحميل هذه الصورة.</string>
     <string name="reader_tap_discover">اضغط لاكتشاف الرمز</string>
     <string name="reader_glyph_learned">تم تعلم الرمز</string>
     <string name="reader_write_prompt">اكتب كود جاردنر لكلمة: %1$s</string>
@@ -37,9 +37,9 @@
     <string name="reader_incorrect">ليست الإجابة الصحيحة — حاول مرة أخرى</string>
 
     <!-- ViewModel messages (G-04) -->
-    <string name="reader_error_interaction">فشل التفاعل</string>
+    <string name="reader_error_interaction">لم تتم العملية. حاول مرة أخرى.</string>
     <string name="reader_generating_narration">جاري توليد السرد…</string>
-    <string name="reader_error_load">تعذر تحميل القصة</string>
+    <string name="reader_error_load">تعذّر فتح هذه القصة. تحقّق من اتصالك وحاول مرة أخرى.</string>
     <string name="reader_generating_scene">جاري إنشاء المشهد…</string>
 
     <!-- G-07 -->

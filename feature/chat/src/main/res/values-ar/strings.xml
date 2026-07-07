@@ -43,8 +43,8 @@
 
     <!-- ViewModel messages (G-04) -->
     <string name="chat_error_daily_limit">تم بلوغ الحد اليومي للرسائل (%1$d). حاول مجددًا غدًا.</string>
-    <string name="chat_error_send_failed">فشل إرسال الرسالة</string>
-    <string name="chat_error_generic_reply">عذرًا، حدث خطأ. حاول مرة أخرى.</string>
+    <string name="chat_error_send_failed">لم تصل رسالتك إلى تحوت. تحقّق من اتصالك وحاول مرة أخرى.</string>
+    <string name="chat_error_generic_reply">تمزّقت البردية قبل أن أُكمل فكرتي. اسألني مرة أخرى.</string>
     <string name="chat_error_timeout_reply">انتهت مهلة الاتصال. حاول مرة أخرى.</string>
     <string name="chat_error_timeout">انتهت مهلة الاتصال</string>
     <string name="chat_generating_audio">جاري توليد الصوت…</string>

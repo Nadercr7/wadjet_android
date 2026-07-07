@@ -77,10 +77,10 @@
     <string name="scan_history_undo">تراجع</string>
 
     <!-- ViewModel messages (G-04) -->
-    <string name="scan_error_invalid_id">معرّف فحص غير صالح</string>
+    <string name="scan_error_invalid_id">لم نعثر على هذا الفحص. حاول الفحص مرة أخرى.</string>
     <string name="scan_error_daily_limit">تم بلوغ الحد اليومي للفحص (%1$d). حاول مجددًا غدًا.</string>
     <string name="scan_toast_daily_limit">تم بلوغ الحد اليومي للفحص</string>
-    <string name="scan_error_failed">فشل الفحص</string>
-    <string name="scan_error_read_image">تعذر قراءة الصورة المختارة</string>
-    <string name="scan_error_process_image">تعذر معالجة الصورة</string>
+    <string name="scan_error_failed">لم يكتمل الفحص. جرّب صورة أخرى.</string>
+    <string name="scan_error_read_image">تعذّرت قراءة هذه الصورة. جرّب صورة أخرى.</string>
+    <string name="scan_error_process_image">تعذّرت معالجة هذه الصورة. جرّب صورة أوضح.</string>
 </resources>

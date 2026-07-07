@@ -77,10 +77,10 @@
     <string name="scan_history_undo">Undo</string>
 
     <!-- ViewModel messages (G-04) -->
-    <string name="scan_error_invalid_id">Invalid scan ID</string>
+    <string name="scan_error_invalid_id">We couldn\'t find that scan. Try scanning again.</string>
     <string name="scan_error_daily_limit">Daily scan limit reached (%1$d). Try again tomorrow.</string>
     <string name="scan_toast_daily_limit">Daily scan limit reached</string>
-    <string name="scan_error_failed">Scan failed</string>
-    <string name="scan_error_read_image">Failed to read selected image</string>
-    <string name="scan_error_process_image">Failed to process image</string>
+    <string name="scan_error_failed">The scan didn\'t come through. Try another photo.</string>
+    <string name="scan_error_read_image">We couldn\'t read that image. Try another one.</string>
+    <string name="scan_error_process_image">We couldn\'t process that image. Try a clearer photo.</string>
 </resources>

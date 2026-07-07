@@ -21,8 +21,8 @@
     <string name="dashboard_story_stats">Score: %1$d · Glyphs: %2$d</string>
 
     <!-- ViewModel messages (G-04) -->
-    <string name="dashboard_error_stats">Failed to load stats</string>
-    <string name="dashboard_error_scans">Failed to load scan history</string>
-    <string name="dashboard_error_favorites">Failed to load favorites</string>
-    <string name="dashboard_error_progress">Failed to load story progress</string>
+    <string name="dashboard_error_stats">We couldn\'t gather your stats just now. Pull to refresh to try again.</string>
+    <string name="dashboard_error_scans">We couldn\'t load your scan history. Pull to refresh to try again.</string>
+    <string name="dashboard_error_favorites">We couldn\'t load your favorites. Pull to refresh to try again.</string>
+    <string name="dashboard_error_progress">We couldn\'t load your story progress. Pull to refresh to try again.</string>
 </resources>

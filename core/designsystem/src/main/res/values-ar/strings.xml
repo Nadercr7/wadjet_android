@@ -24,7 +24,7 @@
     <!-- Shared component strings -->
     <string name="error_try_again">حاول مرة أخرى</string>
     <string name="error_state_desc">خطأ</string>
-    <string name="error_unknown">خطأ غير معروف</string>
+    <string name="error_unknown">حدث خطأ ما. يُرجى المحاولة مرة أخرى.</string>
     <string name="offline_no_connection">لا يوجد اتصال بالإنترنت</string>
     <string name="copied_toast">تم النسخ!</string>
 

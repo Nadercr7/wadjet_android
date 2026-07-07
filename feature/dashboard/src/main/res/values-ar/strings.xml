@@ -21,8 +21,8 @@
     <string name="dashboard_story_stats">النقاط: %1$d · الرموز: %2$d</string>
 
     <!-- ViewModel messages (G-04) -->
-    <string name="dashboard_error_stats">تعذر تحميل الإحصائيات</string>
-    <string name="dashboard_error_scans">تعذر تحميل سجل الفحص</string>
-    <string name="dashboard_error_favorites">تعذر تحميل المفضلة</string>
-    <string name="dashboard_error_progress">تعذر تحميل تقدم القصص</string>
+    <string name="dashboard_error_stats">تعذّر جمع إحصاءاتك الآن. اسحب للتحديث وحاول مرة أخرى.</string>
+    <string name="dashboard_error_scans">تعذّر تحميل سجل الفحص. اسحب للتحديث وحاول مرة أخرى.</string>
+    <string name="dashboard_error_favorites">تعذّر تحميل مفضّلاتك. اسحب للتحديث وحاول مرة أخرى.</string>
+    <string name="dashboard_error_progress">تعذّر تحميل تقدّمك في القصص. اسحب للتحديث وحاول مرة أخرى.</string>
 </resources>

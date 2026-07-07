@@ -24,7 +24,7 @@
     <!-- Shared component strings -->
     <string name="error_try_again">Try Again</string>
     <string name="error_state_desc">Error</string>
-    <string name="error_unknown">Unknown error</string>
+    <string name="error_unknown">Something didn\'t work. Please try again.</string>
     <string name="offline_no_connection">No internet connection</string>
     <string name="copied_toast">Copied!</string>
 

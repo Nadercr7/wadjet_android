@@ -62,12 +62,12 @@
     <string name="identify_agreement_best_guess">Best Guess</string>
 
     <!-- ViewModel messages (G-04) -->
-    <string name="explore_error_landmark">Failed to load landmark</string>
-    <string name="explore_error_landmarks">Failed to load landmarks</string>
+    <string name="explore_error_landmark">We couldn\'t load this landmark. Check your connection and try again.</string>
+    <string name="explore_error_landmarks">We couldn\'t load the landmarks. Check your connection and try again.</string>
     <string name="identify_error_daily_limit">Daily scan limit reached (%1$d). Try again tomorrow.</string>
-    <string name="identify_error_failed">Identification failed</string>
-    <string name="identify_error_read_image">Failed to read selected image</string>
-    <string name="identify_error_process_image">Failed to process image</string>
+    <string name="identify_error_failed">We couldn\'t identify this one. Try another photo.</string>
+    <string name="identify_error_read_image">We couldn\'t read that image. Try another one.</string>
+    <string name="identify_error_process_image">We couldn\'t process that image. Try a clearer photo.</string>
 
     <!-- G-07: display labels for stable landmark category values -->
     <string name="label_lmcat_all">All</string>
