@@ -46,6 +46,7 @@ import com.wadjet.core.designsystem.WadjetColors
 import com.wadjet.core.designsystem.animation.FadeUp
 import com.wadjet.core.designsystem.animation.GoldGradientText
 import com.wadjet.core.designsystem.animation.MeteorShower
+import com.wadjet.core.designsystem.animation.TurntableEye
 import com.wadjet.core.designsystem.component.WadjetButton
 import com.wadjet.core.designsystem.component.WadjetCard
 import com.wadjet.core.designsystem.component.WadjetGhostButton
@@ -122,10 +123,11 @@ fun WelcomeScreen(
             // Logo & tagline
             FadeUp(visible = visibleSections >= 1) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(
-                        painter = painterResource(DesignR.drawable.ic_logo_eye),
+                    // 3D golden Eye-of-Wadjet stela — pre-rendered sway turntable
+                    // (same model as the web hero; no 3D engine in the base APK).
+                    TurntableEye(
+                        modifier = Modifier.size(132.dp),
                         contentDescription = stringResource(R.string.welcome_logo_desc),
-                        modifier = Modifier.size(120.dp),
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     GoldGradientText(
