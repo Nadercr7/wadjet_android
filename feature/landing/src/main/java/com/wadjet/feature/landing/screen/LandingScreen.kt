@@ -270,7 +270,7 @@ fun LandingScreen(
                 Text(
                     text = stringResource(DesignR.string.footer_credit),
                     style = MaterialTheme.typography.bodySmall,
-                    color = WadjetColors.Dust,
+                    color = WadjetColors.TextMuted, // K-02: Dust is ~3.8:1 on Night — below AA for small text
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
@@ -451,15 +451,17 @@ private fun ContinueStoryCard(
                 color = WadjetColors.Gold,
             )
             Spacer(modifier = Modifier.height(8.dp))
+            // G-06: server story titles are bilingual; follow the app locale.
+            val isArabicLocale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]?.language == "ar"
             Text(
-                text = story.titleEn,
+                text = if (isArabicLocale && story.titleAr.isNotBlank()) story.titleAr else story.titleEn,
                 style = MaterialTheme.typography.titleSmall,
                 color = WadjetColors.Gold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = "Chapter ${chapter + 1} of ${story.chapterCount}",
+                text = stringResource(R.string.landing_chapter_progress, chapter + 1, story.chapterCount),
                 style = MaterialTheme.typography.bodySmall,
                 color = WadjetColors.TextMuted,
             )

@@ -25,6 +25,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.wadjet.app.screen.HieroglyphsHubScreen
 import com.wadjet.app.screen.HieroglyphsHubViewModel
+import com.wadjet.app.screen.OnboardingScreen
+import com.wadjet.app.screen.OnboardingViewModel
 import com.wadjet.feature.auth.screen.WelcomeScreen
 import com.wadjet.feature.chat.ChatViewModel
 import com.wadjet.feature.chat.screen.ChatScreen
@@ -67,6 +69,9 @@ import com.wadjet.app.navigation.lifecycleIsResumed
 import com.wadjet.core.ui.LocalAnimatedVisibilityScope
 import com.wadjet.core.ui.LocalSharedTransitionScope
 
+// E-P8: web origin for https App Links (must match the manifest intent-filter host)
+private const val WEB_BASE = "https://nadercr7-wadjet-v2.hf.space"
+
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun WadjetNavGraph(
@@ -99,8 +104,17 @@ fun WadjetNavGraph(
                 fadeOut(tween(150))
         },
     ) {
-        composable<Route.Splash> {
-            // Splash handled by SplashViewModel in MainActivity — this is a fallback
+        // U7: first-run onboarding — shown once, then never again (persisted flag).
+        composable<Route.Onboarding> {
+            val onboardingViewModel: OnboardingViewModel = hiltViewModel()
+            OnboardingScreen(
+                onFinish = {
+                    onboardingViewModel.markSeen()
+                    navController.navigate(Route.Welcome) {
+                        popUpTo<Route.Onboarding> { inclusive = true }
+                    }
+                },
+            )
         }
 
         composable<Route.Welcome> {
@@ -241,8 +255,9 @@ fun WadjetNavGraph(
                     ) {
                         com.wadjet.core.designsystem.component.EmptyState(
                             glyph = "\uD80C\uDC80",
-                            title = "Scan not found",
-                            subtitle = state.error ?: "This scan result is no longer available",
+                            title = androidx.compose.ui.res.stringResource(com.wadjet.app.R.string.scan_result_not_found_title),
+                            subtitle = state.error
+                                ?: androidx.compose.ui.res.stringResource(com.wadjet.app.R.string.scan_result_not_found_subtitle),
                         )
                     }
                 }
@@ -306,7 +321,10 @@ fun WadjetNavGraph(
             )
             }
         }
-        composable<Route.LandmarkDetail> { navEntry ->
+        composable<Route.LandmarkDetail>(
+            // B-01: wadjet://landmark/{slug}
+            deepLinks = listOf(androidx.navigation.navDeepLink<Route.LandmarkDetail>(basePath = "wadjet://landmark")),
+        ) { navEntry ->
             val viewModel: DetailViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
             CompositionLocalProvider(
@@ -370,6 +388,7 @@ fun WadjetNavGraph(
                 onDismissError = viewModel::dismissError,
                 onDismissLocalTts = viewModel::dismissLocalTts,
                 onBack = { navController.popBackStack() },
+                showBack = false, // L-02: root bottom-nav tab
             )
         }
         composable<Route.ChatLandmark> {
@@ -398,6 +417,8 @@ fun WadjetNavGraph(
             )
         }
         composable<Route.Stories>(
+            // E-P8: https App Link for the web stories list URL
+            deepLinks = listOf(androidx.navigation.navDeepLink<Route.Stories>(basePath = "$WEB_BASE/stories")),
             enterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
             exitTransition = { fadeOut(tween(150)) + scaleOut(tween(150), targetScale = 0.96f) },
             popEnterTransition = { fadeIn(tween(200)) + scaleIn(tween(200), initialScale = 0.96f) },
@@ -420,7 +441,14 @@ fun WadjetNavGraph(
             }
         }
 
-        composable<Route.StoryReader> {
+        composable<Route.StoryReader>(
+            // B-01: wadjet://story/{storyId}; E-P8: https App Link mirrors the
+            // web reader URL (https://…/stories/{storyId})
+            deepLinks = listOf(
+                androidx.navigation.navDeepLink<Route.StoryReader>(basePath = "wadjet://story"),
+                androidx.navigation.navDeepLink<Route.StoryReader>(basePath = "$WEB_BASE/stories"),
+            ),
+        ) {
             val viewModel: StoryReaderViewModel = hiltViewModel()
             val state by viewModel.state.collectAsStateWithLifecycle()
             CompositionLocalProvider(
@@ -468,13 +496,9 @@ fun WadjetNavGraph(
             val context = androidx.compose.ui.platform.LocalContext.current
             val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
 
-            if (state.signedOut) {
-                androidx.compose.runtime.LaunchedEffect(Unit) {
-                    navController.navigate(Route.Welcome) {
-                        popUpTo(navController.graph.id) { inclusive = true }
-                    }
-                }
-            }
+            // C-01: sign-out navigation is handled solely by the global auth observer in
+            // MainActivity (authenticated→unauthenticated transition); navigating here too
+            // caused a duplicate, racing redirect to Welcome.
 
             SettingsScreen(
                 state = state,
@@ -487,6 +511,7 @@ fun WadjetNavGraph(
                 onChangePassword = viewModel::changePassword,
                 onTtsEnabledChanged = viewModel::setTtsEnabled,
                 onTtsSpeedChanged = viewModel::setTtsSpeed,
+                onPrefetchStoriesChanged = viewModel::setPrefetchStoriesOnWifi,
                 onClearCache = {
                     coroutineScope.launch {
                         val imageLoader = coil3.SingletonImageLoader.get(context)

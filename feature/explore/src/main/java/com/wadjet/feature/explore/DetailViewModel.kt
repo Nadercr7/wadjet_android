@@ -2,6 +2,7 @@ package com.wadjet.feature.explore
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.wadjet.core.domain.model.LandmarkDetail
@@ -27,6 +28,7 @@ data class DetailUiState(
 class DetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val exploreRepository: ExploreRepository,
+    private val strings: StringResolver,
 ) : ViewModel() {
 
     private val slug: String = savedStateHandle.toRoute<LandmarkDetailRoute>().slug
@@ -71,7 +73,7 @@ class DetailViewModel @Inject constructor(
                     Timber.e(error, "Failed to load landmark detail")
                     _state.update {
                         it.copy(
-                            error = error.message ?: "Failed to load landmark",
+                            error = error.message ?: strings.get(R.string.explore_error_landmark),
                             isLoading = false,
                         )
                     }

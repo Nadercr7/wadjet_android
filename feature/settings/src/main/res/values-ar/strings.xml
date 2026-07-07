@@ -1,39 +1,48 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
     <!-- Settings screen -->
-    <string name="settings_title">Settings</string>
-    <string name="settings_sign_out_title">Sign Out</string>
-    <string name="settings_sign_out_message">Are you sure you want to sign out?</string>
-    <string name="settings_sign_out_confirm">Sign Out</string>
-    <string name="settings_section_profile">Profile</string>
-    <string name="settings_section_password">Password</string>
-    <string name="settings_section_tts">Text-to-Speech</string>
-    <string name="settings_section_storage">Storage</string>
-    <string name="settings_cache_label">Cache</string>
-    <string name="settings_cache_size">%1$d MB</string>
-    <string name="settings_clear_cache">Clear Cache</string>
-    <string name="settings_section_about">About</string>
-    <string name="settings_app_version">Wadjet v%1$s</string>
-    <string name="settings_send_feedback">Send Feedback</string>
-    <string name="settings_section_account">Account</string>
-    <string name="settings_display_name_placeholder">Display name</string>
-    <string name="settings_no_name">No name set</string>
-    <string name="settings_provider_google">Google</string>
-    <string name="settings_provider_email">Email</string>
-    <string name="settings_edit_name_desc">Edit name</string>
-    <string name="settings_current_password">Current Password</string>
-    <string name="settings_new_password">New Password</string>
-    <string name="settings_password_saving">Savingâ€¦</string>
-    <string name="settings_change_password">Change Password</string>
-    <string name="settings_enable_tts">Enable TTS</string>
-    <string name="settings_tts_speed">Speed</string>
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_sign_out_title">تسجيل الخروج</string>
+    <string name="settings_sign_out_message">هل أنت متأكد أنك تريد تسجيل الخروج؟</string>
+    <string name="settings_sign_out_confirm">تسجيل الخروج</string>
+    <string name="settings_section_profile">الملف الشخصي</string>
+    <string name="settings_section_password">كلمة المرور</string>
+    <string name="settings_section_tts">النطق الصوتي</string>
+    <!-- E-P1 -->
+    <string name="settings_section_offline">دون اتصال</string>
+    <string name="settings_prefetch_stories">تنزيل الحكايات عبر Wi-Fi</string>
+    <string name="settings_prefetch_stories_sub">مرة واحدة يوميًا عبر شبكة Wi-Fi غير محدودة، تُحفظ جميع الحكايات للقراءة دون اتصال. لا تُستخدم بيانات الهاتف أبدًا.</string>
+    <string name="settings_section_storage">التخزين</string>
+    <string name="settings_cache_label">الذاكرة المؤقتة</string>
+    <string name="settings_cache_size">%1$d ميجابايت</string>
+    <string name="settings_clear_cache">مسح الذاكرة المؤقتة</string>
+    <string name="settings_section_about">حول التطبيق</string>
+    <string name="settings_app_version">واجِت الإصدار %1$s</string>
+    <string name="settings_send_feedback">إرسال الملاحظات</string>
+    <string name="settings_section_account">الحساب</string>
+    <string name="settings_display_name_placeholder">اسم العرض</string>
+    <string name="settings_no_name">لم يتم تعيين اسم</string>
+    <string name="settings_provider_google">جوجل</string>
+    <string name="settings_provider_email">البريد الإلكتروني</string>
+    <string name="settings_edit_name_desc">تعديل الاسم</string>
+    <string name="settings_current_password">كلمة المرور الحالية</string>
+    <string name="settings_new_password">كلمة المرور الجديدة</string>
+    <string name="settings_password_saving">جاري الحفظ…</string>
+    <string name="settings_change_password">تغيير كلمة المرور</string>
+    <string name="settings_enable_tts">تفعيل النطق الصوتي</string>
+    <string name="settings_tts_speed">السرعة</string>
     <string name="settings_tts_speed_value">%1$sx</string>
 
     <!-- Quick settings dialog -->
-    <string name="quick_settings_title">Quick Settings</string>
-    <string name="quick_settings_language">Language</string>
+    <string name="quick_settings_title">إعدادات سريعة</string>
+    <string name="quick_settings_language">اللغة</string>
     <string name="quick_settings_english">English</string>
     <string name="quick_settings_arabic">العربية</string>
-    <string name="quick_settings_full_settings">Full Settings</string>
-</resources>
+    <string name="quick_settings_full_settings">كل الإعدادات</string>
 
+    <!-- ViewModel messages (G-04) -->
+    <string name="settings_msg_name_updated">تم تحديث الاسم</string>
+    <string name="settings_msg_password_length">كلمة المرور الجديدة يجب ألا تقل عن ٨ أحرف</string>
+    <string name="settings_msg_password_changed">تم تغيير كلمة المرور</string>
+    <string name="settings_msg_sign_out_failed">فشل تسجيل الخروج</string>
+</resources>

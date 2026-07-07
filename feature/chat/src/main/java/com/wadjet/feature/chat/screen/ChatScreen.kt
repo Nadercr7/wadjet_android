@@ -40,6 +40,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -105,7 +106,9 @@ import com.wadjet.core.domain.model.ChatMessage
 import com.wadjet.core.domain.model.ChatMessage.Role
 import com.wadjet.feature.chat.ChatUiState
 import com.wadjet.feature.chat.ConversationSummary
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import com.wadjet.core.common.audio.trySetLanguageFor
 import com.wadjet.core.designsystem.R as DesignR
 import com.wadjet.feature.chat.R
 import dev.jeziellago.compose.markdowntext.MarkdownText
@@ -136,6 +139,8 @@ fun ChatScreen(
     onDismissLocalTts: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    // L-02: false for the root Thoth tab; true when pushed (landmark chat).
+    showBack: Boolean = true,
 ) {
     val context = LocalContext.current
     val listState = rememberLazyListState()
@@ -159,9 +164,11 @@ fun ChatScreen(
     // Handle local TTS fallback
     LaunchedEffect(state.localTtsText) {
         val text = state.localTtsText ?: return@LaunchedEffect
-        val isArabic = text.any { it in '\u0600'..'\u06FF' || it in '\u0750'..'\u077F' }
-        ttsInstance?.language = if (isArabic) Locale("ar") else Locale.US
-        ttsInstance?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        // H-04: verify the device has a voice for the text's language (ar-EG \u2192 ar);
+        // skip rather than let an English voice mangle Arabic.
+        if (ttsInstance?.trySetLanguageFor(text) == true) {
+            ttsInstance.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        }
         onDismissLocalTts()
     }
 
@@ -262,12 +269,14 @@ fun ChatScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(DesignR.string.action_back),
-                            tint = WadjetColors.Text,
-                        )
+                    if (showBack) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(DesignR.string.action_back),
+                                tint = WadjetColors.Text,
+                            )
+                        }
                     }
                 },
                 actions = {
@@ -354,7 +363,7 @@ fun ChatScreen(
                                     overflow = TextOverflow.Ellipsis,
                                 )
                                 Text(
-                                    text = stringResource(R.string.chat_message_count, convo.messageCount),
+                                    text = pluralStringResource(R.plurals.chat_message_count_plural, convo.messageCount, convo.messageCount),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = WadjetColors.TextMuted,
                                 )
@@ -661,16 +670,16 @@ private fun ChatBubble(
                     color = WadjetColors.TextMuted,
                 )
                 if (isUser && onEdit != null && !message.isStreaming) {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(R.string.chat_edit_message_desc),
-                        tint = WadjetColors.TextMuted,
-                        modifier = Modifier
-                            .size(14.dp)
-                            .clip(CircleShape)
-                            .clickable { onEdit() },
-                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    // K-01: 48dp minimum touch target (icon itself stays 14dp)
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.chat_edit_message_desc),
+                            tint = WadjetColors.TextMuted,
+                            modifier = Modifier.size(14.dp),
+                        )
+                    }
                 }
             }
 
@@ -687,15 +696,21 @@ private fun ChatBubble(
                         modifier = Modifier.size(14.dp),
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = stringResource(R.string.chat_retry),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = WadjetColors.Gold,
+                    // K-01: 48dp minimum touch target
+                    Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
+                            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
                             .clip(RoundedCornerShape(4.dp))
-                            .clickable { onRetry() }
-                            .padding(horizontal = 4.dp, vertical = 2.dp),
-                    )
+                            .clickable(onClickLabel = null, role = androidx.compose.ui.semantics.Role.Button) { onRetry() }
+                            .padding(horizontal = 4.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.chat_retry),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = WadjetColors.Gold,
+                        )
+                    }
                 }
             }
 
@@ -773,8 +788,8 @@ private fun formatRelativeTime(context: android.content.Context, timestamp: Long
     val diff = now - timestamp
     return when {
         diff < 60_000 -> context.getString(R.string.time_just_now)
-        diff < 3_600_000 -> context.getString(R.string.time_minutes_ago, diff / 60_000)
-        diff < 86_400_000 -> context.getString(R.string.time_hours_ago, diff / 3_600_000)
+        diff < 3_600_000 -> (diff / 60_000).toInt().let { context.resources.getQuantityString(R.plurals.time_minutes_ago_plural, it, it) }
+        diff < 86_400_000 -> (diff / 3_600_000).toInt().let { context.resources.getQuantityString(R.plurals.time_hours_ago_plural, it, it) }
         diff < 172_800_000 -> context.getString(R.string.time_yesterday)
         else -> {
             val sdf = java.text.SimpleDateFormat("MMM d", Locale.getDefault())

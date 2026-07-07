@@ -1,8 +1,9 @@
 package com.wadjet.feature.dictionary
 
-import android.media.MediaPlayer
+import com.wadjet.core.common.audio.AudioPlaybackManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.domain.model.Sign
 import com.wadjet.core.domain.repository.DictionaryRepository
@@ -16,7 +17,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.io.File
 import javax.inject.Inject
 
 data class SignDetailUiState(
@@ -33,14 +33,14 @@ class SignDetailViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val ttsPreferences: TtsPreferencesRepository,
     private val toastController: com.wadjet.core.common.ToastController,
+    private val audioPlayer: AudioPlaybackManager,
+    private val strings: StringResolver,
 ) : ViewModel() {
 
     private val code: String = savedStateHandle.get<String>("code") ?: ""
 
     private val _state = MutableStateFlow(SignDetailUiState())
     val state: StateFlow<SignDetailUiState> = _state.asStateFlow()
-
-    private var mediaPlayer: MediaPlayer? = null
 
     init {
         loadSign()
@@ -92,41 +92,33 @@ class SignDetailViewModel @Inject constructor(
 
     fun speakSign(text: String) {
         viewModelScope.launch {
+            val speed = ttsPreferences.ttsSpeed.first()
+            // H-05: server TTS disabled or unavailable -> on-device voice (web parity)
             if (!ttsPreferences.ttsEnabled.first()) {
-                _state.update { it.copy(error = "TTS is disabled in settings") }
+                audioPlayer.speakLocal(text, speed)
                 return@launch
             }
-            val speed = ttsPreferences.ttsSpeed.first()
-            toastController.info("Generating pronunciation…")
+            toastController.info(strings.get(R.string.dict_generating_pronunciation))
             repository.speakPhonetic(text).onSuccess { bytes ->
                 if (bytes != null) {
-                    try {
-                        val tmp = File.createTempFile("sign_tts_", ".wav")
-                        tmp.writeBytes(bytes)
-                        mediaPlayer?.apply { if (isPlaying) stop(); release() }
-                        mediaPlayer = MediaPlayer().apply {
-                            setDataSource(tmp.absolutePath)
-                            prepare()
-                            playbackParams = playbackParams.setSpeed(speed)
-                            start()
-                            setOnCompletionListener { tmp.delete() }
-                        }
-                    } catch (e: Exception) {
-                        Timber.e(e, "Sign TTS playback failed")
-                        _state.update { it.copy(error = "TTS playback failed") }
-                    }
+                    audioPlayer.playWavBytes(
+                        bytes = bytes,
+                        prefix = "sign_tts_",
+                        speed = speed,
+                        onError = { audioPlayer.speakLocal(text, speed) },
+                    )
                 } else {
-                    _state.update { it.copy(error = "TTS not available") }
+                    audioPlayer.speakLocal(text, speed)
                 }
             }.onFailure { e ->
-                Timber.e(e, "Sign TTS failed")
-                _state.update { it.copy(error = "TTS failed: ${e.message}") }
+                Timber.e(e, "Sign TTS failed; falling back to local voice")
+                audioPlayer.speakLocal(text, speed)
             }
         }
     }
 
     override fun onCleared() {
         super.onCleared()
-        mediaPlayer?.release()
+        audioPlayer.stop()
     }
 }

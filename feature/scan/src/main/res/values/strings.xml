@@ -23,12 +23,15 @@
     <!-- Scan result screen -->
     <string name="scan_results_title">Results</string>
     <string name="scan_warning_desc">Warning</string>
-    <string name="scan_ai_unverified_warning">AI verification unavailable — results may be less accurate</string>
+    <string name="scan_ai_unverified_warning">AI verification unavailable · results may be less accurate</string>
     <string name="scan_tips_label">Tips</string>
     <string name="scan_source_ai_vision">AI Vision</string>
     <string name="scan_source_onnx_fallback">ONNX (Fallback)</string>
     <string name="scan_source_onnx_ai">ONNX + AI Verified</string>
     <string name="scan_source_onnx">ONNX</string>
+    <!-- C2: offline on-device fallback -->
+    <string name="scan_source_on_device">On-device (offline)</string>
+    <string name="scan_offline_banner">Offline result · on-device detection, lower accuracy. Translation needs a connection.</string>
     <string name="scan_detected_by">Detected by: %1$s</string>
     <string name="scan_confidence_badge">Confidence: %1$d%%</string>
     <string name="scan_stat_avg">Avg</string>
@@ -59,7 +62,7 @@
     <string name="share_transliteration">Transliteration: %1$s</string>
     <string name="share_translation">Translation: %1$s</string>
     <string name="share_glyphs">Glyphs: %1$s</string>
-    <string name="share_scan_footer">Scanned with Wadjet — Decode the Secrets of Ancient Egypt</string>
+    <string name="share_scan_footer">Scanned with Wadjet · Decode the Secrets of Ancient Egypt</string>
     <string name="share_scan_chooser">Share Scan Results</string>
 
     <!-- Scan history screen -->
@@ -72,4 +75,12 @@
     <string name="scan_history_glyph_count">%1$d glyphs</string>
     <string name="scan_history_deleted">Scan deleted</string>
     <string name="scan_history_undo">Undo</string>
+
+    <!-- ViewModel messages (G-04) -->
+    <string name="scan_error_invalid_id">We couldn\'t find that scan. Try scanning again.</string>
+    <string name="scan_error_daily_limit">Daily scan limit reached (%1$d). Try again tomorrow.</string>
+    <string name="scan_toast_daily_limit">Daily scan limit reached</string>
+    <string name="scan_error_failed">The scan didn\'t come through. Try another photo.</string>
+    <string name="scan_error_read_image">We couldn\'t read that image. Try another one.</string>
+    <string name="scan_error_process_image">We couldn\'t process that image. Try a clearer photo.</string>
 </resources>

@@ -69,7 +69,7 @@ class DictionaryViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel() = DictionaryViewModel(repository, userRepository, ttsPreferences, toastController).also { viewModel = it }
+    private fun createViewModel() = DictionaryViewModel(repository, userRepository, ttsPreferences, toastController, mockk(relaxed = true), mockk(relaxed = true), androidx.lifecycle.SavedStateHandle()).also { viewModel = it }
 
     @Test
     fun `init loads categories and signs`() = runTest {

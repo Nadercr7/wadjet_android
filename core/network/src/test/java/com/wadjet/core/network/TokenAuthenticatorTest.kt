@@ -9,6 +9,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -17,6 +18,9 @@ class TokenAuthenticatorTest {
     private lateinit var server: MockWebServer
     private lateinit var tokenManager: TokenManager
     private lateinit var client: OkHttpClient
+
+    // A1: default = no Firebase user available, so Rejected still invalidates.
+    private var firebaseIdToken: String? = null
 
     @Before
     fun setup() {
@@ -32,6 +36,7 @@ class TokenAuthenticatorTest {
             tokenManager = tokenManager,
             baseUrl = server.url("/").toString(),
             json = json,
+            firebaseIdTokenProvider = { firebaseIdToken },
         )
 
         val interceptor = AuthInterceptor(
@@ -125,6 +130,38 @@ class TokenAuthenticatorTest {
         assertEquals(200, response.code)
         // 2 requests: original 401 + retry (no refresh call)
         assertEquals(2, server.requestCount)
+    }
+
+    @Test
+    fun `rejected refresh self-heals via Firebase re-exchange (A1)`() {
+        firebaseIdToken = "fresh-firebase-token"
+
+        // Original request 401 → refresh 401 (Rejected) → firebase exchange 200 → retry 200
+        server.enqueue(MockResponse().setResponseCode(401))
+        server.enqueue(MockResponse().setResponseCode(401).setBody("{}"))
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setBody("""{"access_token": "exchanged-token"}"""),
+        )
+        server.enqueue(MockResponse().setResponseCode(200).setBody("""{"data": "ok"}"""))
+
+        every { tokenManager.accessToken } returnsMany listOf("old-token", "old-token", "exchanged-token")
+
+        val request = okhttp3.Request.Builder()
+            .url(server.url("/api/dictionary/signs"))
+            .build()
+        val response = client.newCall(request).execute()
+
+        assertEquals(200, response.code)
+        verify { tokenManager.accessToken = "exchanged-token" }
+        verify(exactly = 0) { tokenManager.invalidateSession() }
+        // exchange request went to api/auth/firebase with the fresh token
+        server.takeRequest() // original
+        server.takeRequest() // refresh
+        val exchange = server.takeRequest()
+        assertEquals("/api/auth/firebase", exchange.path)
+        assertTrue(exchange.body.readUtf8().contains("fresh-firebase-token"))
     }
 
     @Test

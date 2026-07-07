@@ -36,3 +36,7 @@ PLAN.md
 PROMPTS.md
 PROJECT-GUIDE.md
 PROMPT*.md
+
+# JVM crash dumps (A-01)
+hs_err_pid*.log
+replay_pid*.log

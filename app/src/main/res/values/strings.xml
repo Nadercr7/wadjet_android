@@ -3,6 +3,25 @@
     <string name="top_bar_profile">Profile</string>
     <string name="top_bar_settings">Settings</string>
 
+    <!-- Scan-result empty state (localized + scribe voice) -->
+    <string name="scan_result_not_found_title">This scan slipped away</string>
+    <string name="scan_result_not_found_subtitle">We couldn\'t find this scan. It may no longer be saved.</string>
+
+    <!-- U7: first-run onboarding carousel (scribe voice) -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_start">Begin</string>
+    <string name="onboarding_page_indicator_cd">Page %1$d of %2$d</string>
+    <string name="onboarding_scan_title">Read the walls</string>
+    <string name="onboarding_scan_body">Point your camera at any hieroglyphs and Wadjet reads them back to you, sign by sign.</string>
+    <string name="onboarding_scan_icon_cd">Scanning hieroglyphs</string>
+    <string name="onboarding_explore_title">Walk through Egypt</string>
+    <string name="onboarding_explore_body">Wander temples, tombs, and treasures, each with its story, its map, and its meaning.</string>
+    <string name="onboarding_explore_icon_cd">Exploring landmarks</string>
+    <string name="onboarding_thoth_title">Ask Thoth</string>
+    <string name="onboarding_thoth_body">The scribe of the gods is here to answer. Ask about any glyph, ruler, or place you meet.</string>
+    <string name="onboarding_thoth_icon_cd">Chatting with Thoth</string>
+
     <!-- Hieroglyphs Hub -->
     <string name="hub_title">Hieroglyphs</string>
     <string name="hub_subtitle">Scan, browse, and write ancient Egyptian hieroglyphs</string>
@@ -19,7 +38,7 @@
     <string name="hub_dictionary_title">Dictionary</string>
     <string name="hub_dictionary_desc">Browse 1,000+ hieroglyphic signs with meanings &amp; phonetics</string>
     <string name="hub_write_title">Write in Hieroglyphs</string>
-    <string name="hub_write_desc">Type English, get hieroglyphs — powered by AI transliteration</string>
+    <string name="hub_write_desc">Type English, get hieroglyphs · powered by AI transliteration</string>
     <string name="hub_how_scanning_title">How Scanning Works</string>
     <string name="hub_how_step1">Take or upload a photo of hieroglyphs</string>
     <string name="hub_how_step2">AI detects individual glyphs with bounding boxes</string>

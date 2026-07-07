@@ -1,5 +1,6 @@
 package com.wadjet.core.data.repository
 
+import com.wadjet.core.data.audio.TtsAudioCache
 import com.wadjet.core.common.suspendRunCatching
 import com.wadjet.core.domain.repository.ChatRepository
 import com.wadjet.core.network.api.AudioApiService
@@ -30,6 +31,7 @@ import javax.inject.Singleton
 class ChatRepositoryImpl @Inject constructor(
     private val chatApi: ChatApiService,
     private val audioApi: AudioApiService,
+    private val ttsCache: TtsAudioCache,
     private val okHttpClient: OkHttpClient,
     private val json: Json,
     @Named("baseUrl") private val baseUrl: String,
@@ -110,9 +112,10 @@ class ChatRepositoryImpl @Inject constructor(
     }
 
     override suspend fun speak(text: String, lang: String): Result<ByteArray?> = suspendRunCatching {
+        ttsCache.get(text, lang, "thoth_chat")?.let { return@suspendRunCatching it }
         val response = audioApi.speak(SpeakRequest(text = text, lang = lang, context = "thoth_chat"))
         when (response.code()) {
-            200 -> response.body()?.bytes()
+            200 -> response.body()?.bytes()?.also { ttsCache.put(text, lang, "thoth_chat", it) }
             204 -> null // Use local TTS fallback
             else -> throw Exception("TTS failed: ${response.code()}")
         }

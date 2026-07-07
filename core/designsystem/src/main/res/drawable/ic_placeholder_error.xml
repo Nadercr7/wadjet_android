@@ -10,22 +10,22 @@
     <!-- Image frame outline -->
     <path
         android:fillColor="@android:color/transparent"
-        android:strokeColor="#D4AF37"
+        android:strokeColor="#C8A24B"
         android:strokeWidth="2"
         android:pathData="M20,24h56v48H20z" />
     <!-- Mountain (bottom-left scene) -->
     <path
-        android:fillColor="#D4AF37"
+        android:fillColor="#C8A24B"
         android:fillAlpha="0.25"
         android:pathData="M20,72L38,50L56,72Z" />
     <!-- Small mountain -->
     <path
-        android:fillColor="#D4AF37"
+        android:fillColor="#C8A24B"
         android:fillAlpha="0.2"
         android:pathData="M50,72L62,56L76,72Z" />
     <!-- Sun -->
     <path
-        android:fillColor="#D4AF37"
+        android:fillColor="#C8A24B"
         android:fillAlpha="0.3"
         android:pathData="M64,36m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
     <!-- Diagonal crack / break line -->

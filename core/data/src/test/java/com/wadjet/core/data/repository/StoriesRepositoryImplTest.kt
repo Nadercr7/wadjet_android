@@ -133,7 +133,22 @@ class StoriesRepositoryImplTest {
     @Before
     fun setup() {
         every { firebaseAuth.currentUser } returns null
-        repository = StoriesRepositoryImpl(storiesApi, audioApi, userApi, firebaseAuth, firestore, storyProgressDao)
+        repository = StoriesRepositoryImpl(
+            storiesApi,
+            audioApi,
+            userApi,
+            firebaseAuth,
+            firestore,
+            storyProgressDao,
+            mockk<com.wadjet.core.database.dao.StoryCacheDao>(relaxed = true) {
+                coEvery { getAll() } returns emptyList()
+                coEvery { getById(any()) } returns null
+            },
+            mockk<com.wadjet.core.data.audio.TtsAudioCache>(relaxed = true) {
+                every { get(any(), any(), any()) } returns null
+            },
+            mockk<com.wadjet.core.firebase.WadjetAnalytics>(relaxed = true),
+        )
     }
 
     @Test

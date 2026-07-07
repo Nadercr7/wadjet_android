@@ -29,8 +29,8 @@ private val WadjetDarkColorScheme = darkColorScheme(
     outlineVariant = WadjetColors.BorderLight,
     error = WadjetColors.Error,
     onError = Color.White,
-    errorContainer = Color(0xFF93000A),
-    onErrorContainer = Color(0xFFFFDAD6),
+    errorContainer = WadjetColors.ErrorContainer,
+    onErrorContainer = WadjetColors.OnErrorContainer,
 )
 
 @Composable

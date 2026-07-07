@@ -3,9 +3,10 @@ package com.wadjet.feature.scan
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.media.MediaPlayer
+import com.wadjet.core.common.audio.AudioPlaybackManager
 import android.net.Uri
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.common.EgyptianPronunciation
 import com.wadjet.core.designsystem.component.TtsState
@@ -37,8 +38,6 @@ data class ScanUiState(
     val error: String? = null,
     val isLoading: Boolean = false,
     val ttsStates: Map<String, TtsState> = emptyMap(),
-    val localTtsText: String? = null,
-    val localTtsLang: String? = null,
 )
 
 sealed class ScanEvent {
@@ -50,6 +49,8 @@ sealed class ScanEvent {
 class ScanViewModel @Inject constructor(
     private val scanRepository: ScanRepository,
     private val userRepository: UserRepository,
+    private val audioPlayer: AudioPlaybackManager,
+    private val strings: StringResolver,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -58,8 +59,6 @@ class ScanViewModel @Inject constructor(
 
     private val _events = MutableSharedFlow<ScanEvent>()
     val events: SharedFlow<ScanEvent> = _events.asSharedFlow()
-
-    private var mediaPlayer: MediaPlayer? = null
 
     fun speak(key: String, text: String, lang: String = "en") {
         val current = _state.value.ttsStates[key]
@@ -72,58 +71,39 @@ class ScanViewModel @Inject constructor(
             val isHieroglyphic = key == "translit"
             val ttsText = if (isHieroglyphic) EgyptianPronunciation.toSpeech(text) else text
             val ctx = if (isHieroglyphic) EgyptianPronunciation.CONTEXT else "scan_pronunciation"
-            val voice = if (isHieroglyphic) EgyptianPronunciation.VOICE else null
-            val style = if (isHieroglyphic) EgyptianPronunciation.STYLE else null
-            scanRepository.speak(ttsText, lang, ctx, voice, style).onSuccess { bytes ->
+            scanRepository.speak(ttsText, lang, ctx).onSuccess { bytes ->
                 if (bytes != null) {
                     playWavBytes(key, bytes)
                 } else {
-                    // 204 — signal local TTS fallback
-                    _state.update {
-                        it.copy(
-                            ttsStates = it.ttsStates + (key to TtsState.IDLE),
-                            localTtsText = text,
-                            localTtsLang = lang,
-                        )
-                    }
+                    speakLocally(key, text)
                 }
             }.onFailure {
-                Timber.e(it, "Scan TTS failed for key=$key")
-                _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) }
+                Timber.e(it, "Scan TTS failed for key=$key; falling back to local voice")
+                speakLocally(key, text)
             }
         }
     }
 
     private fun playWavBytes(key: String, bytes: ByteArray) {
-        stopMediaPlayer()
-        try {
-            val tmp = File.createTempFile("tts_", ".wav", context.cacheDir)
-            tmp.writeBytes(bytes)
-            mediaPlayer = MediaPlayer().apply {
-                setDataSource(tmp.absolutePath)
-                prepare()
-                setOnCompletionListener {
-                    _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) }
-                    stopMediaPlayer()
-                    tmp.delete()
-                }
-                start()
-            }
-            _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.PLAYING)) }
-        } catch (e: Exception) {
-            Timber.e(e, "MediaPlayer failed")
-            _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.IDLE)) }
-        }
+        _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.PLAYING)) }
+        audioPlayer.playWavBytes(
+            bytes = bytes,
+            onCompletion = { _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) } },
+            onError = { _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) } },
+        )
     }
 
     private fun stopTts(key: String) {
-        stopMediaPlayer()
+        audioPlayer.stop()
         _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.IDLE)) }
     }
 
-    private fun stopMediaPlayer() {
-        mediaPlayer?.apply { if (isPlaying) stop(); release() }
-        mediaPlayer = null
+    // H-05: degrade to the on-device voice when server TTS is unavailable
+    private fun speakLocally(key: String, text: String) {
+        _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.PLAYING)) }
+        audioPlayer.speakLocal(text) {
+            _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) }
+        }
     }
 
     fun onImageCaptured(file: File) {
@@ -132,8 +112,8 @@ class ScanViewModel @Inject constructor(
             // Check free-tier limits
             userRepository.getLimits().onSuccess { limits ->
                 if (limits.scansToday >= limits.scansPerDay) {
-                    _state.update { it.copy(error = "Daily scan limit reached (${limits.scansPerDay}). Try again tomorrow.") }
-                    _events.emit(ScanEvent.ShowToast("Daily scan limit reached"))
+                    _state.update { it.copy(error = strings.get(R.string.scan_error_daily_limit, limits.scansPerDay)) }
+                    _events.emit(ScanEvent.ShowToast(strings.get(R.string.scan_toast_daily_limit)))
                     return@launch
                 }
             }
@@ -148,12 +128,9 @@ class ScanViewModel @Inject constructor(
 
             scanRepository.scanImage(compressed)
                 .onSuccess { result ->
-                    _state.update { it.copy(scanStep = ScanStep.TRANSLITERATING) }
-                    kotlinx.coroutines.delay(400)
-                    _state.update { it.copy(scanStep = ScanStep.TRANSLATING) }
-                    kotlinx.coroutines.delay(400)
+                    // F-04: no fake staged delays — the server already finished the whole
+                    // pipeline when this returns; go straight to DONE.
                     _state.update { it.copy(scanStep = ScanStep.DONE) }
-                    kotlinx.coroutines.delay(300)
 
                     // Save to Room
                     val thumbnailPath = saveThumbnail(compressed)
@@ -175,12 +152,12 @@ class ScanViewModel @Inject constructor(
                     Timber.e(error, "Scan failed")
                     _state.update {
                         it.copy(
-                            error = error.message ?: "Scan failed",
+                            error = error.message ?: strings.get(R.string.scan_error_failed),
                             isLoading = false,
                             scanStep = ScanStep.IDLE,
                         )
                     }
-                    _events.emit(ScanEvent.ShowToast(error.message ?: "Scan failed"))
+                    _events.emit(ScanEvent.ShowToast(error.message ?: strings.get(R.string.scan_error_failed)))
                 }
         }
     }
@@ -192,11 +169,11 @@ class ScanViewModel @Inject constructor(
                 if (file != null) {
                     onImageCaptured(file)
                 } else {
-                    _state.update { it.copy(error = "Failed to read selected image") }
+                    _state.update { it.copy(error = strings.get(R.string.scan_error_read_image)) }
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to process selected image")
-                _state.update { it.copy(error = "Failed to process image") }
+                _state.update { it.copy(error = strings.get(R.string.scan_error_process_image)) }
             }
         }
     }
@@ -211,13 +188,9 @@ class ScanViewModel @Inject constructor(
         _state.update { it.copy(error = null) }
     }
 
-    fun dismissLocalTts() {
-        _state.update { it.copy(localTtsText = null, localTtsLang = null) }
-    }
-
     override fun onCleared() {
         super.onCleared()
-        stopMediaPlayer()
+        audioPlayer.stop()
         // Clean up temp files in cacheDir
         context.cacheDir.listFiles()?.forEach { file ->
             if (file.name.startsWith("scan_") || file.name.startsWith("tts_") || file.name.startsWith("picked_")) {
@@ -237,7 +210,8 @@ class ScanViewModel @Inject constructor(
         }
 
         val decodeOptions = BitmapFactory.Options().apply { inSampleSize = sampleSize }
-        val bitmap = BitmapFactory.decodeFile(file.absolutePath, decodeOptions) ?: return file
+        val decoded = BitmapFactory.decodeFile(file.absolutePath, decodeOptions) ?: return file
+        val bitmap = uprightBitmap(decoded, file)
 
         val outFile = File(context.cacheDir, "scan_${System.currentTimeMillis()}.jpg")
         FileOutputStream(outFile).use { out ->
@@ -246,6 +220,34 @@ class ScanViewModel @Inject constructor(
         bitmap.recycle()
         return outFile
     }
+
+    /**
+     * F-01: BitmapFactory ignores the EXIF Orientation tag and the re-encoded JPEG
+     * carries none, so portrait phone photos reached the server sideways and
+     * degraded detection. Bake the rotation into the pixels before upload.
+     */
+    private fun uprightBitmap(source: android.graphics.Bitmap, sourceFile: File): android.graphics.Bitmap {
+        val orientation = androidx.exifinterface.media.ExifInterface(sourceFile.absolutePath)
+            .getAttributeInt(
+                androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION,
+                androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL,
+            )
+        val matrix = android.graphics.Matrix()
+        when (orientation) {
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.preScale(-1f, 1f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.preScale(1f, -1f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_TRANSPOSE -> { matrix.postRotate(90f); matrix.preScale(-1f, 1f) }
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_TRANSVERSE -> { matrix.postRotate(270f); matrix.preScale(-1f, 1f) }
+            else -> return source
+        }
+        val rotated = android.graphics.Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
+        if (rotated != source) source.recycle()
+        return rotated
+    }
+
 
     private fun saveThumbnail(file: File): String {
         val thumbDir = File(context.filesDir, "scan_thumbnails")

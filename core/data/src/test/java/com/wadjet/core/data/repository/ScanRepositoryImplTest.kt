@@ -72,7 +72,17 @@ class ScanRepositoryImplTest {
 
     @Before
     fun setup() {
-        repository = ScanRepositoryImpl(scanApi, audioApi, scanResultDao, json)
+        repository = ScanRepositoryImpl(
+            scanApi,
+            audioApi,
+            scanResultDao,
+            json,
+            mockk<com.wadjet.core.data.audio.TtsAudioCache>(relaxed = true) {
+                every { get(any(), any(), any()) } returns null
+            },
+            dagger.Lazy { mockk<com.wadjet.core.ml.OnDeviceScanner>(relaxed = true) },
+            mockk<com.wadjet.core.firebase.WadjetAnalytics>(relaxed = true),
+        )
     }
 
     @Test

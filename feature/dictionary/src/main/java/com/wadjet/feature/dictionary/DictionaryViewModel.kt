@@ -1,7 +1,8 @@
 package com.wadjet.feature.dictionary
 
-import android.media.MediaPlayer
+import com.wadjet.core.common.audio.AudioPlaybackManager
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.domain.model.Category
 import com.wadjet.core.domain.model.Sign
@@ -19,7 +20,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.io.File
 import javax.inject.Inject
 
 data class AlphabetUiState(
@@ -41,7 +41,6 @@ data class BrowseUiState(
     val error: String? = null,
     val selectedSign: Sign? = null,
     val favorites: Set<String> = emptySet(),
-    val localTtsText: String? = null,
     val isOfflineData: Boolean = false,
 )
 
@@ -53,9 +52,19 @@ class DictionaryViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val ttsPreferences: TtsPreferencesRepository,
     private val toastController: com.wadjet.core.common.ToastController,
+    private val audioPlayer: AudioPlaybackManager,
+    private val strings: StringResolver,
+    private val savedState: androidx.lifecycle.SavedStateHandle,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(BrowseUiState())
+    // C-03: search/filter state survives process death
+    private val _state = MutableStateFlow(
+        BrowseUiState(
+            selectedCategory = savedState[KEY_CATEGORY],
+            selectedType = savedState[KEY_TYPE],
+            searchQuery = savedState[KEY_QUERY] ?: "",
+        ),
+    )
     val state: StateFlow<BrowseUiState> = _state.asStateFlow()
 
     private val _alphabetState = MutableStateFlow(AlphabetUiState())
@@ -64,7 +73,7 @@ class DictionaryViewModel @Inject constructor(
     private var searchJob: Job? = null
     private var loadSignsJob: Job? = null
     private var isSpeaking = false
-    private val lang: String get() = if (java.util.Locale.getDefault().language == "ar") "ar" else "en"
+    private val lang: String get() = com.wadjet.core.common.AppLanguage.current()
 
     init {
         loadCategories()
@@ -143,16 +152,20 @@ class DictionaryViewModel @Inject constructor(
     }
 
     fun selectCategory(category: String?) {
+        savedState[KEY_CATEGORY] = category
         _state.update { it.copy(selectedCategory = category, page = 1) }
         loadSigns()
     }
 
     fun selectType(type: String?) {
-        _state.update { it.copy(selectedType = if (type == "All") null else type, page = 1) }
+        val normalized = if (type == "All") null else type
+        savedState[KEY_TYPE] = normalized
+        _state.update { it.copy(selectedType = normalized, page = 1) }
         loadSigns()
     }
 
     fun onSearchQueryChange(query: String) {
+        savedState[KEY_QUERY] = query
         _state.update { it.copy(searchQuery = query) }
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
@@ -171,10 +184,6 @@ class DictionaryViewModel @Inject constructor(
         _state.update { it.copy(error = null) }
     }
 
-    fun dismissLocalTts() {
-        _state.update { it.copy(localTtsText = null) }
-    }
-
     fun showToast(message: String) {
         toastController.success(message)
     }
@@ -183,44 +192,28 @@ class DictionaryViewModel @Inject constructor(
         if (isSpeaking) return
         isSpeaking = true
         viewModelScope.launch {
-            // Respect TTS settings from DataStore
+            val speed = ttsPreferences.ttsSpeed.first()
+            // H-05: server TTS disabled or unavailable -> on-device voice (web parity)
             if (!ttsPreferences.ttsEnabled.first()) {
-                _state.update { it.copy(localTtsText = text) }
+                audioPlayer.speakLocal(text, speed)
                 isSpeaking = false
                 return@launch
             }
-            val speed = ttsPreferences.ttsSpeed.first()
-            toastController.info("Generating pronunciation\u2026")
+            toastController.info(strings.get(R.string.dict_generating_pronunciation))
             repository.speakPhonetic(text).onSuccess { bytes ->
                 if (bytes != null) {
-                    var tmp: File? = null
-                    try {
-                        tmp = File.createTempFile("dict_tts_", ".wav")
-                        tmp.writeBytes(bytes)
-                        mediaPlayer?.apply { if (isPlaying) stop(); release() }
-                        val player = MediaPlayer().apply {
-                            setDataSource(tmp.absolutePath)
-                            prepare()
-                            playbackParams = playbackParams.setSpeed(speed)
-                            setOnCompletionListener {
-                                it.release()
-                                if (mediaPlayer === it) mediaPlayer = null
-                                tmp.delete()
-                            }
-                            start()
-                        }
-                        mediaPlayer = player
-                    } catch (e: Exception) {
-                        Timber.e(e, "Dictionary TTS playback failed")
-                        tmp?.delete()
-                        _state.update { it.copy(localTtsText = text) }
-                    }
+                    audioPlayer.playWavBytes(
+                        bytes = bytes,
+                        prefix = "dict_tts_",
+                        speed = speed,
+                        onError = { audioPlayer.speakLocal(text, speed) },
+                    )
                 } else {
-                    _state.update { it.copy(localTtsText = text) }
+                    audioPlayer.speakLocal(text, speed)
                 }
             }.onFailure {
-                Timber.e(it, "Dictionary TTS failed")
-                _state.update { it.copy(localTtsText = text) }
+                Timber.e(it, "Dictionary TTS failed; falling back to local voice")
+                audioPlayer.speakLocal(text, speed)
             }
             isSpeaking = false
         }
@@ -243,11 +236,14 @@ class DictionaryViewModel @Inject constructor(
         }
     }
 
-    private var mediaPlayer: MediaPlayer? = null
-
     override fun onCleared() {
         super.onCleared()
-        mediaPlayer?.apply { if (isPlaying) stop(); release() }
-        mediaPlayer = null
+        audioPlayer.stop()
+    }
+
+    private companion object {
+        const val KEY_CATEGORY = "category"
+        const val KEY_TYPE = "type"
+        const val KEY_QUERY = "query"
     }
 }

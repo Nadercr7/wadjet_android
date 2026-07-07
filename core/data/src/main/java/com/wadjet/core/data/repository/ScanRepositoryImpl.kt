@@ -1,6 +1,7 @@
 package com.wadjet.core.data.repository
 
 import com.wadjet.core.common.suspendRunCatching
+import com.wadjet.core.data.audio.TtsAudioCache
 import com.wadjet.core.data.ApiException
 import com.wadjet.core.database.dao.ScanResultDao
 import com.wadjet.core.database.entity.ScanResultEntity
@@ -30,22 +31,37 @@ class ScanRepositoryImpl @Inject constructor(
     private val audioApi: AudioApiService,
     private val scanResultDao: ScanResultDao,
     private val json: Json,
+    private val ttsCache: TtsAudioCache,
+    private val onDeviceScanner: dagger.Lazy<com.wadjet.core.ml.OnDeviceScanner>,
+    private val analytics: com.wadjet.core.firebase.WadjetAnalytics,
 ) : ScanRepository {
 
     override suspend fun scanImage(imageFile: File, mode: String): Result<ScanResult> = suspendRunCatching {
-        val filePart = MultipartBody.Part.createFormData(
-            "file",
-            imageFile.name,
-            imageFile.asRequestBody("image/jpeg".toMediaType()),
-        )
-        val modePart = mode.toRequestBody("text/plain".toMediaType())
+        val result = try {
+            // PRIMARY: server inference (full pipeline — accurate, with translation)
+            val filePart = MultipartBody.Part.createFormData(
+                "file",
+                imageFile.name,
+                imageFile.asRequestBody("image/jpeg".toMediaType()),
+            )
+            val modePart = mode.toRequestBody("text/plain".toMediaType())
 
-        val response = scanApi.scan(filePart, modePart)
-        if (response.isSuccessful) {
-            response.body()!!.toDomain()
-        } else {
-            throw ApiException("Scan failed: ${response.code()}")
+            val response = scanApi.scan(filePart, modePart)
+            if (response.isSuccessful) {
+                response.body()!!.toDomain()
+            } else {
+                // HTTP errors mean the server was REACHED — surface them as before,
+                // never silently downgrade to the on-device result.
+                throw ApiException("Scan failed: ${response.code()}")
+            }
+        } catch (e: java.io.IOException) {
+            // C2 (F-02): server unreachable → OFFLINE-ONLY on-device fallback
+            // (detect+classify only; no translation — flagged on_device_onnx).
+            Timber.w(e, "Server scan unreachable — running on-device ONNX fallback")
+            onDeviceScanner.get().scan(imageFile, mode)
         }
+        analytics.logScanCompleted(result.numDetections, result.detectionSource)
+        result
     }
 
     override suspend fun saveScanResult(result: ScanResult, thumbnailPath: String): Result<Int> = suspendRunCatching {
@@ -98,10 +114,11 @@ class ScanRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun speak(text: String, lang: String, context: String, voice: String?, style: String?): Result<ByteArray?> = suspendRunCatching {
-        val response = audioApi.speak(SpeakRequest(text = text, lang = lang, context = context, voice = voice, style = style))
+    override suspend fun speak(text: String, lang: String, context: String): Result<ByteArray?> = suspendRunCatching {
+        ttsCache.get(text, lang, context)?.let { return@suspendRunCatching it }
+        val response = audioApi.speak(SpeakRequest(text = text, lang = lang, context = context))
         when (response.code()) {
-            200 -> response.body()?.bytes()
+            200 -> response.body()?.bytes()?.also { ttsCache.put(text, lang, context, it) }
             204 -> null
             else -> throw Exception("TTS failed: ${response.code()}")
         }

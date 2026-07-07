@@ -13,22 +13,22 @@
         android:pathData="M0,78h96v18H0z" />
     <!-- Great Pyramid (centre) -->
     <path
-        android:fillColor="#D4AF37"
+        android:fillColor="#C8A24B"
         android:fillAlpha="0.55"
         android:pathData="M48,22L68,78H28Z" />
     <!-- Smaller pyramid (left) -->
     <path
-        android:fillColor="#D4AF37"
+        android:fillColor="#C8A24B"
         android:fillAlpha="0.35"
         android:pathData="M24,42L36,78H12Z" />
     <!-- Smaller pyramid (right) -->
     <path
-        android:fillColor="#D4AF37"
+        android:fillColor="#C8A24B"
         android:fillAlpha="0.35"
         android:pathData="M72,48L82,78H62Z" />
     <!-- Sun disc -->
     <path
-        android:fillColor="#D4AF37"
+        android:fillColor="#C8A24B"
         android:fillAlpha="0.25"
         android:pathData="M76,20m-8,0a8,8 0,1 1,16 0a8,8 0,1 1,-16 0" />
 </vector>

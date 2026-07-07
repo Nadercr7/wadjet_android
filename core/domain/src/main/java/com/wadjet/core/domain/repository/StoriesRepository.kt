@@ -21,7 +21,7 @@ interface StoriesRepository {
 
     suspend fun generateChapterImage(storyId: String, chapterIndex: Int): Result<String?>
 
-    suspend fun speakChapter(text: String, voice: String? = null, style: String? = null): Result<ByteArray?>
+    suspend fun speakChapter(text: String, lang: String = "en"): Result<ByteArray?>
 
     fun getStoryProgress(storyId: String): Flow<StoryProgress?>
 

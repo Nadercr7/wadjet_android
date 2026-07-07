@@ -30,6 +30,7 @@ dependencies {
     implementation(project(":core:database"))
     implementation(project(":core:firebase"))
     implementation(project(":core:common"))
+    implementation(project(":core:ml"))
 
     // OkHttp SSE (for chat streaming)
     implementation(libs.okhttp.sse)
@@ -37,6 +38,11 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+
+    // WorkManager (E-P1 story prefetch)
+    implementation(libs.work.runtime.ktx)
+    implementation(libs.hilt.work)
+    ksp(libs.hilt.ext.compiler)
 
     // DataStore
     implementation(libs.datastore.preferences)

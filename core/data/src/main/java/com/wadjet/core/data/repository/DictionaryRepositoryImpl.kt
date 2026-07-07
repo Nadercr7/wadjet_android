@@ -2,6 +2,7 @@ package com.wadjet.core.data.repository
 
 import com.wadjet.core.common.EgyptianPronunciation
 import com.wadjet.core.common.suspendRunCatching
+import com.wadjet.core.data.audio.TtsAudioCache
 import com.wadjet.core.data.ApiException
 import com.wadjet.core.database.dao.SignDao
 import com.wadjet.core.database.entity.SignEntity
@@ -36,6 +37,7 @@ class DictionaryRepositoryImpl @Inject constructor(
     private val audioApi: AudioApiService,
     private val signDao: SignDao,
     private val categoryDao: com.wadjet.core.database.dao.CategoryDao,
+    private val ttsCache: TtsAudioCache,
 ) : DictionaryRepository {
 
     override suspend fun getSigns(
@@ -64,9 +66,10 @@ class DictionaryRepositoryImpl @Inject constructor(
             } else {
                 throw ApiException("Failed to load signs: ${response.code()}")
             }
-        } catch (e: java.io.IOException) {
-            // Offline fallback — serve from Room cache
-            Timber.w(e, "Network unavailable, falling back to cached signs")
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            // E-05: fall back to cache on ANY fetch failure (offline OR server error)
+            Timber.w(e, "Sign fetch failed, falling back to cached signs")
             val limit = perPage
             val offset = (page - 1) * perPage
 
@@ -228,15 +231,14 @@ class DictionaryRepositoryImpl @Inject constructor(
     }
 
     override suspend fun speakPhonetic(text: String): Result<ByteArray?> = suspendRunCatching {
+        ttsCache.get(text, "en", EgyptianPronunciation.CONTEXT)?.let { return@suspendRunCatching it }
         val response = audioApi.speak(SpeakRequest(
             text = text,
             lang = "en",
             context = EgyptianPronunciation.CONTEXT,
-            voice = EgyptianPronunciation.VOICE,
-            style = EgyptianPronunciation.STYLE,
         ))
         when (response.code()) {
-            200 -> response.body()?.bytes()
+            200 -> response.body()?.bytes()?.also { ttsCache.put(text, "en", EgyptianPronunciation.CONTEXT, it) }
             204 -> null
             else -> throw ApiException("TTS failed: ${response.code()}")
         }

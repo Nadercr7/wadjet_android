@@ -46,8 +46,10 @@ class AuthInterceptor @Inject constructor(
     }
 
     private fun handleAuthRequest(chain: Interceptor.Chain, request: Request): Response {
-        // For refresh endpoint, send refresh token as cookie
-        val modifiedRequest = if (request.url.encodedPath.endsWith("/auth/refresh")) {
+        // Refresh needs the cookie to rotate; logout needs it so the server can
+        // actually revoke the stored refresh token (D-04).
+        val path = request.url.encodedPath
+        val modifiedRequest = if (path.endsWith("/auth/refresh") || path.endsWith("/auth/logout")) {
             val refreshToken = tokenManager.refreshToken
             if (refreshToken != null) {
                 request.newBuilder()
@@ -80,11 +82,8 @@ class AuthInterceptor @Inject constructor(
 
     private fun Request.isAuthEndpoint(): Boolean {
         val path = url.encodedPath
-        return path.contains("/auth/login") ||
-            path.contains("/auth/register") ||
-            path.contains("/auth/google") ||
+        return path.contains("/auth/firebase") ||
             path.contains("/auth/refresh") ||
-            path.contains("/auth/forgot-password") ||
             path.contains("/auth/logout")
     }
 }

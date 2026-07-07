@@ -4,6 +4,7 @@ import com.wadjet.core.common.audio.AudioPlaybackManager
 import android.content.SharedPreferences
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.domain.model.Chapter
 import com.wadjet.core.domain.model.Interaction
@@ -59,6 +60,8 @@ class StoryReaderViewModel @Inject constructor(
     private val storiesRepository: StoriesRepository,
     private val toastController: com.wadjet.core.common.ToastController,
     private val audioPlayer: AudioPlaybackManager,
+    private val strings: StringResolver,
+    @com.wadjet.core.common.di.ApplicationScope private val appScope: kotlinx.coroutines.CoroutineScope,
     private val sharedPreferences: SharedPreferences,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -148,7 +151,7 @@ class StoryReaderViewModel @Inject constructor(
             }.onFailure { error ->
                 Timber.e(error, "Interaction failed")
                 _state.update { it.copy(error = error.message) }
-                toastController.error(error.message ?: "Interaction failed")
+                toastController.error(error.message ?: strings.get(R.string.reader_error_interaction))
             }
         }
     }
@@ -171,13 +174,18 @@ class StoryReaderViewModel @Inject constructor(
         if (paragraphs.isEmpty()) return
 
         _state.update { it.copy(isNarrating = true, isSpeaking = true, narratingParagraphIndex = 0) }
-        toastController.info("Generating narration\u2026")
+        toastController.info(strings.get(R.string.reader_generating_narration))
         narrationJob = viewModelScope.launch {
             for ((idx, paragraph) in paragraphs.withIndex()) {
                 if (!_state.value.isNarrating) break
                 _state.update { it.copy(narratingParagraphIndex = idx) }
 
-                val spoken = speakAndWait(paragraph.textEn, chapter.ttsVoice, chapter.ttsStyle)
+                // H-01: narrate in the app language — Arabic text when the app is in Arabic.
+                val isArabic = com.wadjet.core.common.AppLanguage.isArabic()
+                val narrationText =
+                    if (isArabic && paragraph.textAr.isNotBlank()) paragraph.textAr else paragraph.textEn
+                val narrationLang = if (isArabic && paragraph.textAr.isNotBlank()) "ar" else "en"
+                val spoken = speakAndWait(narrationText, narrationLang)
                 if (!spoken || !_state.value.isNarrating) break
             }
             _state.update { it.copy(isNarrating = false, isSpeaking = false, narratingParagraphIndex = -1) }
@@ -195,11 +203,11 @@ class StoryReaderViewModel @Inject constructor(
      * Speaks text via server TTS and suspends until playback finishes.
      * Returns true if playback completed, false if it should fall back to local TTS / failed.
      */
-    private suspend fun speakAndWait(text: String, voice: String?, style: String?): Boolean {
+    private suspend fun speakAndWait(text: String, lang: String): Boolean {
         return suspendCancellableCoroutine { cont ->
             cont.invokeOnCancellation { stopSpeaking() }
             viewModelScope.launch {
-                storiesRepository.speakChapter(text, voice = voice, style = style)
+                storiesRepository.speakChapter(text, lang = lang)
                     .onSuccess { bytes ->
                         if (bytes != null) {
                             playWavBytesAndWait(bytes) { if (cont.isActive) cont.resume(true) }
@@ -212,9 +220,14 @@ class StoryReaderViewModel @Inject constructor(
                             if (cont.isActive) cont.resume(true)
                         }
                     }
-                    .onFailure {
-                        Timber.e(it, "Narration TTS failed for paragraph")
-                        if (cont.isActive) cont.resume(false)
+                    .onFailure { e ->
+                        // H-05: degrade to on-device narration instead of stopping silently
+                        Timber.e(e, "Narration TTS failed; falling back to local TTS")
+                        localTtsDeferred = CompletableDeferred()
+                        _state.update { it.copy(localTtsText = text) }
+                        localTtsDeferred?.await()
+                        localTtsDeferred = null
+                        if (cont.isActive) cont.resume(true)
                     }
             }
         }
@@ -243,7 +256,7 @@ class StoryReaderViewModel @Inject constructor(
                 .onFailure { error ->
                     Timber.e(error, "Failed to load story")
                     _state.update { it.copy(isLoading = false, error = error.message) }
-                    toastController.error(error.message ?: "Failed to load story")
+                    toastController.error(error.message ?: strings.get(R.string.reader_error_load))
                 }
         }
     }
@@ -267,7 +280,7 @@ class StoryReaderViewModel @Inject constructor(
 
         // 3. Generate on-demand via POST
         _state.update { it.copy(isLoadingImage = true, imageLoadFailed = false) }
-        toastController.info("Generating scene image\u2026")
+        toastController.info(strings.get(R.string.reader_generating_scene))
         viewModelScope.launch {
             storiesRepository.generateChapterImage(storyId, chapterIdx)
                 .onSuccess { url ->
@@ -336,7 +349,8 @@ class StoryReaderViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO).launch {
+        // I-03: persist on the application scope so the write survives VM teardown.
+        appScope.launch {
             storiesRepository.saveProgress(
                 StoryProgress(
                     storyId = storyId,

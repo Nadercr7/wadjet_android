@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- API 31+ system splash: keep the splash background Night (#0A0A0A).
+         Without this the AppCompat parent (G-01) let the system splash render
+         white before the app's forced-dark UI appeared. -->
+    <style name="Theme.Wadjet" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">#FF0A0A0A</item>
+        <item name="android:windowSplashScreenBackground">#FF0A0A0A</item>
+        <!-- U5: branded splash - reveal the gold Eye of Wadjet (primary mark) on Night. -->
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash_eye</item>
+    </style>
+</resources>

@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.domain.model.IdentifyMatch
 import com.wadjet.core.domain.model.IdentifyResult
@@ -36,6 +37,7 @@ data class IdentifyUiState(
 class IdentifyViewModel @Inject constructor(
     private val exploreRepository: ExploreRepository,
     private val userRepository: UserRepository,
+    private val strings: StringResolver,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -48,7 +50,7 @@ class IdentifyViewModel @Inject constructor(
             // Check free-tier limits
             userRepository.getLimits().onSuccess { limits ->
                 if (limits.scansToday >= limits.scansPerDay) {
-                    _state.update { it.copy(error = "Daily scan limit reached (${limits.scansPerDay}). Try again tomorrow.") }
+                    _state.update { it.copy(error = strings.get(R.string.identify_error_daily_limit, limits.scansPerDay)) }
                     return@launch
                 }
             }
@@ -66,7 +68,7 @@ class IdentifyViewModel @Inject constructor(
                     if (compressed !== file) compressed.delete()
                     _state.update {
                         it.copy(
-                            error = error.message ?: "Identification failed",
+                            error = error.message ?: strings.get(R.string.identify_error_failed),
                             isLoading = false,
                             cameraActive = true,
                         )
@@ -98,11 +100,11 @@ class IdentifyViewModel @Inject constructor(
                 if (file != null) {
                     onImageCaptured(file)
                 } else {
-                    _state.update { it.copy(error = "Failed to read selected image") }
+                    _state.update { it.copy(error = strings.get(R.string.identify_error_read_image)) }
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to process selected image")
-                _state.update { it.copy(error = "Failed to process image") }
+                _state.update { it.copy(error = strings.get(R.string.identify_error_process_image)) }
             }
         }
     }
@@ -126,7 +128,8 @@ class IdentifyViewModel @Inject constructor(
         }
 
         val decodeOptions = BitmapFactory.Options().apply { inSampleSize = sampleSize }
-        val bitmap = BitmapFactory.decodeFile(file.absolutePath, decodeOptions) ?: return file
+        val decoded = BitmapFactory.decodeFile(file.absolutePath, decodeOptions) ?: return file
+        val bitmap = uprightBitmap(decoded, file)
 
         val outFile = File(context.cacheDir, "identify_${System.currentTimeMillis()}.jpg")
         FileOutputStream(outFile).use { out ->
@@ -135,6 +138,34 @@ class IdentifyViewModel @Inject constructor(
         bitmap.recycle()
         return outFile
     }
+
+    /**
+     * F-01: BitmapFactory ignores the EXIF Orientation tag and the re-encoded JPEG
+     * carries none, so portrait phone photos reached the server sideways and
+     * degraded detection. Bake the rotation into the pixels before upload.
+     */
+    private fun uprightBitmap(source: android.graphics.Bitmap, sourceFile: File): android.graphics.Bitmap {
+        val orientation = androidx.exifinterface.media.ExifInterface(sourceFile.absolutePath)
+            .getAttributeInt(
+                androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION,
+                androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL,
+            )
+        val matrix = android.graphics.Matrix()
+        when (orientation) {
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.preScale(-1f, 1f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.preScale(1f, -1f)
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_TRANSPOSE -> { matrix.postRotate(90f); matrix.preScale(-1f, 1f) }
+            androidx.exifinterface.media.ExifInterface.ORIENTATION_TRANSVERSE -> { matrix.postRotate(270f); matrix.preScale(-1f, 1f) }
+            else -> return source
+        }
+        val rotated = android.graphics.Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
+        if (rotated != source) source.recycle()
+        return rotated
+    }
+
 
     private fun uriToFile(uri: Uri): File? {
         return try {

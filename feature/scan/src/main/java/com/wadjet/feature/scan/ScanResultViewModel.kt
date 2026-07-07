@@ -1,23 +1,21 @@
 package com.wadjet.feature.scan
 
-import android.content.Context
-import android.media.MediaPlayer
+import com.wadjet.core.common.audio.AudioPlaybackManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.common.EgyptianPronunciation
 import com.wadjet.core.designsystem.component.TtsState
 import com.wadjet.core.domain.model.ScanResult
 import com.wadjet.core.domain.repository.ScanRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.io.File
 import javax.inject.Inject
 
 data class ScanResultUiState(
@@ -25,23 +23,20 @@ data class ScanResultUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val ttsStates: Map<String, TtsState> = emptyMap(),
-    val localTtsText: String? = null,
-    val localTtsLang: String? = null,
 )
 
 @HiltViewModel
 class ScanResultViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val scanRepository: ScanRepository,
-    @ApplicationContext private val context: Context,
+    private val audioPlayer: AudioPlaybackManager,
+    private val strings: StringResolver,
 ) : ViewModel() {
 
     private val scanId: String = savedStateHandle.get<String>("scanId") ?: ""
 
     private val _state = MutableStateFlow(ScanResultUiState())
     val state: StateFlow<ScanResultUiState> = _state.asStateFlow()
-
-    private var mediaPlayer: MediaPlayer? = null
 
     init {
         loadResult()
@@ -50,7 +45,7 @@ class ScanResultViewModel @Inject constructor(
     private fun loadResult() {
         val id = scanId.toIntOrNull()
         if (id == null) {
-            _state.update { it.copy(isLoading = false, error = "Invalid scan ID") }
+            _state.update { it.copy(isLoading = false, error = strings.get(R.string.scan_error_invalid_id)) }
             return
         }
         viewModelScope.launch {
@@ -76,65 +71,43 @@ class ScanResultViewModel @Inject constructor(
             val isHieroglyphic = key == "translit"
             val ttsText = if (isHieroglyphic) EgyptianPronunciation.toSpeech(text) else text
             val ctx = if (isHieroglyphic) EgyptianPronunciation.CONTEXT else "scan_pronunciation"
-            val voice = if (isHieroglyphic) EgyptianPronunciation.VOICE else null
-            val style = if (isHieroglyphic) EgyptianPronunciation.STYLE else null
-            scanRepository.speak(ttsText, lang, ctx, voice, style).onSuccess { bytes ->
+            scanRepository.speak(ttsText, lang, ctx).onSuccess { bytes ->
                 if (bytes != null) {
                     playWavBytes(key, bytes)
                 } else {
-                    _state.update {
-                        it.copy(
-                            ttsStates = it.ttsStates + (key to TtsState.IDLE),
-                            localTtsText = text,
-                            localTtsLang = lang,
-                        )
-                    }
+                    speakLocally(key, text)
                 }
             }.onFailure {
-                Timber.e(it, "TTS failed for key=$key")
-                _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) }
+                Timber.e(it, "TTS failed for key=$key; falling back to local voice")
+                speakLocally(key, text)
             }
         }
     }
 
     private fun playWavBytes(key: String, bytes: ByteArray) {
-        stopMediaPlayer()
-        try {
-            val tmp = File.createTempFile("tts_", ".wav", context.cacheDir)
-            tmp.writeBytes(bytes)
-            mediaPlayer = MediaPlayer().apply {
-                setDataSource(tmp.absolutePath)
-                prepare()
-                setOnCompletionListener {
-                    _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) }
-                    stopMediaPlayer()
-                    tmp.delete()
-                }
-                start()
-            }
-            _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.PLAYING)) }
-        } catch (e: Exception) {
-            Timber.e(e, "MediaPlayer failed")
-            _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.IDLE)) }
-        }
+        _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.PLAYING)) }
+        audioPlayer.playWavBytes(
+            bytes = bytes,
+            onCompletion = { _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) } },
+            onError = { _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) } },
+        )
     }
 
     private fun stopTts(key: String) {
-        stopMediaPlayer()
+        audioPlayer.stop()
         _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.IDLE)) }
     }
 
-    private fun stopMediaPlayer() {
-        mediaPlayer?.apply { if (isPlaying) stop(); release() }
-        mediaPlayer = null
-    }
-
-    fun dismissLocalTts() {
-        _state.update { it.copy(localTtsText = null, localTtsLang = null) }
+    // H-05: degrade to the on-device voice when server TTS is unavailable
+    private fun speakLocally(key: String, text: String) {
+        _state.update { it.copy(ttsStates = it.ttsStates + (key to TtsState.PLAYING)) }
+        audioPlayer.speakLocal(text) {
+            _state.update { s -> s.copy(ttsStates = s.ttsStates + (key to TtsState.IDLE)) }
+        }
     }
 
     override fun onCleared() {
         super.onCleared()
-        stopMediaPlayer()
+        audioPlayer.stop()
     }
 }

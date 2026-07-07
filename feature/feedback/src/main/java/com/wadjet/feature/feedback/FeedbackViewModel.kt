@@ -1,6 +1,7 @@
 package com.wadjet.feature.feedback
 
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import com.wadjet.core.domain.model.FeedbackData
 import com.wadjet.core.domain.repository.FeedbackRepository
@@ -27,6 +28,7 @@ data class FeedbackUiState(
 @HiltViewModel
 class FeedbackViewModel @Inject constructor(
     private val feedbackRepository: FeedbackRepository,
+    private val strings: StringResolver,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FeedbackUiState())
@@ -54,11 +56,11 @@ class FeedbackViewModel @Inject constructor(
         val s = _state.value
         if (s.isSubmitting) return
         if (s.selectedCategory.isBlank()) {
-            _state.update { it.copy(error = "Please select a category") }
+            _state.update { it.copy(error = strings.get(R.string.feedback_error_category)) }
             return
         }
         if (s.message.length < 10) {
-            _state.update { it.copy(error = "Message must be at least 10 characters") }
+            _state.update { it.copy(error = strings.get(R.string.feedback_error_min_chars)) }
             return
         }
         _state.update { it.copy(isSubmitting = true, error = null) }

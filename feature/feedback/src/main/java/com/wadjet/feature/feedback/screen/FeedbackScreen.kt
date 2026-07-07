@@ -97,7 +97,7 @@ fun FeedbackScreen(
                         FilterChip(
                             selected = state.selectedCategory == category,
                             onClick = { onCategorySelected(category) },
-                            label = { Text(category) },
+                            label = { Text(feedbackCategoryLabel(category)) }, // G-07
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = WadjetColors.Gold,
                                 selectedLabelColor = WadjetColors.Night,
@@ -223,3 +223,13 @@ private fun feedbackTextFieldColors() = TextFieldDefaults.colors(
     focusedIndicatorColor = WadjetColors.Gold,
     unfocusedIndicatorColor = WadjetColors.Border,
 )
+
+/** G-07: category VALUES are what the backend receives; only the label is localized. */
+@Composable
+private fun feedbackCategoryLabel(value: String): String = when (value.lowercase()) {
+    "bug" -> stringResource(R.string.label_cat_bug)
+    "suggestion" -> stringResource(R.string.label_cat_suggestion)
+    "praise" -> stringResource(R.string.label_cat_praise)
+    "other" -> stringResource(R.string.label_cat_other)
+    else -> value
+}

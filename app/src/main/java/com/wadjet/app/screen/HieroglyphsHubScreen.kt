@@ -30,7 +30,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.Image
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -75,6 +77,16 @@ fun HieroglyphsHubScreen(
             text = stringResource(R.string.hub_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = WadjetColors.TextMuted,
+        )
+
+        // Gold hieroglyph relief panel (static hero-lit 3D accent)
+        Spacer(Modifier.height(16.dp))
+        Image(
+            painter = painterResource(com.wadjet.core.designsystem.R.drawable.accent_panel),
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .fillMaxWidth(0.72f),
         )
 
         // Recent Scans carousel

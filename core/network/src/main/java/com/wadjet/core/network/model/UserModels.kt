@@ -99,7 +99,9 @@ data class UsageDto(
 data class SaveProgressRequest(
     @SerialName("story_id") val storyId: String,
     @SerialName("chapter_index") val chapterIndex: Int,
-    @SerialName("glyphs_learned") val glyphsLearned: List<String>,
+    // Backend (schemas.py StoryProgressRequest) expects a JSON-encoded string,
+    // not an array — a list here 422s on every call.
+    @SerialName("glyphs_learned") val glyphsLearned: String,
     val score: Int,
     val completed: Boolean,
 )

@@ -45,6 +45,19 @@ fun SettingsQuickDialog(
         },
         text = {
             Column {
+                // Language (G-01: per-app locale EN/AR)
+                Text(
+                    text = stringResource(R.string.quick_settings_language),
+                    color = WadjetColors.Text,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LanguageSection()
+
+                Spacer(modifier = Modifier.height(8.dp))
+                HorizontalDivider(color = WadjetColors.Border)
+                Spacer(modifier = Modifier.height(8.dp))
+
                 // TTS Toggle
                 Row(
                     modifier = Modifier.fillMaxWidth(),

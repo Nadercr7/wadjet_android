@@ -101,7 +101,7 @@ fun BrowseTab(
                     colors = chipColors(state.selectedCategory == null),
                 )
             }
-            items(state.categories) { cat ->
+            items(state.categories, key = { it.code }) { cat -> // I-05: stable keys
                 FilterChip(
                     selected = state.selectedCategory == cat.code,
                     onClick = { onCategorySelect(cat.code) },
@@ -117,12 +117,12 @@ fun BrowseTab(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(bottom = 8.dp),
         ) {
-            items(SIGN_TYPES) { type ->
+            items(SIGN_TYPES, key = { it }) { type -> // I-05: stable keys
                 val isSelected = (type == "All" && state.selectedType == null) || type == state.selectedType
                 FilterChip(
                     selected = isSelected,
                     onClick = { onTypeSelect(type) },
-                    label = { Text(type.replaceFirstChar { it.uppercase() }) },
+                    label = { Text(signTypeLabel(type)) }, // G-07: localized label, stable value
                     colors = chipColors(isSelected),
                 )
             }
@@ -222,3 +222,15 @@ private fun chipColors(selected: Boolean) = FilterChipDefaults.filterChipColors(
     containerColor = WadjetColors.Surface,
     labelColor = WadjetColors.TextMuted,
 )
+
+/** G-07: sign-type filter VALUES are stable API identifiers; only the label is localized. */
+@Composable
+private fun signTypeLabel(value: String): String = when (value.lowercase()) {
+    "all" -> stringResource(R.string.label_type_all)
+    "uniliteral" -> stringResource(R.string.label_type_uniliteral)
+    "biliteral" -> stringResource(R.string.label_type_biliteral)
+    "triliteral" -> stringResource(R.string.label_type_triliteral)
+    "logogram" -> stringResource(R.string.label_type_logogram)
+    "determinative" -> stringResource(R.string.label_type_determinative)
+    else -> value.replaceFirstChar { it.uppercase() }
+}

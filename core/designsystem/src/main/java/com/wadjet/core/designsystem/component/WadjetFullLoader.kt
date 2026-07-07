@@ -80,7 +80,7 @@ fun WadjetFullLoader(
         ) {
             // Pulsing logo
             Image(
-                painter = painterResource(R.drawable.logo_wadjet),
+                painter = painterResource(R.drawable.ic_logo_eye),
                 contentDescription = stringResource(R.string.app_name_display),
                 modifier = Modifier
                     .size(80.dp)

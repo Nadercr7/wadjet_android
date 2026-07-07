@@ -56,9 +56,9 @@ data class PaletteSignDto(
 data class SpeakRequest(
     val text: String,
     val lang: String = "en",
+    // Must match backend SpeakRequest (audio.py): text/lang/context only.
+    // Voice and style are chosen server-side from the context preset (H-03).
     val context: String = "dictionary",
-    val voice: String? = null,
-    val style: String? = null,
 )
 
 @Serializable

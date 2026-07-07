@@ -11,10 +11,15 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -76,6 +81,7 @@ fun SettingsScreen(
     onChangePassword: () -> Unit,
     onTtsEnabledChanged: (Boolean) -> Unit,
     onTtsSpeedChanged: (Float) -> Unit,
+    onPrefetchStoriesChanged: (Boolean) -> Unit,
     onClearCache: () -> Unit,
     onSignOut: () -> Unit,
     onFeedback: () -> Unit,
@@ -175,6 +181,19 @@ fun SettingsScreen(
                 )
             }
 
+            // ── Offline (E-P1) ──
+            item { SectionHeader(stringResource(R.string.settings_section_offline)) }
+            item {
+                PrefetchSection(
+                    enabled = state.prefetchStoriesOnWifi,
+                    onEnabledChanged = onPrefetchStoriesChanged,
+                )
+            }
+
+            // ── Language (G-01: per-app locale EN/AR) ──
+            item { SectionHeader(stringResource(R.string.quick_settings_language)) }
+            item { LanguageSection() }
+
             // ── Storage ──
             item { SectionHeader(stringResource(R.string.settings_section_storage)) }
             item {
@@ -193,11 +212,14 @@ fun SettingsScreen(
                             )
                         }
                         Box(
+                            contentAlignment = Alignment.Center,
                             modifier = Modifier
+                                // K-01: 48dp minimum touch target
+                                .sizeIn(minHeight = 48.dp)
                                 .clip(MaterialTheme.shapes.small)
                                 .background(WadjetColors.Surface)
                                 .border(1.dp, WadjetColors.Gold, MaterialTheme.shapes.small)
-                                .clickable(onClick = onClearCache)
+                                .clickable(onClick = onClearCache, role = androidx.compose.ui.semantics.Role.Button)
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                         ) {
                             Text(stringResource(R.string.settings_clear_cache), color = WadjetColors.Gold, style = MaterialTheme.typography.labelMedium)
@@ -218,12 +240,19 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(stringResource(DesignR.string.footer_credit), color = WadjetColors.TextMuted, style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = stringResource(R.string.settings_send_feedback),
-                        color = WadjetColors.Gold,
-                        style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.clickable(onClick = onFeedback),
-                    )
+                    // K-01: 48dp minimum touch target
+                    Box(
+                        contentAlignment = Alignment.CenterStart,
+                        modifier = Modifier
+                            .sizeIn(minHeight = 48.dp)
+                            .clickable(onClick = onFeedback, role = androidx.compose.ui.semantics.Role.Button),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_send_feedback),
+                            color = WadjetColors.Gold,
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
                 }
             }
 
@@ -242,6 +271,18 @@ fun SettingsScreen(
                 ) {
                     Text(stringResource(R.string.settings_sign_out_title), color = WadjetColors.Error, style = MaterialTheme.typography.labelLarge)
                 }
+            }
+
+            // Gold cartouche brand seal (static hero-lit 3D accent)
+            item {
+                Image(
+                    painter = painterResource(DesignR.drawable.accent_cartouche),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 72.dp),
+                )
             }
 
             item { Spacer(modifier = Modifier.height(32.dp)) }
@@ -414,12 +455,46 @@ private fun TtsSection(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = stringResource(R.string.settings_tts_speed_value, String.format("%.1f", speed)),
+                    text = stringResource(R.string.settings_tts_speed_value, String.format(java.util.Locale.getDefault(), "%.1f", speed)), // G-05
                     color = WadjetColors.Sand,
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
         }
+    }
+}
+
+/** E-P1: daily Wi-Fi story prefetch toggle. */
+@Composable
+private fun PrefetchSection(
+    enabled: Boolean,
+    onEnabledChanged: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SettingsCard(modifier = modifier) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(stringResource(R.string.settings_prefetch_stories), color = WadjetColors.Text, style = MaterialTheme.typography.bodyMedium)
+            Switch(
+                checked = enabled,
+                onCheckedChange = onEnabledChanged,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = WadjetColors.Gold,
+                    checkedTrackColor = WadjetColors.Gold.copy(alpha = 0.3f),
+                    uncheckedThumbColor = WadjetColors.TextMuted,
+                    uncheckedTrackColor = WadjetColors.Surface,
+                ),
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = stringResource(R.string.settings_prefetch_stories_sub),
+            color = WadjetColors.TextMuted,
+            style = MaterialTheme.typography.bodySmall,
+        )
     }
 }
 

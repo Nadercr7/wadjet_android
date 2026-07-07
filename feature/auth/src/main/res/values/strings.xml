@@ -62,4 +62,17 @@
     <string name="verify_checking">Checking…</string>
     <string name="verify_resend">Resend verification email</string>
     <string name="verify_cancel">Cancel and sign out</string>
+
+    <!-- ViewModel messages (G-04) -->
+    <string name="auth_error_invalid_email_password">Please enter a valid email and password</string>
+    <string name="auth_error_login_failed">Login failed</string>
+    <string name="auth_error_invalid_email">Please enter a valid email</string>
+    <string name="auth_error_registration_failed">Registration failed</string>
+    <string name="auth_error_send_verification">Failed to send verification email</string>
+    <string name="auth_error_check_verification">Failed to check verification</string>
+    <string name="auth_error_send_reset">Failed to send reset email</string>
+    <string name="auth_error_password_length">Password must be at least 8 characters</string>
+    <string name="auth_error_password_uppercase">Password must contain an uppercase letter</string>
+    <string name="auth_error_password_lowercase">Password must contain a lowercase letter</string>
+    <string name="auth_error_password_digit">Password must contain a digit</string>
 </resources>

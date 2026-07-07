@@ -18,20 +18,43 @@
     <string name="reader_stop_narrate">Stop</string>
     <string name="reader_narrate">Narrate</string>
     <string name="reader_loading">Loading story…</string>
-    <string name="reader_prev_chapter">← Previous</string>
-    <string name="reader_next_chapter">Next →</string>
+    <!-- G-05: no baked-in directional arrows - they don't mirror in RTL -->
+    <string name="reader_prev_chapter">Previous</string>
+    <string name="reader_next_chapter">Next</string>
     <string name="reader_story_complete">Story Complete</string>
     <string name="reader_score_label">Score</string>
     <string name="reader_glyphs_label">Glyphs</string>
     <string name="reader_read_again">Read Again</string>
     <string name="reader_back_to_stories">Back to Stories</string>
     <string name="reader_scene_desc">Scene illustration</string>
-    <string name="reader_image_failed">Image failed to load</string>
+    <string name="reader_image_failed">This image wouldn\'t load.</string>
     <string name="reader_tap_discover">Tap to discover glyph</string>
     <string name="reader_glyph_learned">Glyph Learned</string>
     <string name="reader_write_prompt">Write the Gardiner code for: %1$s</string>
     <string name="reader_hint">Hint: %1$s</string>
     <string name="reader_write_placeholder">e.g. %1$s</string>
     <string name="reader_correct">Correct!</string>
-    <string name="reader_incorrect">Not quite — try again</string>
+    <string name="reader_incorrect">Not quite. Try again</string>
+
+    <!-- ViewModel messages (G-04) -->
+    <string name="reader_error_interaction">That didn\'t go through. Give it another try.</string>
+    <string name="reader_generating_narration">Generating narration…</string>
+    <string name="reader_error_load">We couldn\'t open this story. Check your connection and try again.</string>
+    <string name="reader_generating_scene">Generating scene image…</string>
+
+    <!-- G-07: display labels for stable difficulty filter values -->
+    <string name="label_difficulty_all">All</string>
+    <string name="label_difficulty_beginner">Beginner</string>
+    <string name="label_difficulty_intermediate">Intermediate</string>
+    <string name="label_difficulty_advanced">Advanced</string>
+
+    <!-- H2: plurals for number agreement -->
+    <plurals name="stories_glyph_count_plural">
+        <item quantity="one">%d glyph</item>
+        <item quantity="other">%d glyphs</item>
+    </plurals>
+    <plurals name="stories_chapter_count_plural">
+        <item quantity="one">%d chapter</item>
+        <item quantity="other">%d chapters</item>
+    </plurals>
 </resources>

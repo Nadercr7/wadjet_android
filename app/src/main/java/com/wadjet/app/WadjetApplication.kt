@@ -16,11 +16,24 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.HiltAndroidApp
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Named
 
 @HiltAndroidApp
-class WadjetApplication : Application(), SingletonImageLoader.Factory {
+class WadjetApplication : Application(), SingletonImageLoader.Factory, androidx.work.Configuration.Provider {
+
+    @javax.inject.Inject lateinit var seedImporter: dagger.Lazy<com.wadjet.core.data.seed.SeedImporter>
+    @javax.inject.Inject @com.wadjet.core.common.di.ApplicationScope lateinit var appScope: kotlinx.coroutines.CoroutineScope
+    @javax.inject.Inject lateinit var workerFactory: androidx.hilt.work.HiltWorkerFactory
+    @javax.inject.Inject lateinit var preferencesDataStore: com.wadjet.core.data.datastore.UserPreferencesDataStore
+    @javax.inject.Inject lateinit var prefetchScheduler: com.wadjet.core.data.prefetch.StoryPrefetchScheduler
+
+    // E-P1: WorkManager on-demand init with Hilt-injected workers
+    override val workManagerConfiguration: androidx.work.Configuration
+        get() = androidx.work.Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
 
     @EntryPoint
     @InstallIn(SingletonComponent::class)
@@ -33,8 +46,20 @@ class WadjetApplication : Application(), SingletonImageLoader.Factory {
         super.onCreate()
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
+        } else {
+            // A4: surface production warnings/errors in Crashlytics
+            Timber.plant(CrashlyticsTree())
         }
         Timber.tag("Wadjet").i("App started; BuildConfig.DEBUG=${BuildConfig.DEBUG}")
+        // E-04: populate signs/categories/landmarks from bundled seed on first run
+        appScope.launch { seedImporter.get().seedIfEmpty() }
+        // E-P1: keep the daily Wi-Fi story prefetch in sync with the Settings toggle
+        appScope.launch {
+            preferencesDataStore.prefetchStoriesOnWifi.collect { enabled ->
+                if (enabled) prefetchScheduler.schedule(this@WadjetApplication)
+                else prefetchScheduler.cancel(this@WadjetApplication)
+            }
+        }
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader {

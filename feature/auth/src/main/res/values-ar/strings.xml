@@ -1,64 +1,78 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
     <!-- Welcome screen -->
-    <string name="welcome_logo_desc">Wadjet logo</string>
-    <string name="welcome_tagline">Decode the Secrets\nof Ancient Egypt</string>
-    <string name="welcome_feature_scan_title">Scan</string>
-    <string name="welcome_feature_scan_subtitle">Decode hieroglyphs</string>
-    <string name="welcome_feature_dict_title">Dictionary</string>
-    <string name="welcome_feature_dict_subtitle">1,000+ signs</string>
-    <string name="welcome_feature_explore_title">Explore</string>
-    <string name="welcome_feature_explore_subtitle">260+ landmarks</string>
-    <string name="welcome_sign_in_google">Sign in with Google</string>
-    <string name="welcome_sign_up_email">Sign up with Email</string>
-    <string name="welcome_already_have_account">Already have an account? Sign in</string>
-    <string name="error_no_google_accounts">No Google accounts found on this device</string>
-    <string name="error_google_sign_in_failed">Google sign-in failed</string>
+    <string name="welcome_logo_desc">شعار واجِت</string>
+    <string name="welcome_tagline">اكتشف أسرار\nمصر القديمة</string>
+    <string name="welcome_feature_scan_title">فحص</string>
+    <string name="welcome_feature_scan_subtitle">فك رموز الهيروغليفية</string>
+    <string name="welcome_feature_dict_title">القاموس</string>
+    <string name="welcome_feature_dict_subtitle">أكثر من ١٠٠٠ علامة</string>
+    <string name="welcome_feature_explore_title">استكشف</string>
+    <string name="welcome_feature_explore_subtitle">أكثر من ٢٦٠ معلمًا</string>
+    <string name="welcome_sign_in_google">تسجيل الدخول بجوجل</string>
+    <string name="welcome_sign_up_email">إنشاء حساب بالبريد الإلكتروني</string>
+    <string name="welcome_already_have_account">لديك حساب بالفعل؟ سجّل الدخول</string>
+    <string name="error_no_google_accounts">لا توجد حسابات جوجل على هذا الجهاز</string>
+    <string name="error_google_sign_in_failed">فشل تسجيل الدخول بجوجل</string>
 
     <!-- Login sheet -->
-    <string name="login_title">Sign In</string>
-    <string name="login_email_label">Email</string>
-    <string name="login_password_label">Password</string>
-    <string name="login_signing_in">Signing inâ€¦</string>
-    <string name="login_button">Sign In</string>
-    <string name="login_forgot_password">Forgot password?</string>
-    <string name="login_divider_or">or</string>
-    <string name="login_no_account">Don\'t have an account?</string>
-    <string name="login_create_account">Create one</string>
+    <string name="login_title">تسجيل الدخول</string>
+    <string name="login_email_label">البريد الإلكتروني</string>
+    <string name="login_password_label">كلمة المرور</string>
+    <string name="login_signing_in">جاري الدخول…</string>
+    <string name="login_button">تسجيل الدخول</string>
+    <string name="login_forgot_password">نسيت كلمة المرور؟</string>
+    <string name="login_divider_or">أو</string>
+    <string name="login_no_account">ليس لديك حساب؟</string>
+    <string name="login_create_account">أنشئ حسابًا</string>
 
     <!-- Register sheet -->
-    <string name="register_title">Create Account</string>
-    <string name="register_display_name">Display Name (optional)</string>
-    <string name="register_email_label">Email</string>
-    <string name="register_password_label">Password</string>
-    <string name="register_confirm_password">Confirm Password</string>
-    <string name="register_creating_account">Creating accountâ€¦</string>
-    <string name="register_rule_length">8+ characters</string>
-    <string name="register_rule_uppercase">1 uppercase letter</string>
-    <string name="register_rule_lowercase">1 lowercase letter</string>
-    <string name="register_rule_digit">1 digit</string>
-    <string name="register_sign_up_google">Sign up with Google</string>
-    <string name="register_have_account">Already have an account?</string>
-    <string name="register_sign_in">Sign in</string>
+    <string name="register_title">إنشاء حساب</string>
+    <string name="register_display_name">اسم العرض (اختياري)</string>
+    <string name="register_email_label">البريد الإلكتروني</string>
+    <string name="register_password_label">كلمة المرور</string>
+    <string name="register_confirm_password">تأكيد كلمة المرور</string>
+    <string name="register_creating_account">جاري إنشاء الحساب…</string>
+    <string name="register_rule_length">٨ أحرف فأكثر</string>
+    <string name="register_rule_uppercase">حرف كبير واحد</string>
+    <string name="register_rule_lowercase">حرف صغير واحد</string>
+    <string name="register_rule_digit">رقم واحد</string>
+    <string name="register_sign_up_google">التسجيل بجوجل</string>
+    <string name="register_have_account">لديك حساب بالفعل؟</string>
+    <string name="register_sign_in">سجّل الدخول</string>
     <string name="register_password_mismatch">كلمتا المرور غير متطابقتين</string>
 
     <!-- Forgot password sheet -->
-    <string name="forgot_title">Reset Password</string>
-    <string name="forgot_success_title">Check your inbox</string>
-    <string name="forgot_success_message">We sent a password reset link to your email.</string>
-    <string name="forgot_open_email">Open Email App</string>
-    <string name="forgot_instructions">Enter your email and we\'ll send a reset link.</string>
-    <string name="forgot_sending">Sendingâ€¦</string>
-    <string name="forgot_send_button">Send Reset Link</string>
-    <string name="forgot_back_to_login">â† Back to Sign In</string>
-    <!-- Verify email sheet -->
-    <string name="verify_title">تأكيد البريد الإلكتروني</string>
-    <string name="verify_instructions">أرسلنا رابط تأكيد إلى بريدك الإلكتروني. افتح الرابط ثم عد إلى هنا.</string>
-    <string name="verify_instructions_with_email">أرسلنا رابط تأكيد إلى %1$s. افتح الرابط ثم عد إلى هنا.</string>
-    <string name="verify_sent_confirmation">تم إرسال رسالة التأكيد.</string>
-    <string name="verify_not_yet">لم يتم التأكيد بعد. تحقق من بريدك (ومجلد الرسائل غير المرغوب فيها) وحاول مرة أخرى.</string>
-    <string name="verify_i_verified">لقد قمت بالتأكيد</string>
-    <string name="verify_checking">جارٍ التحقق…</string>
-    <string name="verify_resend">إعادة إرسال رسالة التأكيد</string>
-    <string name="verify_cancel">إلغاء وتسجيل الخروج</string></resources>
+    <string name="forgot_title">إعادة تعيين كلمة المرور</string>
+    <string name="forgot_success_title">تفقد بريدك الوارد</string>
+    <string name="forgot_success_message">أرسلنا رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.</string>
+    <string name="forgot_open_email">افتح تطبيق البريد</string>
+    <string name="forgot_instructions">أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين.</string>
+    <string name="forgot_sending">جاري الإرسال…</string>
+    <string name="forgot_send_button">إرسال رابط إعادة التعيين</string>
+    <string name="forgot_back_to_login">→ العودة لتسجيل الدخول</string>
 
+    <!-- Verify email sheet -->
+    <string name="verify_title">أكّد بريدك الإلكتروني</string>
+    <string name="verify_instructions">أرسلنا رابط تحقق إلى بريدك الإلكتروني. افتحه ثم عد إلى هنا.</string>
+    <string name="verify_instructions_with_email">أرسلنا رابط تحقق إلى %1$s. افتحه ثم عد إلى هنا.</string>
+    <string name="verify_sent_confirmation">تم إرسال بريد التحقق.</string>
+    <string name="verify_not_yet">لم يتم التحقق بعد. تفقد بريدك الوارد (ومجلد الرسائل غير المرغوبة) وحاول مرة أخرى.</string>
+    <string name="verify_i_verified">لقد أكدت بريدي الإلكتروني</string>
+    <string name="verify_checking">جاري التحقق…</string>
+    <string name="verify_resend">إعادة إرسال بريد التحقق</string>
+    <string name="verify_cancel">إلغاء وتسجيل الخروج</string>
+
+    <!-- ViewModel messages (G-04) -->
+    <string name="auth_error_invalid_email_password">أدخل بريدًا إلكترونيًا وكلمة مرور صحيحين</string>
+    <string name="auth_error_login_failed">فشل تسجيل الدخول</string>
+    <string name="auth_error_invalid_email">أدخل بريدًا إلكترونيًا صحيحًا</string>
+    <string name="auth_error_registration_failed">فشل إنشاء الحساب</string>
+    <string name="auth_error_send_verification">تعذر إرسال بريد التحقق</string>
+    <string name="auth_error_check_verification">تعذر التحقق من حالة البريد</string>
+    <string name="auth_error_send_reset">تعذر إرسال رابط إعادة التعيين</string>
+    <string name="auth_error_password_length">يجب أن تكون كلمة المرور ٨ أحرف على الأقل</string>
+    <string name="auth_error_password_uppercase">يجب أن تحتوي كلمة المرور على حرف كبير</string>
+    <string name="auth_error_password_lowercase">يجب أن تحتوي كلمة المرور على حرف صغير</string>
+    <string name="auth_error_password_digit">يجب أن تحتوي كلمة المرور على رقم</string>
+</resources>

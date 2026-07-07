@@ -6,7 +6,7 @@
     <string name="explore_empty_search">No results for \"%1$s\"</string>
     <string name="explore_empty_title">No landmarks found</string>
     <string name="explore_empty_search_subtitle">Try a different search term</string>
-    <string name="explore_empty_subtitle">Explore Egypt\'s ancient wonders — check back soon</string>
+    <string name="explore_empty_subtitle">Explore Egypt\'s ancient wonders, check back soon</string>
     <string name="explore_featured">Featured</string>
     <string name="explore_all_landmarks">All Landmarks</string>
     <string name="explore_loading_more">Loading more…</string>
@@ -31,7 +31,8 @@
     <string name="detail_recommendations">Recommendations</string>
     <string name="detail_related_sites">Related Sites</string>
     <string name="detail_wikipedia">Wikipedia</string>
-    <string name="detail_read_wikipedia">Read on Wikipedia →</string>
+    <!-- G-05: no baked-in directional arrow - doesn't mirror in RTL -->
+    <string name="detail_read_wikipedia">Read on Wikipedia</string>
     <string name="detail_highlights">Highlights</string>
     <string name="detail_notable_pharaohs">Notable Pharaohs</string>
     <string name="detail_notable_tombs">Notable Tombs</string>
@@ -59,4 +60,22 @@
     <string name="identify_agreement_uncertain">Uncertain</string>
     <string name="identify_agreement_single">Single Source</string>
     <string name="identify_agreement_best_guess">Best Guess</string>
+
+    <!-- ViewModel messages (G-04) -->
+    <string name="explore_error_landmark">We couldn\'t load this landmark. Check your connection and try again.</string>
+    <string name="explore_error_landmarks">We couldn\'t load the landmarks. Check your connection and try again.</string>
+    <string name="identify_error_daily_limit">Daily scan limit reached (%1$d). Try again tomorrow.</string>
+    <string name="identify_error_failed">We couldn\'t identify this one. Try another photo.</string>
+    <string name="identify_error_read_image">We couldn\'t read that image. Try another one.</string>
+    <string name="identify_error_process_image">We couldn\'t process that image. Try a clearer photo.</string>
+
+    <!-- G-07: display labels for stable landmark category values -->
+    <string name="label_lmcat_all">All</string>
+    <string name="label_lmcat_pharaonic">Pharaonic</string>
+    <string name="label_lmcat_islamic">Islamic</string>
+    <string name="label_lmcat_coptic">Coptic</string>
+    <string name="label_lmcat_greco_roman">Greco-Roman</string>
+    <string name="label_lmcat_museum">Museum</string>
+    <string name="label_lmcat_natural">Natural</string>
+    <string name="label_lmcat_modern">Modern</string>
 </resources>

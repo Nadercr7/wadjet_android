@@ -68,7 +68,7 @@ class AuthViewModelTest {
         authRepository = mockk(relaxed = true) {
             every { currentUser } returns flowOf(null)
         }
-        vm = AuthViewModel(authRepository)
+        vm = AuthViewModel(authRepository, mockk(relaxed = true))
     }
 
     @After
@@ -132,7 +132,7 @@ class AuthViewModelTest {
         vm.signInWithEmail("bad-email", "Password1")
         advanceUntilIdle()
 
-        assertEquals("Please enter a valid email and password", vm.state.value.error)
+        assertTrue(vm.state.value.error != null) // localized via StringResolver (G-04)
         coVerify(exactly = 0) { authRepository.signInWithEmail(any(), any()) }
     }
 
@@ -208,7 +208,7 @@ class AuthViewModelTest {
         vm.register("test@example.com", "Password1", "Different1", null)
         advanceUntilIdle()
 
-        assertEquals("Passwords do not match", vm.state.value.error)
+        assertTrue(vm.state.value.error != null) // localized via StringResolver (G-04)
         coVerify(exactly = 0) { authRepository.register(any(), any(), any()) }
     }
 
@@ -246,6 +246,8 @@ class AuthViewModelTest {
     @Test
     fun `signInWithEmail with unverified user opens VERIFY_EMAIL sheet`() = runTest {
         coEvery { authRepository.signInWithEmail(any(), any()) } returns Result.success(unverifiedUser)
+        // B-03: gate re-checks server-side state before showing the sheet
+        coEvery { authRepository.reloadEmailVerified() } returns Result.success(false)
 
         vm.signInWithEmail("test@example.com", "Password1")
         advanceUntilIdle()
@@ -286,6 +288,8 @@ class AuthViewModelTest {
     fun `checkEmailVerified when verified emits EmailVerified and AuthSuccess`() = runTest {
         coEvery { authRepository.register(any(), any(), any()) } returns Result.success(unverifiedUser)
         coEvery { authRepository.reloadEmailVerified() } returns Result.success(true)
+        // A1: backend session is established only after the verification gate passes
+        coEvery { authRepository.establishBackendSession() } returns Result.success(fakeUser)
 
         vm.register("test@example.com", "Password1", "Password1", null)
         advanceUntilIdle()

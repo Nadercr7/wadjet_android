@@ -1,76 +1,86 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
     <!-- Scan screen -->
-    <string name="scan_title">Scan</string>
-    <string name="scan_upload_title">Tap to select a hieroglyph image</string>
-    <string name="scan_upload_subtitle">Supports JPG, PNG up to 10MB</string>
-    <string name="scan_analyze_button">Scan Hieroglyphs</string>
-    <string name="scan_history_action">History</string>
-    <string name="scan_error_fallback">Couldn\'t read hieroglyphs. Try again with better lighting</string>
+    <string name="scan_title">فحص</string>
+    <string name="scan_upload_title">اضغط لاختيار صورة هيروغليفية</string>
+    <string name="scan_upload_subtitle">يدعم JPG وPNG حتى ١٠ ميجابايت</string>
+    <string name="scan_analyze_button">افحص الهيروغليفية</string>
+    <string name="scan_history_action">السجل</string>
+    <string name="scan_error_fallback">تعذر قراءة الهيروغليفية. حاول مرة أخرى بإضاءة أفضل</string>
 
     <!-- Scan progress overlay -->
-    <string name="scan_progress_eye_desc">Eye of Horus</string>
-    <string name="scan_progress_title">Analyzing Inscription</string>
-    <string name="scan_step_detecting">Detecting glyphs</string>
-    <string name="scan_step_detecting_sub">Locating hieroglyphs in image</string>
-    <string name="scan_step_classifying">Classifying signs</string>
-    <string name="scan_step_classifying_sub">Matching to Gardiner catalogue</string>
-    <string name="scan_step_transliterating">Transliterating</string>
-    <string name="scan_step_transliterating_sub">Converting to phonetic script</string>
-    <string name="scan_step_translating">Translating</string>
-    <string name="scan_step_translating_sub">Producing English &amp; Arabic</string>
+    <string name="scan_progress_eye_desc">عين حورس</string>
+    <string name="scan_progress_title">جاري تحليل النقش</string>
+    <string name="scan_step_detecting">اكتشاف الرموز</string>
+    <string name="scan_step_detecting_sub">تحديد مواقع الهيروغليفية في الصورة</string>
+    <string name="scan_step_classifying">تصنيف العلامات</string>
+    <string name="scan_step_classifying_sub">المطابقة مع قائمة جاردنر</string>
+    <string name="scan_step_transliterating">النقحرة</string>
+    <string name="scan_step_transliterating_sub">التحويل إلى نص صوتي</string>
+    <string name="scan_step_translating">الترجمة</string>
+    <string name="scan_step_translating_sub">إنتاج الترجمة بالإنجليزية والعربية</string>
 
     <!-- Scan result screen -->
-    <string name="scan_results_title">Results</string>
-    <string name="scan_warning_desc">Warning</string>
-    <string name="scan_ai_unverified_warning">AI verification unavailable â€” results may be less accurate</string>
-    <string name="scan_tips_label">Tips</string>
-    <string name="scan_source_ai_vision">AI Vision</string>
-    <string name="scan_source_onnx_fallback">ONNX (Fallback)</string>
-    <string name="scan_source_onnx_ai">ONNX + AI Verified</string>
+    <string name="scan_results_title">النتائج</string>
+    <string name="scan_warning_desc">تحذير</string>
+    <string name="scan_ai_unverified_warning">التحقق بالذكاء الاصطناعي غير متاح · قد تكون النتائج أقل دقة</string>
+    <string name="scan_tips_label">نصائح</string>
+    <string name="scan_source_ai_vision">رؤية AI</string>
+    <string name="scan_source_onnx_fallback">ONNX (احتياطي)</string>
+    <string name="scan_source_onnx_ai">ONNX + تحقق AI</string>
     <string name="scan_source_onnx">ONNX</string>
-    <string name="scan_detected_by">Detected by: %1$s</string>
-    <string name="scan_confidence_badge">Confidence: %1$d%%</string>
-    <string name="scan_stat_avg">Avg</string>
-    <string name="scan_stat_min">Min</string>
-    <string name="scan_stat_max">Max</string>
-    <string name="scan_stat_low">Low</string>
-    <string name="scan_detected_count">Detected (%1$d)</string>
-    <string name="scan_transliteration_label">Transliteration</string>
-    <string name="scan_gardiner_label">Gardiner: %1$s</string>
+    <!-- C2 -->
+    <string name="scan_source_on_device">على الجهاز (دون اتصال)</string>
+    <string name="scan_offline_banner">نتيجة دون اتصال · اكتشاف على الجهاز بدقة أقل. الترجمة تتطلب اتصالاً بالإنترنت.</string>
+    <string name="scan_detected_by">تم الاكتشاف بواسطة: %1$s</string>
+    <string name="scan_confidence_badge">الدقة: %1$d%%</string>
+    <string name="scan_stat_avg">متوسط</string>
+    <string name="scan_stat_min">أدنى</string>
+    <string name="scan_stat_max">أقصى</string>
+    <string name="scan_stat_low">منخفض</string>
+    <string name="scan_detected_count">المكتشفة (%1$d)</string>
+    <string name="scan_transliteration_label">النقحرة</string>
+    <string name="scan_gardiner_label">جاردنر: %1$s</string>
     <string name="scan_lang_ar">AR</string>
     <string name="scan_lang_en">EN</string>
-    <string name="scan_lang_toggle_en_ar">EN â†” AR</string>
-    <string name="scan_lang_toggle_ar_en">AR â†” EN</string>
-    <string name="scan_ai_notes_label">AI Notes</string>
-    <string name="scan_performance_label">Performance</string>
-    <string name="scan_timing_detection">Detection</string>
-    <string name="scan_timing_classification">Classification</string>
-    <string name="scan_timing_total">Total</string>
-    <string name="scan_source_info">Source: %1$s</string>
-    <string name="scan_again_button">Scan Again</string>
-    <string name="scan_confidence_classification">Classification</string>
-    <string name="scan_confidence_detection">Detection</string>
-    <string name="scan_view_in_dictionary">View in Dictionary</string>
-    <string name="scan_glyph_desc">Hieroglyph %1$s</string>
+    <string name="scan_lang_toggle_en_ar">EN ↔ AR</string>
+    <string name="scan_lang_toggle_ar_en">AR ↔ EN</string>
+    <string name="scan_ai_notes_label">ملاحظات القراءة</string>
+    <string name="scan_performance_label">زمن المعالجة</string>
+    <string name="scan_timing_detection">الاكتشاف</string>
+    <string name="scan_timing_classification">التصنيف</string>
+    <string name="scan_timing_total">الإجمالي</string>
+    <string name="scan_source_info">المصدر: %1$s</string>
+    <string name="scan_again_button">فحص صورة أخرى</string>
+    <string name="scan_confidence_classification">التصنيف</string>
+    <string name="scan_confidence_detection">الاكتشاف</string>
+    <string name="scan_view_in_dictionary">عرض في القاموس</string>
+    <string name="scan_glyph_desc">رمز هيروغليفي %1$s</string>
 
     <!-- Share -->
-    <string name="share_scan_title">Wadjet Scan Results</string>
-    <string name="share_transliteration">Transliteration: %1$s</string>
-    <string name="share_translation">Translation: %1$s</string>
-    <string name="share_glyphs">Glyphs: %1$s</string>
-    <string name="share_scan_footer">Scanned with Wadjet â€” Decode the Secrets of Ancient Egypt</string>
-    <string name="share_scan_chooser">Share Scan Results</string>
+    <string name="share_scan_title">نتائج فحص واجِت</string>
+    <string name="share_transliteration">النقحرة: %1$s</string>
+    <string name="share_translation">الترجمة: %1$s</string>
+    <string name="share_glyphs">الرموز: %1$s</string>
+    <string name="share_scan_footer">تم الفحص بواسطة واجِت · اكتشف أسرار مصر القديمة</string>
+    <string name="share_scan_chooser">مشاركة نتائج الفحص</string>
 
     <!-- Scan history screen -->
-    <string name="scan_history_title">Scan History</string>
-    <string name="scan_history_error">Couldn\'t load scan history. Check your connection</string>
-    <string name="scan_history_empty_title">No scans yet</string>
-    <string name="scan_history_empty_subtitle">Scan hieroglyphs to see them here</string>
-    <string name="scan_history_thumbnail_desc">Scan thumbnail</string>
-    <string name="scan_history_item_fallback">Scan</string>
-    <string name="scan_history_glyph_count">%1$d glyphs</string>
-    <string name="scan_history_deleted">تم حذف المسح</string>
+    <string name="scan_history_title">سجل الفحص</string>
+    <string name="scan_history_error">تعذر تحميل سجل الفحص. تأكد من اتصالك</string>
+    <string name="scan_history_empty_title">لا توجد فحوصات بعد</string>
+    <string name="scan_history_empty_subtitle">افحص الهيروغليفية لتظهر هنا</string>
+    <string name="scan_history_thumbnail_desc">صورة مصغرة للفحص</string>
+    <string name="scan_history_item_fallback">فحص</string>
+    <string name="scan_history_glyph_count">%1$d رموز</string>
+    <string name="scan_history_deleted">تم حذف الفحص</string>
     <string name="scan_history_undo">تراجع</string>
-</resources>
 
+    <!-- ViewModel messages (G-04) -->
+    <string name="scan_error_invalid_id">لم نعثر على هذا الفحص. حاول الفحص مرة أخرى.</string>
+    <string name="scan_error_daily_limit">تم بلوغ الحد اليومي للفحص (%1$d). حاول مجددًا غدًا.</string>
+    <string name="scan_toast_daily_limit">تم بلوغ الحد اليومي للفحص</string>
+    <string name="scan_error_failed">لم يكتمل الفحص. جرّب صورة أخرى.</string>
+    <string name="scan_error_read_image">تعذّرت قراءة هذه الصورة. جرّب صورة أخرى.</string>
+    <string name="scan_error_process_image">تعذّرت معالجة هذه الصورة. جرّب صورة أوضح.</string>
+</resources>

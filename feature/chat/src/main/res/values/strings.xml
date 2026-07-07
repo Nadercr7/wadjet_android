@@ -40,4 +40,30 @@
     <string name="time_minutes_ago">%1$dm ago</string>
     <string name="time_hours_ago">%1$dh ago</string>
     <string name="time_yesterday">Yesterday</string>
+
+    <!-- ViewModel messages (G-04) -->
+    <string name="chat_error_daily_limit">Daily message limit reached (%1$d). Try again tomorrow.</string>
+    <string name="chat_error_send_failed">Your message didn\'t reach Thoth. Check your connection and try again.</string>
+    <string name="chat_error_generic_reply">The papyrus tore before I could finish that thought. Ask me once more.</string>
+    <string name="chat_error_timeout_reply">The connection slipped into the sand. Ask me again in a moment.</string>
+    <string name="chat_error_timeout">Connection timed out</string>
+    <string name="chat_generating_audio">Generating audio…</string>
+    <string name="chat_error_stt_unavailable">Voice-to-text unavailable on server. Tap the mic button to use on-device speech recognition.</string>
+    <string name="chat_cleared_toast">Chat cleared</string>
+    <string name="chat_cleared_message">A fresh papyrus. What shall we uncover?</string>
+    <string name="chat_tell_me_about">Tell me about %1$s.</string>
+
+    <!-- H2: plurals for number agreement (Arabic has full zero/one/two/few/many/other) -->
+    <plurals name="chat_message_count_plural">
+        <item quantity="one">%d message</item>
+        <item quantity="other">%d messages</item>
+    </plurals>
+    <plurals name="time_minutes_ago_plural">
+        <item quantity="one">%dm ago</item>
+        <item quantity="other">%dm ago</item>
+    </plurals>
+    <plurals name="time_hours_ago_plural">
+        <item quantity="one">%dh ago</item>
+        <item quantity="other">%dh ago</item>
+    </plurals>
 </resources>

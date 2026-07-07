@@ -67,7 +67,6 @@ import com.wadjet.core.designsystem.WadjetColors
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.wadjet.core.designsystem.animation.FadeUp
-import com.wadjet.core.designsystem.animation.KenBurnsImage
 import com.wadjet.core.designsystem.component.ShimmerDetail
 import com.wadjet.core.domain.model.LandmarkChild
 import com.wadjet.core.domain.model.LandmarkDetail

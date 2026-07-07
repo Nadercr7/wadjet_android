@@ -91,7 +91,7 @@ fun ScanResultScreen(
 ) {
     val context = LocalContext.current
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
-    var showArabic by remember { mutableStateOf(false) }
+    var showArabic by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) } // C-02: survive rotation
     var selectedGlyph by remember { mutableStateOf<DetectedGlyph?>(null) }
     val sheetState = rememberModalBottomSheetState()
 
@@ -130,7 +130,8 @@ fun ScanResultScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
         ) {
-            // AI Unverified warning
+            // AI Unverified warning (C2: dedicated copy for the offline on-device path)
+            val isOnDevice = result.detectionSource == "on_device_onnx"
             if (result.aiUnverified) {
                 FadeUp(visible = visibleSections >= 1) {
                     Surface(
@@ -150,7 +151,9 @@ fun ScanResultScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = stringResource(R.string.scan_ai_unverified_warning),
+                                text = stringResource(
+                                    if (isOnDevice) R.string.scan_offline_banner else R.string.scan_ai_unverified_warning,
+                                ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = WadjetColors.Warning,
                             )
@@ -199,6 +202,7 @@ fun ScanResultScreen(
                     // Pipeline source badge
                     result.detectionSource?.let { source ->
                         val sourceLabel = when {
+                            source == "on_device_onnx" -> stringResource(R.string.scan_source_on_device)
                             source.contains("gemini", ignoreCase = true) -> stringResource(R.string.scan_source_ai_vision)
                             source.contains("ai_vision", ignoreCase = true) -> stringResource(R.string.scan_source_ai_vision)
                             source.contains("onnx_fallback", ignoreCase = true) -> stringResource(R.string.scan_source_onnx_fallback)
@@ -391,7 +395,7 @@ fun ScanResultScreen(
             if (!aiNotes.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 FadeUp(visible = visibleSections >= 6) {
-                    var aiNotesExpanded by remember { mutableStateOf(false) }
+                    var aiNotesExpanded by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) } // C-02
                     Surface(
                         shape = MaterialTheme.shapes.medium,
                         color = WadjetColors.Gold.copy(alpha = 0.08f),

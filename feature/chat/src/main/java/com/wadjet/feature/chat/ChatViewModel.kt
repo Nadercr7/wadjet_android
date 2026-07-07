@@ -4,6 +4,7 @@ import com.wadjet.core.common.audio.AudioPlaybackManager
 import android.speech.SpeechRecognizer
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.wadjet.core.common.StringResolver
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.wadjet.core.domain.model.ChatMessage
@@ -51,6 +52,8 @@ class ChatViewModel @Inject constructor(
     private val ttsPreferences: TtsPreferencesRepository,
     private val audioPlayer: AudioPlaybackManager,
     private val toastController: com.wadjet.core.common.ToastController,
+    private val strings: StringResolver,
+    @com.wadjet.core.common.di.ApplicationScope private val appScope: kotlinx.coroutines.CoroutineScope,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -86,7 +89,7 @@ class ChatViewModel @Inject constructor(
                 .joinToString(" ") { word ->
                     word.replaceFirstChar { c -> c.uppercaseChar() }
                 }
-            sendMessage("Tell me about $displayName.")
+            sendMessage(strings.get(R.string.chat_tell_me_about, displayName))
         } else {
             // Try to resume an existing session
             val activeId = chatHistoryStore.getActiveSessionId()
@@ -159,9 +162,9 @@ class ChatViewModel @Inject constructor(
             // Check free-tier limits
             userRepository.getLimits().onSuccess { limits ->
                 if (limits.chatMessagesToday >= limits.chatMessagesPerDay) {
-                    toastController.error("Daily message limit reached (${limits.chatMessagesPerDay}). Try again tomorrow.")
+                    toastController.error(strings.get(R.string.chat_error_daily_limit, limits.chatMessagesPerDay))
                     _state.update {
-                        it.copy(error = "Daily message limit reached (${limits.chatMessagesPerDay}). Try again tomorrow.")
+                        it.copy(error = strings.get(R.string.chat_error_daily_limit, limits.chatMessagesPerDay))
                     }
                     return@launch
                 }
@@ -208,14 +211,14 @@ class ChatViewModel @Inject constructor(
                 )
                     .catch { error ->
                         Timber.e(error, "Chat stream error")
-                        toastController.error("Failed to send message")
+                        toastController.error(strings.get(R.string.chat_error_send_failed))
                         _state.update { state ->
                             state.copy(
                                 messages = state.messages.map { msg ->
                                     if (msg.id == botMessageId) {
                                         msg.copy(
                                             content = contentBuilder.toString().ifEmpty {
-                                                "Sorry, I encountered an error. Please try again."
+                                                strings.get(R.string.chat_error_generic_reply)
                                             },
                                             isStreaming = false,
                                         )
@@ -265,7 +268,7 @@ class ChatViewModel @Inject constructor(
                             if (msg.id == botMessageId) {
                                 msg.copy(
                                     content = contentBuilder.toString().ifEmpty {
-                                        "Connection timed out. Please try again."
+                                        strings.get(R.string.chat_error_timeout_reply)
                                     },
                                     isStreaming = false,
                                 )
@@ -274,7 +277,7 @@ class ChatViewModel @Inject constructor(
                             }
                         },
                         isStreaming = false,
-                        error = "Connection timed out",
+                        error = strings.get(R.string.chat_error_timeout),
                     )
                 }
             }
@@ -314,8 +317,10 @@ class ChatViewModel @Inject constructor(
 
             _state.update { it.copy(isSpeaking = true, isLoadingTts = true, speakingMessageId = message.id) }
 
-            toastController.info("Generating audio\u2026")
-            chatRepository.speak(message.content).onSuccess { bytes ->
+            toastController.info(strings.get(R.string.chat_generating_audio))
+            // H-04: Arabic replies must request the Arabic TTS voice (web sends chatLang).
+            val ttsLang = if (com.wadjet.core.common.audio.isArabicText(message.content)) "ar" else "en"
+            chatRepository.speak(message.content, ttsLang).onSuccess { bytes ->
                 if (bytes != null) {
                     _state.update { it.copy(isLoadingTts = false) }
                     val speed = ttsPreferences.ttsSpeed.first()
@@ -378,7 +383,7 @@ class ChatViewModel @Inject constructor(
                 Timber.e(it, "Server STT failed, use local fallback")
                 _state.update { s ->
                     s.copy(
-                        error = "Voice-to-text unavailable on server. Tap the mic button to use on-device speech recognition.",
+                        error = strings.get(R.string.chat_error_stt_unavailable),
                         isRecording = false,
                     )
                 }
@@ -411,11 +416,11 @@ class ChatViewModel @Inject constructor(
             // Generate fresh session
             sessionId = UUID.randomUUID().toString()
             chatHistoryStore.storeSessionId(sessionId)
-            toastController.success("Chat cleared")
+            toastController.success(strings.get(R.string.chat_cleared_toast))
             val greeting = ChatMessage(
                 id = UUID.randomUUID().toString(),
                 role = Role.ASSISTANT,
-                content = "Chat cleared. How can I help you?",
+                content = strings.get(R.string.chat_cleared_message),
             )
             _state.update {
                 ChatUiState(
@@ -469,7 +474,8 @@ class ChatViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         streamJob?.cancel()
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO).launch {
+        // I-03: persist on the application scope so the write survives VM teardown.
+        appScope.launch {
             saveCurrentConversation()
         }
         audioPlayer.stop()

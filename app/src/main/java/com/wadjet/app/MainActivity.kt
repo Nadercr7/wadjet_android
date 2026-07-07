@@ -1,7 +1,8 @@
 package com.wadjet.app
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
@@ -38,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -65,29 +67,63 @@ import javax.inject.Inject
 import javax.inject.Named
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+// AppCompatActivity (not ComponentActivity) so AppCompatDelegate.setApplicationLocales
+// works on all supported API levels (per-app language, G-01).
+class MainActivity : AppCompatActivity() {
 
     @Inject lateinit var authRepository: AuthRepository
     @Inject @Named("webClientId") lateinit var webClientId: String
     @Inject lateinit var networkMonitor: NetworkMonitor
     @Inject lateinit var toastController: ToastController
+    @Inject lateinit var analytics: com.wadjet.core.firebase.WadjetAnalytics
+    @Inject lateinit var userPreferences: com.wadjet.core.data.datastore.UserPreferencesDataStore
+
+    // A3: POST_NOTIFICATIONS is runtime-gated on API 33+ — without asking,
+    // FCM notifications silently never appear.
+    private val notificationPermissionLauncher =
+        registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { }
+
+    private fun maybeRequestNotificationPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.POST_NOTIFICATIONS,
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            if (!granted) {
+                notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         val isLoggedIn = authRepository.isLoggedIn
-        enableEdgeToEdge()
+        // U7: gate first launch on the onboarding carousel (read once off the splash
+        // thread, mirroring the synchronous auth check above).
+        val onboardingSeen = userPreferences.onboardingSeenBlocking()
+        // Ask signed-in users on launch; new sign-ins are asked via onAuthenticated below.
+        if (isLoggedIn) maybeRequestNotificationPermission()
+        // L-01: the app is forced-dark; auto style would follow the SYSTEM theme
+        // and paint dark icons on the near-black background in light mode.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+        )
         setContent {
             val windowSizeClass = calculateWindowSizeClass(this)
             WadjetTheme {
                 WadjetApp(
                     initialLoggedIn = isLoggedIn,
+                    onboardingSeen = onboardingSeen,
                     authRepository = authRepository,
                     webClientId = webClientId,
                     networkMonitor = networkMonitor,
                     toastController = toastController,
                     widthSizeClass = windowSizeClass.widthSizeClass,
+                    onAuthenticated = ::maybeRequestNotificationPermission,
+                    analytics = analytics,
                 )
             }
         }
@@ -98,11 +134,14 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun WadjetApp(
     initialLoggedIn: Boolean,
+    onboardingSeen: Boolean,
     authRepository: AuthRepository,
     webClientId: String,
     networkMonitor: NetworkMonitor,
     toastController: ToastController,
     widthSizeClass: WindowWidthSizeClass,
+    onAuthenticated: () -> Unit = {},
+    analytics: com.wadjet.core.firebase.WadjetAnalytics? = null,
 ) {
     var currentToast by remember { mutableStateOf<ToastState?>(null) }
     LaunchedEffect(Unit) {
@@ -119,30 +158,72 @@ private fun WadjetApp(
         }
     }
     val navController = rememberNavController()
+
+    // B-01: handle wadjet:// deep links arriving while the activity is alive
+    // (notification taps); the launch intent is handled by NavHost itself.
+    val deepLinkActivity = androidx.compose.ui.platform.LocalContext.current as? androidx.activity.ComponentActivity
+    androidx.compose.runtime.DisposableEffect(navController, deepLinkActivity) {
+        val listener = androidx.core.util.Consumer<android.content.Intent> { intent ->
+            navController.handleDeepLink(intent)
+        }
+        deepLinkActivity?.addOnNewIntentListener(listener)
+        onDispose { deepLinkActivity?.removeOnNewIntentListener(listener) }
+    }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    val isOffline by networkMonitor.isOnline.collectAsStateWithLifecycle(initialValue = true)
+
+    // A4: automatic screen_view analytics per navigation destination
+    LaunchedEffect(currentDestination) {
+        val screen = currentDestination?.route
+            ?.substringBefore('/')?.substringBefore('?')?.substringAfterLast('.')
+        if (analytics != null && !screen.isNullOrBlank()) analytics.logScreenView(screen)
+    }
+    val isOnline by networkMonitor.isOnline.collectAsStateWithLifecycle(initialValue = true)
     var showQuickSettings by remember { mutableStateOf(false) }
 
-    // Reactive auth state observation — navigate to Welcome on sign-out/token clear
-    val currentUser by authRepository.currentUser.collectAsStateWithLifecycle(initialValue = null)
-    val isAuthenticated = currentUser != null
-    LaunchedEffect(isAuthenticated) {
-        if (!isAuthenticated && navController.currentDestination?.hasRoute(Route.Welcome::class) != true) {
-            // User signed out or token expired — reset to Welcome
-            navController.navigate(Route.Welcome) {
-                popUpTo(navController.graph.id) { inclusive = true }
+    // Reactive auth state observation — navigate to Welcome ONLY on a real
+    // authenticated→unauthenticated transition. Comparing transitions (rather than
+    // reacting to the current value) avoids the recreation race where the flow's
+    // initial/transient null briefly reads as "signed out" and dumped a logged-in
+    // user onto Welcome after every activity recreation (e.g. language switch).
+    LaunchedEffect(Unit) {
+        var wasAuthenticated: Boolean? = null
+        authRepository.currentUser.collect { user ->
+            val isAuthenticated = user != null
+            if (wasAuthenticated == true && !isAuthenticated &&
+                navController.currentDestination?.hasRoute(Route.Welcome::class) != true
+            ) {
+                // User signed out or token expired — reset to Welcome
+                navController.navigate(Route.Welcome) {
+                    popUpTo(navController.graph.id) { inclusive = true }
+                }
             }
+            if (isAuthenticated && wasAuthenticated == false) {
+                // A3: fresh sign-in — ask for notification permission (API 33+)
+                onAuthenticated()
+            }
+            wasAuthenticated = isAuthenticated
         }
     }
 
-    // Determine start destination based on auth state
-    val startDestination: Route = if (initialLoggedIn) Route.Landing else Route.Welcome
+    // Determine start destination: unseen onboarding wins on first launch, then
+    // auth state decides between the app and the Welcome/sign-in screen.
+    val startDestination: Route = when {
+        !onboardingSeen -> Route.Onboarding
+        initialLoggedIn -> Route.Landing
+        else -> Route.Welcome
+    }
 
     // Show navigation only on top-level destinations
     val showNav = TopLevelDestination.entries.any { dest ->
         currentDestination?.hasRoute(dest.route::class) == true
     }
+
+    // L-02: Explore/Stories/Chat draw their own TopAppBar (with screen-specific
+    // actions) — showing the global bar too produced stacked double bars.
+    val hasOwnTopBar = currentDestination?.hasRoute(Route.Explore::class) == true ||
+        currentDestination?.hasRoute(Route.Stories::class) == true ||
+        currentDestination?.hasRoute(Route.Chat::class) == true
 
     // Adapt layout based on window size class
     val layoutType = if (!showNav) {
@@ -202,7 +283,7 @@ private fun WadjetApp(
                     },
                     icon = {
                         Icon(
-                            imageVector = dest.icon,
+                            painter = painterResource(dest.iconRes),
                             contentDescription = stringResource(dest.labelRes),
                         )
                     },
@@ -222,7 +303,7 @@ private fun WadjetApp(
         Scaffold(
             containerColor = WadjetColors.Night,
             topBar = {
-                if (showNav) {
+                if (showNav && !hasOwnTopBar) {
                     TopAppBar(
                         title = {
                             Text(
@@ -258,7 +339,7 @@ private fun WadjetApp(
         ) { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)) {
                 Column {
-                    OfflineIndicator(isOffline = !isOffline)
+                    OfflineIndicator(isOffline = !isOnline)
 
                     WadjetNavGraph(
                         navController = navController,

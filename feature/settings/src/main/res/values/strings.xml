@@ -8,6 +8,10 @@
     <string name="settings_section_profile">Profile</string>
     <string name="settings_section_password">Password</string>
     <string name="settings_section_tts">Text-to-Speech</string>
+    <!-- E-P1 -->
+    <string name="settings_section_offline">Offline</string>
+    <string name="settings_prefetch_stories">Download stories on Wi-Fi</string>
+    <string name="settings_prefetch_stories_sub">Once a day on unmetered Wi-Fi, all stories are saved for offline reading. Never uses mobile data.</string>
     <string name="settings_section_storage">Storage</string>
     <string name="settings_cache_label">Cache</string>
     <string name="settings_cache_size">%1$d MB</string>
@@ -35,4 +39,10 @@
     <string name="quick_settings_english">English</string>
     <string name="quick_settings_arabic">العربية</string>
     <string name="quick_settings_full_settings">Full Settings</string>
+
+    <!-- ViewModel messages (G-04) -->
+    <string name="settings_msg_name_updated">Name updated</string>
+    <string name="settings_msg_password_length">New password must be at least 8 characters</string>
+    <string name="settings_msg_password_changed">Password changed</string>
+    <string name="settings_msg_sign_out_failed">Sign out failed</string>
 </resources>

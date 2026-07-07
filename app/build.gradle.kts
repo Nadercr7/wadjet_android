@@ -17,8 +17,8 @@ android {
         applicationId = "com.wadjet.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 3
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -76,6 +76,14 @@ android {
         buildConfig = true
     }
 
+    lint {
+        // lintVital crashes on release with "Found class KaCallableMemberCall, but
+        // interface was expected" — a Kotlin-analysis-API version mismatch inside the
+        // lint tool itself (not our code), so it must not gate the release artifact.
+        // Debug lint (`./gradlew lint`) still runs normally.
+        checkReleaseBuilds = false
+    }
+
     composeCompiler {
         stabilityConfigurationFile = rootProject.layout.projectDirectory.file("compose_compiler_config.conf")
     }
@@ -118,6 +126,11 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
+    // WorkManager (E-P1 story prefetch — Configuration.Provider lives here)
+    implementation(libs.work.runtime.ktx)
+    implementation(libs.hilt.work)
+    ksp(libs.hilt.ext.compiler)
+
     // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
@@ -135,6 +148,7 @@ dependencies {
 
     // AndroidX
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity.compose)
     implementation(libs.core.splashscreen)
     implementation(libs.kotlinx.serialization.json)

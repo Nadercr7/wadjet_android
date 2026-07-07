@@ -8,6 +8,7 @@ import com.wadjet.core.database.dao.FavoriteDao
 import com.wadjet.core.database.dao.LandmarkDao
 import com.wadjet.core.database.dao.ScanResultDao
 import com.wadjet.core.database.dao.SignDao
+import com.wadjet.core.database.dao.StoryCacheDao
 import com.wadjet.core.database.dao.StoryProgressDao
 import dagger.Module
 import dagger.Provides
@@ -24,12 +25,18 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): WadjetDatabase =
         Room.databaseBuilder(context, WadjetDatabase::class.java, "wadjet.db")
-            .addMigrations(WadjetDatabase.MIGRATION_4_5, WadjetDatabase.MIGRATION_5_6, WadjetDatabase.MIGRATION_6_7)
-            .fallbackToDestructiveMigration()
+            .addMigrations(WadjetDatabase.MIGRATION_4_5, WadjetDatabase.MIGRATION_5_6, WadjetDatabase.MIGRATION_6_7, WadjetDatabase.MIGRATION_7_8, WadjetDatabase.MIGRATION_8_9)
+            // E-01: destructive fallback on UPGRADE silently wiped scan history,
+            // story progress and favorites whenever a migration was missing.
+            // Downgrade-only keeps user data safe; forward migrations are mandatory.
+            .fallbackToDestructiveMigrationOnDowngrade()
             .build()
 
     @Provides
     fun provideSignDao(db: WadjetDatabase): SignDao = db.signDao()
+
+    @Provides
+    fun provideStoryCacheDao(db: WadjetDatabase): StoryCacheDao = db.storyCacheDao()
 
     @Provides
     fun provideScanResultDao(db: WadjetDatabase): ScanResultDao = db.scanResultDao()

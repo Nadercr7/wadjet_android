@@ -20,6 +20,7 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:localeConfig="@xml/locales_config"
         android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
@@ -34,7 +35,50 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- B-01: wadjet:// deep links (notifications, external launches) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="wadjet" />
+            </intent-filter>
+            <!-- E-P8: verified https App Links — web story URLs open the app.
+                 Auto-verification needs /.well-known/assetlinks.json served by
+                 the backend with the signing cert's SHA-256 (FIREBASE_RUNBOOK §9). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="nadercr7-wadjet-v2.hf.space"
+                    android:pathPrefix="/stories" />
+            </intent-filter>
         </activity>
+
+        <!-- Persists the user's in-app language choice across restarts (G-01);
+             AppCompatDelegate reads it back before the first activity resumes. -->
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
+
+        <!-- E-P1: WorkManager is initialized on demand via Configuration.Provider
+             (Hilt worker factory) — remove only its default startup initializer. -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
 
         <service
             android:name="com.wadjet.core.firebase.WadjetFirebaseMessaging"

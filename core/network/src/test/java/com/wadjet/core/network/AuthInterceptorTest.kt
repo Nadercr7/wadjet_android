@@ -69,11 +69,11 @@ class AuthInterceptorTest {
     }
 
     @Test
-    fun `skips auth for login endpoint`() {
+    fun `skips auth for firebase exchange endpoint`() {
         server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
 
         val request = okhttp3.Request.Builder()
-            .url(server.url("/api/auth/login"))
+            .url(server.url("/api/auth/firebase"))
             .post(okhttp3.RequestBody.create(null, "{}".toByteArray()))
             .build()
         client.newCall(request).execute()
@@ -137,7 +137,7 @@ class AuthInterceptorTest {
         )
 
         val request = okhttp3.Request.Builder()
-            .url(server.url("/api/auth/login"))
+            .url(server.url("/api/auth/firebase"))
             .post(okhttp3.RequestBody.create(null, "{}".toByteArray()))
             .build()
         client.newCall(request).execute()

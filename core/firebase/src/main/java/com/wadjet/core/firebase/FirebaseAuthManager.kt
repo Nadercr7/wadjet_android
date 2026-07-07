@@ -66,12 +66,19 @@ class FirebaseAuthManager @Inject constructor(
         firebaseAuth.signOut()
     }
 
-    suspend fun getIdToken(): String? {
+    suspend fun getIdToken(forceRefresh: Boolean = false): String? {
         return try {
-            currentUser?.getIdToken(false)?.await()?.token
+            currentUser?.getIdToken(forceRefresh)?.await()?.token
         } catch (e: Exception) {
             Timber.e(e, "Failed to get Firebase ID token")
             null
         }
+    }
+
+    /** Sets the display name on the current Firebase user's profile. */
+    suspend fun updateDisplayName(displayName: String) {
+        val user = firebaseAuth.currentUser ?: return
+        val request = com.google.firebase.auth.userProfileChangeRequest { this.displayName = displayName }
+        user.updateProfile(request).await()
     }
 }

@@ -61,6 +61,7 @@ class ExploreRepositoryImpl @Inject constructor(
                 search = search,
                 page = page,
                 perPage = perPage,
+                lang = com.wadjet.core.common.AppLanguage.current(),
             )
             if (response.isSuccessful) {
                 val body = response.body()!!
@@ -73,7 +74,10 @@ class ExploreRepositoryImpl @Inject constructor(
                     landmarks = body.landmarks.map { it.toDomain() },
                     total = body.total,
                     page = body.page,
-                    totalPages = body.totalPages,
+                    // Backend returns total/page/has_more but NOT total_pages, so the
+                    // DTO default (1) froze pagination at page 1 (D-06). Derive it.
+                    totalPages = if (body.totalPages > 1) body.totalPages
+                    else ((body.total + perPage - 1) / perPage).coerceAtLeast(1),
                 )
             } else {
                 throw ApiException("Failed to load landmarks: ${response.code()}")
@@ -102,7 +106,7 @@ class ExploreRepositoryImpl @Inject constructor(
 
     override suspend fun getLandmarkDetail(slug: String): Result<LandmarkDetail> = suspendRunCatching {
         try {
-            val response = landmarkApi.getLandmarkDetail(slug)
+            val response = landmarkApi.getLandmarkDetail(slug, lang = com.wadjet.core.common.AppLanguage.current())
             if (response.isSuccessful) {
                 val dto = response.body()!!
                 // Cache detail JSON
